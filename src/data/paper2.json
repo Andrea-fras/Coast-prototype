@@ -1,0 +1,81 @@
+{
+  "id": "econ_101",
+  "title": "Economics 101",
+  "description": "Introduction to Microeconomics",
+  "questions": [
+    {
+      "id": "e1",
+      "number": 1,
+      "type": "multiple-choice",
+      "text": "What happens to demand when the price of a substitute good increases?",
+      "equation": null,
+      "options": [
+        { "id": "a", "text": "Demand decreases" },
+        { "id": "b", "text": "Demand increases" },
+        { "id": "c", "text": "Demand stays the same" },
+        { "id": "d", "text": "Supply increases" }
+      ],
+      "correctAnswerId": "b"
+    },
+    {
+      "id": "e2",
+      "number": 2,
+      "type": "multiple-choice",
+      "text": "Calculate the price elasticity of demand if quantity demanded falls from 100 to 80 units when price rises from $10 to $12.",
+      "equation": "E_d = \\frac{\\%\\Delta Q}{\\%\\Delta P}",
+      "options": [
+        { "id": "a", "text": "-1.0" },
+        { "id": "b", "text": "-0.5" },
+        { "id": "c", "text": "-2.0" },
+        { "id": "d", "text": "-1.5" }
+      ],
+      "correctAnswerId": "a"
+    },
+    {
+      "id": "e3",
+      "number": 3,
+      "type": "multiple-choice",
+      "text": "In a perfectly competitive market, what is true about the firm's marginal revenue?",
+      "equation": null,
+      "options": [
+        { "id": "a", "text": "MR > Price" },
+        { "id": "b", "text": "MR < Price" },
+        { "id": "c", "text": "MR = Price" },
+        { "id": "d", "text": "MR = 0" }
+      ],
+      "correctAnswerId": "c"
+    },
+    {
+      "id": "e4",
+      "number": 4,
+      "type": "open-ended",
+      "text": "Explain what happens to consumer surplus when the government imposes a price ceiling below the equilibrium price.",
+      "equation": null,
+      "modelAnswer": "When a price ceiling is set below equilibrium, there is a shortage as quantity demanded exceeds quantity supplied. Consumer surplus changes in two ways: some consumers benefit from lower prices, but overall consumer surplus may decrease because fewer units are available. Some consumers who would have bought at the higher price can no longer purchase the good due to shortages.",
+      "keyTerms": ["shortage", "quantity demanded", "quantity supplied", "lower price", "fewer units", "cannot purchase"]
+    },
+    {
+      "id": "e5",
+      "number": 5,
+      "type": "multiple-choice",
+      "text": "If the cross-price elasticity between goods A and B is positive, the goods are:",
+      "equation": null,
+      "options": [
+        { "id": "a", "text": "Complements" },
+        { "id": "b", "text": "Substitutes" },
+        { "id": "c", "text": "Unrelated" },
+        { "id": "d", "text": "Inferior goods" }
+      ],
+      "correctAnswerId": "b"
+    },
+    {
+      "id": "e6",
+      "number": 6,
+      "type": "open-ended",
+      "text": "Describe the concept of opportunity cost and provide an example.",
+      "equation": null,
+      "modelAnswer": "Opportunity cost is the value of the next best alternative that must be given up when making a choice. It represents the benefits you could have received by taking an alternative action. For example, if you choose to spend $1000 on a vacation instead of investing it, the opportunity cost is the potential returns you would have earned from that investment.",
+      "keyTerms": ["next best alternative", "given up", "choice", "benefits", "alternative action", "foregone"]
+    }
+  ]
+}

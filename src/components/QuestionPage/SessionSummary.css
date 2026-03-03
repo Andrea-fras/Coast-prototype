@@ -1,0 +1,1396 @@
+.session-summary {
+  display: flex;
+  gap: 2rem;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: visible;
+}
+
+/* Confetti container */
+.confetti-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.confetti {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  top: -20px;
+  opacity: 0;
+  animation: confettiFall 4s ease-out forwards;
+}
+
+.confetti:nth-child(odd) {
+  border-radius: 50%;
+}
+
+.confetti:nth-child(even) {
+  border-radius: 2px;
+}
+
+@keyframes confettiFall {
+  0% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(100vh) rotate(720deg);
+  }
+}
+
+/* Left Panel: Stats */
+.summary-left-panel {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 24px;
+  padding: 2rem 2.5rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 600px;
+  height: 65vh;
+  justify-content: space-between;
+  transition: opacity 0.3s;
+  box-sizing: border-box;
+}
+
+.summary-title {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #333;
+  margin: 0;
+  margin-bottom: 0.25rem;
+}
+
+.summary-subtitle {
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.1rem;
+  color: #888;
+  font-weight: 700;
+  margin: 0;
+}
+
+.bird-mascot {
+  width: 220px;
+  height: auto;
+}
+
+.stats-grid {
+  display: flex;
+  gap: 1.25rem;
+  width: 100%;
+  justify-content: center;
+}
+
+.stat-card {
+  background: rgba(255, 255, 255, 0.65);
+  border: 4px solid #F5A623;
+  border-radius: 18px;
+  padding: 0.6rem;
+  width: 130px;
+  height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.stat-card.orange {
+  border-color: #F5A623;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: white;
+  background-color: #F5A623;
+  padding: 0.4rem 0.75rem;
+  border-radius: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  text-transform: uppercase;
+  text-align: center;
+  font-family: 'Nunito Sans', sans-serif;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #F5A623;
+  font-family: 'Nunito Sans', sans-serif;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.xp-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.xp-bar-bg {
+  width: 100%;
+  height: 14px;
+  background-color: #e0e0e0;
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.xp-bar-fill {
+  height: 100%;
+  background: linear-gradient(to right, #FFB503, #FF7B02);
+  border-radius: 7px;
+  animation: xpGrow 1.2s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+@keyframes xpGrow {
+  from { width: 0%; }
+}
+
+.xp-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.xp-gained {
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 800;
+  font-size: 0.95rem;
+  background: linear-gradient(to right, #FFB503, #FF7B02);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.xp-level {
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: #999;
+}
+
+/* Right Panel: Reward */
+.summary-right-panel {
+  background: linear-gradient(to bottom, rgba(135, 206, 235, 0.75) 0%, rgba(52, 152, 219, 0.8) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 24px;
+  width: 600px;
+  height: 65vh;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Scene Styling */
+.scene-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+/* Sky Background - covers entire panel */
+.sky-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  min-width: 100%;
+  min-height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  z-index: 0;
+}
+
+/* Ocean Container - deep layered water */
+.ocean {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 38%;
+  background: linear-gradient(to bottom, 
+    rgba(52, 152, 219, 0.9) 0%, 
+    #2471A3 30%, 
+    #1A5276 70%, 
+    #0E2F44 100%
+  );
+  z-index: 1;
+}
+
+/* Underwater glow effect */
+.ocean::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at 50% 20%, rgba(100, 200, 255, 0.15) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* Water surface line - subtle oscillating wave */
+.wave {
+  position: absolute;
+  width: 200%;
+  height: 50px;
+  top: -30px;
+  left: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 50' preserveAspectRatio='none'%3E%3Cpath d='M0,28 Q150,8 300,28 T600,28 T900,28 T1200,28 L1200,50 L0,50 Z' fill='rgba(255,255,255,0.45)'/%3E%3C/svg%3E");
+  background-size: 50% 100%;
+  background-repeat: repeat-x;
+}
+
+.wave1 {
+  animation: waveFlow 6s linear infinite, waveBob 3s ease-in-out infinite;
+  opacity: 1;
+}
+
+.wave2 {
+  animation: waveFlow 8s linear infinite reverse, waveBob 4s ease-in-out infinite 0.5s;
+  opacity: 0.7;
+  top: -18px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 50' preserveAspectRatio='none'%3E%3Cpath d='M0,30 Q150,10 300,30 T600,30 T900,30 T1200,30 L1200,50 L0,50 Z' fill='rgba(100,180,220,0.5)'/%3E%3C/svg%3E");
+  background-size: 50% 100%;
+  background-repeat: repeat-x;
+}
+
+.wave3 {
+  animation: waveFlow 10s linear infinite, waveBob 5s ease-in-out infinite 1s;
+  opacity: 0.5;
+  top: -10px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 50' preserveAspectRatio='none'%3E%3Cpath d='M0,32 Q150,12 300,32 T600,32 T900,32 T1200,32 L1200,50 L0,50 Z' fill='rgba(50,120,180,0.55)'/%3E%3C/svg%3E");
+  background-size: 50% 100%;
+  background-repeat: repeat-x;
+}
+
+@keyframes waveFlow {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes waveBob {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  50% { transform: translateX(-25%) translateY(-4px); }
+}
+
+/* Boat wrapper - sits ON the water surface */
+.boat-wrapper {
+  position: absolute;
+  bottom: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 5;
+  animation: boatRock 3s ease-in-out infinite;
+}
+
+.boat-fishing {
+  width: 100%;
+  height: auto;
+}
+
+.fishing-lottie {
+  width: 100%;
+  height: auto;
+}
+
+/* Fishing Line - positioned to align with rod in SVG */
+.fishing-line {
+  position: absolute;
+  width: 2px;
+  height: 60px;
+  background: linear-gradient(to bottom, #333 0%, #666 100%);
+  bottom: -40px;
+  right: 20%;
+  transform-origin: top;
+  opacity: 0.8;
+  z-index: 6;
+}
+
+/* Fish on Line */
+.hooked-fish {
+  position: absolute;
+  bottom: -80px;
+  right: 15%;
+  width: 45px;
+  height: auto;
+  opacity: 0;
+  transform: translateY(0) rotate(15deg);
+  transition: all 0.5s ease-out;
+  z-index: 6;
+}
+
+.boat-wrapper.fish-caught .hooked-fish {
+  opacity: 1;
+  transform: translateY(-40px) rotate(-10deg);
+  animation: fishWiggle 0.4s ease-in-out infinite;
+}
+
+@keyframes fishWiggle {
+  0%, 100% { transform: translateY(-40px) rotate(-15deg); }
+  50% { transform: translateY(-45px) rotate(5deg); }
+}
+
+/* Boat rocking - gentle bob synced with wave flow */
+@keyframes boatRock {
+  0%, 100% { 
+    transform: translateX(-50%) translateY(0) rotate(-1deg); 
+  }
+  25% {
+    transform: translateX(-50%) translateY(-3px) rotate(0deg);
+  }
+  50% { 
+    transform: translateX(-50%) translateY(-5px) rotate(1deg); 
+  }
+  75% {
+    transform: translateX(-50%) translateY(-2px) rotate(0deg);
+  }
+}
+
+/* Glow effect overlay for intensity */
+.glow-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 8;
+  opacity: 0;
+  transition: opacity 0.3s, background 0.3s;
+}
+
+/* Intensity levels */
+.scene-container[data-intensity="1"] .glow-overlay {
+  opacity: 0.15;
+  background: radial-gradient(circle at 50% 70%, rgba(255,200,100,0.5), transparent 60%);
+}
+
+.scene-container[data-intensity="2"] .glow-overlay {
+  opacity: 0.25;
+  background: radial-gradient(circle at 50% 70%, rgba(255,180,50,0.6), transparent 60%);
+}
+
+.scene-container[data-intensity="3"] .glow-overlay {
+  opacity: 0.35;
+  background: radial-gradient(circle at 50% 70%, rgba(255,150,0,0.7), transparent 65%);
+}
+
+.scene-container[data-intensity="4"] .glow-overlay {
+  opacity: 0.5;
+  background: radial-gradient(circle at 50% 70%, rgba(255,120,0,0.8), transparent 70%);
+  animation: intensePulse 0.5s ease-in-out infinite;
+}
+
+.scene-container[data-intensity="5"] .glow-overlay {
+  opacity: 0.7;
+  background: radial-gradient(circle at 50% 70%, rgba(255,200,0,1), transparent 80%);
+  animation: intensePulse 0.3s ease-in-out infinite;
+}
+
+@keyframes intensePulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+}
+
+/* Screen shake on click */
+.scene-container.shake {
+  animation: screenShake 0.2s ease-out;
+}
+
+@keyframes screenShake {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-3px, 2px); }
+  50% { transform: translate(3px, -2px); }
+  75% { transform: translate(-2px, -1px); }
+}
+
+/* UI Overlay */
+.ui-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3rem 2rem;
+  box-sizing: border-box;
+}
+
+
+/* Reel Interaction */
+.boat-wrapper.reeling-anim {
+  animation: reelJerk 0.3s ease-out forwards;
+}
+
+@keyframes reelJerk {
+  0% { transform: translateX(-50%) translateY(0) rotate(0deg); }
+  30% { transform: translateX(-50%) translateY(3px) rotate(-3deg); }
+  60% { transform: translateX(-50%) translateY(-6px) rotate(2deg); }
+  100% { transform: translateX(-50%) translateY(0) rotate(0deg); }
+}
+
+/* Splash effect on reel */
+.splash {
+  position: absolute;
+  bottom: 40%;
+  left: 60%;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  opacity: 0;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.scene-container.reeling .splash {
+  animation: splashAnim 0.5s ease-out;
+}
+
+@keyframes splashAnim {
+  0% { 
+    opacity: 1; 
+    transform: scale(0);
+    box-shadow: 0 0 0 0 rgba(255,255,255,0.8),
+                0 0 0 0 rgba(255,255,255,0.6),
+                0 0 0 0 rgba(255,255,255,0.4);
+  }
+  100% { 
+    opacity: 0; 
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(255,255,255,0),
+                0 0 0 20px rgba(255,255,255,0),
+                0 0 0 30px rgba(255,255,255,0);
+  }
+}
+
+.reward-title {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-top: 2rem;
+  z-index: 2;
+}
+
+.tap-text {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 4rem;
+  z-index: 2;
+}
+
+.reward-circles {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  z-index: 2;
+}
+
+.circle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: rgba(0,0,0,0.2);
+  border: 2px solid rgba(255,255,255,0.2);
+}
+
+/* Expanded State */
+.summary-right-panel.expanded {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90vw;
+  height: 90vh;
+  max-width: 1600px;
+  z-index: 2000;
+  border-radius: 32px;
+  padding: 4rem;
+}
+
+/* Minimize Button */
+.minimize-btn {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 30;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+.minimize-btn:hover {
+  background: white;
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.minimize-btn svg {
+  color: #333;
+}
+
+/* Expanded state - bigger water and boat */
+.summary-right-panel.expanded .ocean {
+  height: 42%;
+}
+
+.summary-right-panel.expanded .boat-wrapper {
+  bottom: 22%;
+  width: 450px;
+}
+
+.summary-right-panel.expanded .hooked-fish {
+  width: 70px;
+  bottom: -100px;
+}
+
+.summary-right-panel.expanded .fishing-line {
+  height: 80px;
+  bottom: -55px;
+}
+
+/* Hide other content when expanded */
+.session-summary.reward-active .summary-left-panel {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.circle.filled {
+  background-color: #FFC107; /* Yellow fill */
+  border-color: #FFC107;
+  box-shadow: 0 0 10px rgba(255, 193, 7, 0.6);
+  transform: scale(1.1);
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.tap-text.active {
+  animation: pulse 0.5s infinite alternate;
+  font-size: 1.8rem;
+  color: #FFF;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+@keyframes pulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.1); }
+}
+
+/* ============================================
+   REWARD SCREEN — Clean, modern fish reveal
+   ============================================ */
+
+.summary-right-panel.reward-shown {
+  cursor: default;
+}
+
+.reward-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, rgba(247, 247, 247, 0.85) 0%, rgba(237, 237, 237, 0.85) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 20;
+  border-radius: 24px;
+  animation: rewardScreenIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  gap: 1.5rem;
+}
+
+@keyframes rewardScreenIn {
+  0% { opacity: 0; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.reward-badge {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #aaa;
+  background: #f0f0f0;
+  padding: 0.35rem 1.2rem;
+  border-radius: 20px;
+  animation: badgeFadeIn 0.5s ease-out 0.3s both;
+}
+
+@keyframes badgeFadeIn {
+  0% { opacity: 0; transform: translateY(-10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.reward-fish-ring {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+  animation: fishRingIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+  position: relative;
+}
+
+@keyframes fishRingIn {
+  0% { opacity: 0; transform: scale(0); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Subtle animated ring */
+.reward-fish-ring::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  right: -8px;
+  bottom: -8px;
+  border-radius: 50%;
+  border: 2px dashed rgba(0, 0, 0, 0.06);
+  animation: ringRotate 20s linear infinite;
+}
+
+@keyframes ringRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.reward-fish-img {
+  width: 100px;
+  height: auto;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+  animation: fishBob 3s ease-in-out infinite;
+}
+
+@keyframes fishBob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-5px) rotate(2deg); }
+}
+
+.reward-fish-name {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin: 0;
+  animation: nameFadeIn 0.6s ease-out 0.5s both;
+}
+
+@keyframes nameFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.reward-subtitle {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.9rem;
+  color: #aaa;
+  margin: 0;
+  animation: nameFadeIn 0.6s ease-out 0.7s both;
+}
+
+/* Perfect Run Progress Bar */
+.progress-bar-container.perfect-run .progress-segment {
+  background: linear-gradient(to right, #FFB503, #FF7B02) !important;
+  border: none;
+}
+
+/* ============================================
+   CHAT BUBBLE & PANEL FOR SESSION SUMMARY
+   ============================================ */
+
+/* Chat Bubble */
+.session-summary .chat-bubble {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(to right, #FFB503, #FF7B02);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(255, 123, 2, 0.4);
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.session-summary .chat-bubble:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 25px rgba(255, 123, 2, 0.5);
+}
+
+.session-summary .chat-bubble svg {
+  color: white;
+}
+
+.session-summary .chat-bubble.has-notification {
+  animation: chatPulse 1.5s infinite;
+}
+
+.session-summary .notification-dot {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 18px;
+  height: 18px;
+  background-color: #E74C3C;
+  border-radius: 50%;
+  border: 3px solid white;
+}
+
+@keyframes chatPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* Chat Panel */
+.session-summary .chat-panel {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 420px;
+  max-height: 75vh;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  z-index: 1001;
+  animation: chatSlideIn 0.3s ease-out;
+}
+
+@keyframes chatSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.session-summary .chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.session-summary .chat-header h3 {
+  margin: 0;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #333;
+}
+
+.session-summary .chat-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #888;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.session-summary .chat-close:hover {
+  color: #333;
+}
+
+.session-summary .chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Recommendation Blocks */
+.chat-recommendation-block {
+  background: rgba(255, 255, 255, 0.65);
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.recommendation-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #eee;
+}
+
+.rec-icon {
+  font-size: 1.3rem;
+}
+
+.rec-title {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #333;
+}
+
+.recommendation-stats {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.rec-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.rec-stat-label {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.8rem;
+  color: #888;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.rec-stat-value {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #333;
+}
+
+.rec-stat-value.good {
+  color: #2ECC71;
+}
+
+.rec-stat-value.medium {
+  color: #F39C12;
+}
+
+.rec-stat-value.needs-work {
+  color: #E74C3C;
+}
+
+.overall-advice {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Study Plan Block */
+.study-plan .rec-intro {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0 0 1rem 0;
+}
+
+.study-recommendation {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.study-recommendation:last-child {
+  margin-bottom: 0;
+}
+
+.study-topic {
+  margin-bottom: 0.75rem;
+}
+
+.topic-badge {
+  display: inline-block;
+  background: linear-gradient(to right, #FFB503, #FF7B02);
+  color: white;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+}
+
+.study-chapter,
+.study-exercises {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.9rem;
+  color: #444;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.study-chapter:last-child,
+.study-exercises:last-child {
+  margin-bottom: 0;
+}
+
+.chapter-icon,
+.exercise-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.study-chapter strong {
+  color: #333;
+}
+
+/* Learning Model Block */
+.learning-model .learning-note {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.6;
+  margin: 0 0 1rem 0;
+}
+
+.learning-model .learning-tip {
+  background: linear-gradient(to right, rgba(255, 181, 3, 0.1), rgba(255, 123, 2, 0.1));
+  border-left: 3px solid #FF7B02;
+  padding: 0.75rem 1rem;
+  border-radius: 0 8px 8px 0;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.9rem;
+  color: #555;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Question Blocks (reusing styles from QuestionPage) */
+.session-summary .chat-question-block {
+  background: rgba(255, 255, 255, 0.65);
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.session-summary .chat-question-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #eee;
+}
+
+.session-summary .chat-q-number {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #888;
+  text-transform: uppercase;
+}
+
+.session-summary .chat-q-text {
+  font-family: 'Nunito', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.session-summary .chat-your-answer,
+.session-summary .chat-correct-answer {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.session-summary .chat-your-answer .wrong {
+  color: #E74C3C;
+  font-weight: 700;
+}
+
+.session-summary .chat-correct-answer .correct {
+  color: #2ECC71;
+  font-weight: 700;
+}
+
+.session-summary .socratic-messages {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.session-summary .tutor-message {
+  background: linear-gradient(to right, rgba(255, 181, 3, 0.1), rgba(255, 123, 2, 0.1));
+  border-left: 3px solid #FF7B02;
+  padding: 0.75rem 1rem;
+  border-radius: 0 12px 12px 0;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.95rem;
+  color: #444;
+  line-height: 1.5;
+}
+
+/* Scrollbar for chat */
+.session-summary .chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.session-summary .chat-messages::-webkit-scrollbar-track {
+  background: #e0e0e0;
+  border-radius: 3px;
+}
+
+.session-summary .chat-messages::-webkit-scrollbar-thumb {
+  background: #bbb;
+  border-radius: 3px;
+}
+
+.session-summary .chat-messages::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+/* ============ INTERACTIVE PEDRO CHAT IN SESSION ============ */
+
+.session-pedro-msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.session-pedro-msg.user {
+  flex-direction: row-reverse;
+}
+
+.session-pedro-avatar {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.session-pedro-bubble {
+  padding: 0.6rem 0.9rem;
+  border-radius: 14px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  max-width: 85%;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.session-pedro-msg.user .session-pedro-bubble {
+  background: linear-gradient(135deg, #FFB503 0%, #FF7B02 100%);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.session-pedro-msg.pedro .session-pedro-bubble {
+  background: #f5f5f5;
+  color: #333;
+  border: 1px solid #e8e8e8;
+  border-bottom-left-radius: 4px;
+}
+
+.session-pedro-typing {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0.6rem 0.9rem !important;
+  min-width: 50px;
+}
+
+.session-typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #bbb;
+  animation: sessionTypingBounce 1.2s infinite ease-in-out;
+}
+
+.session-typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.session-typing-dot:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes sessionTypingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+/* Input area */
+
+.session-pedro-input-area {
+  padding: 0.6rem 0.75rem;
+  border-top: 1px solid rgba(238, 238, 238, 0.6);
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 0 0 16px 16px;
+}
+
+.session-pedro-input-wrapper {
+  display: flex;
+  align-items: center;
+  background: #f8f8f8;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 0.3rem 0.3rem 0.3rem 0.7rem;
+  transition: border-color 0.2s;
+}
+
+.session-pedro-input-wrapper:focus-within {
+  border-color: #FFB503;
+}
+
+.session-pedro-input-wrapper input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.85rem;
+  color: #333;
+  background: transparent;
+}
+
+.session-pedro-input-wrapper input::placeholder {
+  color: #bbb;
+}
+
+.session-pedro-send {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #FFB503 0%, #FF7B02 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.session-pedro-send:hover:not(:disabled) {
+  transform: scale(1.05);
+}
+
+.session-pedro-send:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Adjust chat panel to accommodate input */
+.session-summary .chat-panel.session-chat {
+  display: flex;
+  flex-direction: column;
+}
+
+.session-summary .chat-panel.session-chat .chat-messages {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* ================ DARK MODE ================ */
+
+.question-page.dark .summary-left-panel {
+  background: rgba(12, 12, 30, 0.75);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.question-page.dark .summary-title { color: rgba(255, 255, 255, 0.95); }
+.question-page.dark .summary-subtitle { color: rgba(255, 255, 255, 0.5); }
+
+.question-page.dark .stat-card {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: #F5A623;
+}
+
+.question-page.dark .xp-bar-bg {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+.question-page.dark .xp-level { color: rgba(255, 255, 255, 0.4); }
+
+.question-page.dark .summary-right-panel {
+  background: linear-gradient(to bottom, rgba(20, 10, 60, 0.6) 0%, rgba(10, 5, 35, 0.7) 100%);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.question-page.dark .ocean {
+  background: linear-gradient(to bottom,
+    rgba(25, 10, 80, 0.9) 0%,
+    #110833 30%,
+    #0a0520 70%,
+    #050210 100%
+  );
+}
+
+.question-page.dark .ocean::after {
+  background: radial-gradient(ellipse at 50% 20%, rgba(80, 40, 200, 0.15) 0%, transparent 60%);
+}
+
+.question-page.dark .reward-screen {
+  background: linear-gradient(160deg, rgba(20, 20, 45, 0.9) 0%, rgba(13, 13, 26, 0.9) 100%);
+}
+.question-page.dark .reward-badge {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.5);
+}
+.question-page.dark .reward-fish-ring {
+  background: rgba(30, 30, 55, 0.8);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+.question-page.dark .reward-fish-ring::after {
+  border-color: rgba(255, 255, 255, 0.06);
+}
+.question-page.dark .reward-title { color: rgba(255, 255, 255, 0.95); }
+.question-page.dark .tap-text { color: rgba(255, 255, 255, 0.8); }
+.question-page.dark .reward-fish-name { color: rgba(255, 255, 255, 0.92); }
+.question-page.dark .reward-subtitle { color: rgba(255, 255, 255, 0.4); }
+
+/* Dark session chat */
+.question-page.dark .session-summary .chat-panel {
+  background: rgba(12, 12, 30, 0.88);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.question-page.dark .session-summary .chat-header {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+.question-page.dark .session-summary .chat-header h3 { color: rgba(255, 255, 255, 0.9); }
+.question-page.dark .session-summary .chat-close { color: rgba(255, 255, 255, 0.4); }
+
+.question-page.dark .chat-recommendation-block {
+  background: rgba(255, 255, 255, 0.05);
+}
+.question-page.dark .recommendation-header { border-bottom-color: rgba(255, 255, 255, 0.06); }
+.question-page.dark .rec-title { color: rgba(255, 255, 255, 0.85); }
+.question-page.dark .rec-stat-label { color: rgba(255, 255, 255, 0.4); }
+.question-page.dark .rec-stat-value { color: rgba(255, 255, 255, 0.85); }
+.question-page.dark .overall-advice { color: rgba(255, 255, 255, 0.6); }
+
+.question-page.dark .study-recommendation {
+  background: rgba(255, 255, 255, 0.04);
+}
+.question-page.dark .study-plan .rec-intro { color: rgba(255, 255, 255, 0.5); }
+.question-page.dark .study-chapter,
+.question-page.dark .study-exercises { color: rgba(255, 255, 255, 0.6); }
+.question-page.dark .study-chapter strong { color: rgba(255, 255, 255, 0.8); }
+
+.question-page.dark .learning-model .learning-note { color: rgba(255, 255, 255, 0.6); }
+.question-page.dark .learning-model .learning-tip {
+  background: linear-gradient(to right, rgba(255, 181, 3, 0.08), rgba(255, 123, 2, 0.06));
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.question-page.dark .session-summary .chat-question-block {
+  background: rgba(255, 255, 255, 0.05);
+}
+.question-page.dark .session-summary .chat-question-header {
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+.question-page.dark .session-summary .chat-q-number { color: rgba(255, 255, 255, 0.4); }
+.question-page.dark .session-summary .chat-q-text { color: rgba(255, 255, 255, 0.85); }
+.question-page.dark .session-summary .chat-your-answer,
+.question-page.dark .session-summary .chat-correct-answer { color: rgba(255, 255, 255, 0.5); }
+
+.question-page.dark .session-summary .tutor-message {
+  background: linear-gradient(to right, rgba(255, 181, 3, 0.08), rgba(255, 123, 2, 0.06));
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Dark Pedro chat in session */
+.question-page.dark .session-pedro-msg.pedro .session-pedro-bubble {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.75);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.question-page.dark .session-pedro-input-area {
+  background: rgba(20, 20, 45, 0.6);
+  border-top-color: rgba(255, 255, 255, 0.06);
+}
+.question-page.dark .session-pedro-input-wrapper {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.question-page.dark .session-pedro-input-wrapper input {
+  color: rgba(255, 255, 255, 0.85);
+}
+.question-page.dark .session-pedro-input-wrapper input::placeholder {
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.question-page.dark .session-summary .chat-messages::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+}
+.question-page.dark .session-summary .chat-messages::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+}

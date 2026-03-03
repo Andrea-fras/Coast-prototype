@@ -1,0 +1,147 @@
+{
+  "id": "cell_bio_101",
+  "title": "Cell Structure & Function",
+  "description": "Biology – Cell Structure Exam",
+  "questions": [
+    {
+      "id": "cb1",
+      "number": 1,
+      "type": "multiple-choice",
+      "text": "Which organelle is known as the 'powerhouse of the cell' because it produces most of the cell's ATP?",
+      "equation": null,
+      "options": [
+        { "id": "a", "text": "Golgi apparatus" },
+        { "id": "b", "text": "Ribosome" },
+        { "id": "c", "text": "Mitochondrion" },
+        { "id": "d", "text": "Lysosome" }
+      ],
+      "correctAnswerId": "c"
+    },
+    {
+      "id": "cb2",
+      "number": 2,
+      "type": "multiple-choice",
+      "text": "What is the primary function of the rough endoplasmic reticulum?",
+      "equation": null,
+      "options": [
+        { "id": "a", "text": "Lipid synthesis" },
+        { "id": "b", "text": "Protein synthesis and folding" },
+        { "id": "c", "text": "Energy production" },
+        { "id": "d", "text": "DNA replication" }
+      ],
+      "correctAnswerId": "b"
+    },
+    {
+      "id": "cb3",
+      "number": 3,
+      "type": "multiple-choice",
+      "text": "Which structure is present in plant cells but NOT in animal cells?",
+      "equation": null,
+      "options": [
+        { "id": "a", "text": "Cell membrane" },
+        { "id": "b", "text": "Mitochondria" },
+        { "id": "c", "text": "Cell wall" },
+        { "id": "d", "text": "Ribosomes" }
+      ],
+      "correctAnswerId": "c"
+    },
+    {
+      "id": "cb4",
+      "number": 4,
+      "type": "multiple-choice",
+      "text": "The fluid mosaic model describes the structure of the:",
+      "equation": null,
+      "options": [
+        { "id": "a", "text": "Cell wall" },
+        { "id": "b", "text": "Nuclear envelope" },
+        { "id": "c", "text": "Plasma membrane" },
+        { "id": "d", "text": "Cytoskeleton" }
+      ],
+      "correctAnswerId": "c"
+    },
+    {
+      "id": "cb5",
+      "number": 5,
+      "type": "multiple-choice",
+      "text": "Which organelle is responsible for modifying, sorting, and packaging proteins for secretion?",
+      "equation": null,
+      "options": [
+        { "id": "a", "text": "Smooth endoplasmic reticulum" },
+        { "id": "b", "text": "Golgi apparatus" },
+        { "id": "c", "text": "Lysosome" },
+        { "id": "d", "text": "Peroxisome" }
+      ],
+      "correctAnswerId": "b"
+    },
+    {
+      "id": "cb6",
+      "number": 6,
+      "type": "multiple-choice",
+      "text": "Osmosis is best defined as the movement of:",
+      "equation": null,
+      "options": [
+        { "id": "a", "text": "Solute molecules from low to high concentration" },
+        { "id": "b", "text": "Water across a selectively permeable membrane from high to low water potential" },
+        { "id": "c", "text": "Ions through protein channels using ATP" },
+        { "id": "d", "text": "Gases down their concentration gradient" }
+      ],
+      "correctAnswerId": "b"
+    },
+    {
+      "id": "cb7",
+      "number": 7,
+      "type": "multiple-choice",
+      "text": "What is the role of lysosomes in a cell?",
+      "equation": null,
+      "options": [
+        { "id": "a", "text": "Synthesise lipids" },
+        { "id": "b", "text": "Store genetic information" },
+        { "id": "c", "text": "Break down waste materials and cellular debris" },
+        { "id": "d", "text": "Generate ATP via oxidative phosphorylation" }
+      ],
+      "correctAnswerId": "c"
+    },
+    {
+      "id": "cb8",
+      "number": 8,
+      "type": "multiple-choice",
+      "text": "A cell is placed in a hypertonic solution. What will happen?",
+      "equation": null,
+      "options": [
+        { "id": "a", "text": "The cell will swell and may burst (lysis)" },
+        { "id": "b", "text": "The cell will shrink (crenation/plasmolysis)" },
+        { "id": "c", "text": "Nothing — the cell is in equilibrium" },
+        { "id": "d", "text": "The cell wall will dissolve" }
+      ],
+      "correctAnswerId": "b"
+    },
+    {
+      "id": "cb9",
+      "number": 9,
+      "type": "multiple-choice",
+      "text": "Which of the following best describes the function of the cytoskeleton?",
+      "equation": null,
+      "options": [
+        { "id": "a", "text": "Protein synthesis" },
+        { "id": "b", "text": "Structural support, cell shape, and intracellular transport" },
+        { "id": "c", "text": "ATP production" },
+        { "id": "d", "text": "DNA transcription" }
+      ],
+      "correctAnswerId": "b"
+    },
+    {
+      "id": "cb10",
+      "number": 10,
+      "type": "multiple-choice",
+      "text": "Active transport differs from passive transport because active transport:",
+      "equation": null,
+      "options": [
+        { "id": "a", "text": "Moves molecules down their concentration gradient" },
+        { "id": "b", "text": "Does not require a membrane" },
+        { "id": "c", "text": "Requires energy (ATP) to move molecules against their concentration gradient" },
+        { "id": "d", "text": "Only occurs in plant cells" }
+      ],
+      "correctAnswerId": "c"
+    }
+  ]
+}

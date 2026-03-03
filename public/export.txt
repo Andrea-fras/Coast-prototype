@@ -1,0 +1,149 @@
+COAST — AI Tools & Models Usage
+================================
+
+Coast is an AI-native study platform that transforms lecture materials into
+interactive learning experiences. Every core feature is powered by AI.
+
+
+1. NOTEBOOK GENERATION (Document → Study Guide)
+------------------------------------------------
+Model: GPT-4o (OpenAI) | Also supports Claude Sonnet 4, Kimi K2.5
+What it does:
+  - Accepts PDFs, PowerPoint slides, or images of lecture notes
+  - Extracts text + embedded diagrams via hybrid OCR pipeline
+  - Generates structured study notebooks with sections, subsections,
+    key highlights, and matched past-paper questions
+  - Processes in parallel chunks for speed, then merges into a coherent guide
+  - Streams real-time progress to the frontend via Server-Sent Events
+How it's used:
+  - User uploads a file → pipeline extracts, analyzes, and generates in ~2-3 min
+  - Progress bar shows extraction → analysis → merging → question matching stages
+
+
+2. MANIM VISUALIZATIONS (AI-Generated Animated Explanations)
+-------------------------------------------------------------
+Models: Gemini 3.1 Pro (script generation + auto-repair) | GPT-4o-mini (concept picking)
+What it does:
+  - Analyzes notebook sections to identify concepts that benefit from animation
+  - Uses Google's Gemini 3.1 Pro (released Feb 2026) to generate Python scripts
+    for Manim (3Blue1Brown's math animation engine) — chosen for its 80.6%
+    SWE-Bench score and 2.5× stronger reasoning over previous models
+  - Renders animated GIFs showing mathematical/scientific concepts
+  - Auto-retry with error feedback: if a render fails, the error is fed back
+    to Gemini 3.1 Pro which fixes the script and re-renders (up to 2 retries)
+  - Per-section visualization: users can click any section heading to generate
+    a targeted animation for that specific concept
+How it's used:
+  - "Generate Visual Explanations" button at the bottom of each notebook
+  - Play icon on each section heading for targeted single-section visualization
+  - Visualizations appear inline as clickable GIF cards with expandable overlay
+
+
+3. PEDRO AI TUTOR (Socratic Learning Assistant)
+------------------------------------------------
+Model: GPT-4o (OpenAI) | Switchable to Kimi K2.5
+What it does:
+  - Socratic tutoring chatbot that guides students through concepts
+    rather than giving direct answers
+  - Context-aware: references the current notebook, user's skill profile,
+    and past interactions
+  - Maintains a persistent "tutor memo" per student — tracks learning patterns,
+    strengths, weaknesses, and preferences across sessions
+  - Automatically summarizes long conversations to preserve context
+    without exceeding token limits
+  - Can condense chat explanations into formatted study notes
+    inserted directly into notebooks
+How it's used:
+  - Right panel in every notebook for contextual Q&A
+  - Standalone chat accessible from dashboard ("Ask Pedro")
+  - Post-quiz chat for reviewing mistakes
+  - "Add to Notes" button converts Pedro's explanations into notebook content
+
+
+4. AI ANSWER EVALUATION (Automated Grading)
+---------------------------------------------
+Model: GPT-4o-mini (OpenAI)
+What it does:
+  - Grades open-ended/written student answers against mark schemes
+  - Two evaluation modes:
+    a) Mark scheme mode: structured matching of student answer against
+       expected points, awarding marks per matched criterion
+    b) Holistic mode: 0-100 score with qualitative feedback
+  - Returns detailed feedback including matched points, missing points,
+    and suggestions for improvement
+How it's used:
+  - Automatic when students submit written answers in quiz sessions
+  - Shows marks awarded, feedback, and mark scheme breakdown
+  - Feeds results into skill profile tracking
+
+
+5. QUESTION MATCHING (Semantic Curriculum Alignment)
+-----------------------------------------------------
+Model: GPT-4o-mini (OpenAI)
+What it does:
+  - Matches past examination questions to generated notebook sections
+  - Uses semantic understanding to align question topics with study material
+  - Falls back to keyword matching when LLM matching is unavailable
+How it's used:
+  - Runs automatically during notebook generation
+  - Matched questions appear as practice exercises within the notebook
+  - Students can jump directly from studying a topic to practicing relevant questions
+
+
+6. TUTOR MEMORY (Persistent Student Modeling)
+----------------------------------------------
+Model: GPT-4o (OpenAI)
+What it does:
+  - Maintains a structured memo per student with three layers:
+    a) Permanent traits: learning style, preferences, background
+    b) Patterns: recurring strengths, weaknesses, common mistakes
+    c) Active context: current topics, recent struggles, session goals
+  - Auto-updates every 5 messages in conversation
+  - Used to personalize all Pedro responses across sessions
+How it's used:
+  - Fully automatic and transparent to users
+  - Pedro proactively references past sessions and known weak areas
+  - Accessible via API for debugging/transparency
+
+
+7. NOTE CONDENSATION (Chat → Study Notes)
+-------------------------------------------
+Model: GPT-4o (OpenAI)
+What it does:
+  - Converts conversational Pedro explanations into concise, formatted
+    HTML study notes suitable for insertion into notebooks
+  - Preserves key information while removing conversational filler
+How it's used:
+  - "Add to Notes" button on any Pedro message in notebook chat
+  - Inserts a styled "Pedro's Note" block into the notebook
+
+
+8. CONVERSATION SUMMARIZATION (Context Management)
+----------------------------------------------------
+Model: GPT-4o (OpenAI)
+What it does:
+  - Compresses older chat messages into a summary to preserve context
+    without exceeding LLM token limits
+  - Keeps the most recent 6 messages in full, summarizes everything older
+How it's used:
+  - Automatic when conversations exceed 12 messages
+  - Transparent to users — conversation feels continuous
+
+
+DEVELOPMENT TOOLS
+-----------------
+- Cursor AI (Claude Sonnet / Opus): Used extensively for full-stack development,
+  including React frontend, FastAPI backend, database design, CSS styling,
+  and iterative feature development
+- Manim Community Edition (v0.20): Open-source mathematical animation engine
+  (originally by 3Blue1Brown) used for rendering AI-generated visualizations
+
+
+TECH STACK
+----------
+Frontend: React + Vite
+Backend: Python FastAPI + SQLite
+AI APIs: OpenAI (GPT-4o, GPT-4o-mini), Google Gemini 3.1 Pro, Anthropic (Claude), Moonshot (Kimi K2.5)
+Visualization: Manim Community Edition
+Auth: JWT-based authentication
+Real-time: Server-Sent Events for progress streaming

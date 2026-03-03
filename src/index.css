@@ -1,0 +1,33 @@
+
+/* Reset or global styles can go here */
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;700;800&family=Nunito:wght@400;700&display=swap');
+
+:root {
+  font-family: 'Nunito', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 700; /* Defaulting to bold per request "nunito bold for other text" */
+  
+  color-scheme: light;
+  color: #213547; /* Dark text for light background */
+  background-color: #F7F7F7;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: #F7F7F7;
+  background-image: url('./assets/waves.svg');
+  background-repeat: no-repeat;
+  background-size: 100% auto;
+  background-position: center 15vh;
+  background-attachment: fixed;
+}
+
+[data-theme="dark"] :root {
+  background-color: #0d1127;
+}

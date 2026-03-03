@@ -1,0 +1,321 @@
+.pomo-page {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #F7F7F7;
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.pomo-page::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-image: url('../../assets/waves.svg');
+  background-repeat: no-repeat;
+  background-size: 100% auto;
+  background-position: center 15vh;
+  opacity: 1;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Close Button ─────────────────────────── */
+.pomo-close {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  z-index: 2;
+  transition: color 0.2s;
+}
+.pomo-close:hover { color: #333; }
+
+/* ── Container ────────────────────────────── */
+.pomo-container {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  max-width: 500px;
+  width: 100%;
+}
+
+/* ── Mode Tabs ────────────────────────────── */
+.pomo-tabs {
+  display: flex;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 16px;
+  padding: 0.35rem;
+}
+
+.pomo-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 12px;
+  background: none;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #999;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.pomo-tab:hover { color: #666; }
+
+.pomo-tab.active.focus  { background: rgba(255, 181, 3, 0.15); color: #FFB503; }
+.pomo-tab.active.short  { background: rgba(78, 205, 196, 0.15); color: #4ECDC4; }
+.pomo-tab.active.long   { background: rgba(124, 108, 255, 0.15); color: #7C6CFF; }
+
+/* ── Timer Panel ──────────────────────────── */
+.pomo-timer-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 28px;
+  padding: 3rem 3.5rem;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.06);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Ring ──────────────────────────────────── */
+.pomo-ring-wrap {
+  position: relative;
+  width: 260px;
+  height: 260px;
+}
+
+.pomo-ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.pomo-ring-bg {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.06);
+  stroke-width: 8;
+}
+
+.pomo-ring-progress {
+  fill: none;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.4s ease;
+}
+
+.pomo-time-display {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.pomo-time {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 3.8rem;
+  font-weight: 800;
+  color: #444;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.pomo-mode-label {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-top: 0.5rem;
+}
+
+/* ── Controls ─────────────────────────────── */
+.pomo-controls {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.pomo-ctrl-btn {
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.pomo-ctrl-btn.secondary {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: #888;
+}
+.pomo-ctrl-btn.secondary:hover {
+  transform: translateY(-1px);
+  color: #555;
+}
+
+.pomo-ctrl-btn.primary {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+.pomo-ctrl-btn.primary:hover {
+  transform: scale(1.06);
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.2);
+}
+
+.pomo-session-count {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 48px;
+}
+.pomo-session-count span {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #666;
+}
+.pomo-session-count small {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #aaa;
+}
+
+/* ── Presets ───────────────────────────────── */
+.pomo-presets {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.pomo-presets-icon { color: #bbb; }
+
+.pomo-preset-btn {
+  padding: 0.4rem 1rem;
+  border: 1.5px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #999;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.pomo-preset-btn:hover { border-color: rgba(0, 0, 0, 0.15); color: #666; }
+.pomo-preset-btn.active {
+  background: rgba(255, 181, 3, 0.12);
+  border-color: rgba(255, 181, 3, 0.3);
+  color: #FFB503;
+}
+
+/* ── Tips ──────────────────────────────────── */
+.pomo-tips {
+  text-align: center;
+  max-width: 360px;
+}
+.pomo-tips p {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #aaa;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ═══════════════════════════════════════════
+   DARK MODE
+   ═══════════════════════════════════════════ */
+.pomo-page.dark {
+  background-color: #0d0d1a;
+}
+.pomo-page.dark::before {
+  background-image: url('../../assets/wavebgglass-dark.svg');
+  background-size: cover;
+  background-position: center center;
+  opacity: 1;
+}
+
+.pomo-page.dark .pomo-close { color: rgba(255, 255, 255, 0.5); }
+.pomo-page.dark .pomo-close:hover { color: rgba(255, 255, 255, 0.9); }
+
+.pomo-page.dark .pomo-tabs {
+  background: rgba(20, 22, 45, 0.7);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+.pomo-page.dark .pomo-tab { color: rgba(255, 255, 255, 0.35); }
+.pomo-page.dark .pomo-tab:hover { color: rgba(255, 255, 255, 0.6); }
+
+.pomo-page.dark .pomo-timer-panel {
+  background: rgba(20, 22, 45, 0.75);
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3);
+}
+
+.pomo-page.dark .pomo-ring-bg { stroke: rgba(255, 255, 255, 0.06); }
+.pomo-page.dark .pomo-time { color: rgba(255, 255, 255, 0.9); }
+
+.pomo-page.dark .pomo-ctrl-btn.secondary {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.4);
+}
+.pomo-page.dark .pomo-ctrl-btn.secondary:hover { color: rgba(255, 255, 255, 0.7); }
+
+.pomo-page.dark .pomo-session-count span { color: rgba(255, 255, 255, 0.7); }
+.pomo-page.dark .pomo-session-count small { color: rgba(255, 255, 255, 0.35); }
+
+.pomo-page.dark .pomo-presets-icon { color: rgba(255, 255, 255, 0.25); }
+.pomo-page.dark .pomo-preset-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.35);
+}
+.pomo-page.dark .pomo-preset-btn:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.6);
+}
+.pomo-page.dark .pomo-preset-btn.active {
+  background: rgba(255, 181, 3, 0.1);
+  border-color: rgba(255, 181, 3, 0.25);
+  color: #FFB503;
+}
+
+.pomo-page.dark .pomo-tips p { color: rgba(255, 255, 255, 0.3); }

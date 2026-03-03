@@ -1,0 +1,162 @@
+{
+  "id": "bankruptcy_allocation",
+  "title": "Bankruptcy Allocation: Fair Shares in Tough Times",
+  "course": "Economics 201 — Bankruptcy and Allocation",
+  "icon": "⚖️",
+  "color": "#FF5733",
+  "intro": {
+    "text": "Welcome to the world of bankruptcy allocation, where we explore how to fairly distribute limited resources among claimants. This guide will help you understand various principles and rules used to ensure equitable distribution. You'll learn about different methods like the Contested Garment Principle and the Talmud Rule, and why these concepts matter in real-world financial scenarios.",
+    "highlights": [
+      {
+        "label": "Contested Garment Principle",
+        "desc": "Splitting contested and uncontested parts"
+      },
+      {
+        "label": "Constrained Equal Awards",
+        "desc": "Equalizing awards until claims are met"
+      },
+      {
+        "label": "Proportional Rule",
+        "desc": "Allocating resources proportionally"
+      }
+    ]
+  },
+  "sections": [
+    {
+      "icon": "👗",
+      "title": "Contested Garment Principle (Splitting the Difference)",
+      "tags": [
+        "contested garment principle",
+        "bankruptcy",
+        "allocation",
+        "claims"
+      ],
+      "content": "The Contested Garment Principle (CGP) is a method used when there are two claimants. It divides the estate into uncontested and contested parts, giving the uncontested part to the larger claim and splitting the contested part equally.",
+      "subsections": [
+        {
+          "title": "Two-Claimant Case",
+          "content": "In a scenario with two claimants, the estate is divided as follows:",
+          "bullets": [
+            "x1 = (E/2) - (c2 - c1)/2",
+            "x2 = (E/2) + (c2 - c1)/2"
+          ]
+        }
+      ]
+    },
+    {
+      "icon": "⚖️",
+      "title": "Constrained Equal Awards (Equalizing Until Exhausted)",
+      "tags": [
+        "constrained equal awards",
+        "bankruptcy",
+        "allocation",
+        "claims"
+      ],
+      "content": "Constrained Equal Awards (CEA) aims to equalize the awards given to claimants until the total claims are met. This method uses a water-filling approach, raising all claims equally until the estate is exhausted.",
+      "subsections": [
+        {
+          "title": "Water-Filling Method",
+          "content": "The formula for CEA is:",
+          "bullets": [
+            "xi = min(ci, t), where Σmin(ci, t) = E"
+          ]
+        }
+      ]
+    },
+    {
+      "icon": "📉",
+      "title": "Constrained Equal Losses (Starting from Full Claims)",
+      "tags": [
+        "constrained equal losses",
+        "bankruptcy",
+        "allocation",
+        "claims"
+      ],
+      "content": "Constrained Equal Losses (CEL) focuses on equalizing losses until some claims reach zero. It starts from full claims and subtracts equally until the estate fits.",
+      "subsections": [
+        {
+          "title": "Loss Equalization",
+          "content": "The formula for CEL is:",
+          "bullets": [
+            "xi = max(0, ci - t), where Σmax(ci - t, 0) = E"
+          ]
+        }
+      ]
+    },
+    {
+      "icon": "📊",
+      "title": "Proportional Rule (Simple and Quick)",
+      "tags": [
+        "proportional rule",
+        "bankruptcy",
+        "allocation",
+        "claims"
+      ],
+      "content": "The Proportional Rule (PROP) is a straightforward method that allocates the estate proportionally to the claims. It's quick and easy to apply.",
+      "subsections": [
+        {
+          "title": "Proportional Allocation",
+          "content": "The formula for PROP is:",
+          "bullets": [
+            "xi = (ci / C) * E"
+          ]
+        }
+      ]
+    },
+    {
+      "icon": "📜",
+      "title": "Talmud Rule (A Hybrid Approach)",
+      "tags": [
+        "talmud rule",
+        "bankruptcy",
+        "allocation",
+        "claims"
+      ],
+      "content": "The Talmud Rule (TAL) is a hybrid method combining CEA and CEL on half-claims. It provides a balanced approach by applying different rules to different parts of the claims.",
+      "subsections": [
+        {
+          "title": "Half-Claims Approach",
+          "content": "The Talmud Rule works as follows:",
+          "bullets": [
+            "Half-claims: hi = ci/2",
+            "Case 1: E ≤ (1/2)C → CEA on half-claims",
+            "Case 2: E ≥ (1/2)C → give hi first, then CEL on second halves"
+          ]
+        }
+      ]
+    },
+    {
+      "icon": "🔍",
+      "title": "Axioms (Fairness Tests)",
+      "tags": [
+        "axioms",
+        "fairness",
+        "bankruptcy",
+        "allocation"
+      ],
+      "content": "Axioms are fairness tests that ensure the allocation methods adhere to principles like efficiency, equal treatment, consistency, and monotonicity.",
+      "subsections": [
+        {
+          "title": "Key Fairness Principles",
+          "content": "These principles guide fair allocation:",
+          "bullets": [
+            "Efficiency: Σxi = E",
+            "Equal Treatment of Equals (ETE): equal claims → equal awards",
+            "Consistency: removing one claimant doesn’t change others’ shares",
+            "Monotonicity: higher claims don’t get less than lower claims"
+          ]
+        }
+      ]
+    }
+  ],
+  "chatResponses": {
+    "contested garment principle|cgp": "The Contested Garment Principle is about dividing an estate between two claimants by giving the uncontested part to the larger claim and splitting the contested part equally. Does that make sense?",
+    "constrained equal awards|cea": "Constrained Equal Awards equalizes the awards until the claims are met using a water-filling method. Would you like to know more about how this works?",
+    "constrained equal losses|cel": "Constrained Equal Losses focuses on equalizing losses until some claims reach zero. It starts from full claims and subtracts equally. Need further clarification?",
+    "proportional rule|prop": "The Proportional Rule allocates the estate proportionally to the claims. It's a simple and quick method. Do you want to see an example?",
+    "talmud rule|tal": "The Talmud Rule is a hybrid approach that combines CEA and CEL on half-claims. Would you like to explore how it applies in different cases?",
+    "axioms|fairness": "Axioms are fairness tests ensuring allocation methods are efficient, consistent, and fair. Interested in how these principles apply?"
+  },
+  "matchedQuestions": [],
+  "questionCount": 0
+}

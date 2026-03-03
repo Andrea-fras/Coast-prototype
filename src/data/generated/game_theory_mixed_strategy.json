@@ -1,0 +1,184 @@
+{
+  "id": "game_theory_mixed_strategy",
+  "title": "Game Theory: Mastering Mixed Strategies",
+  "course": "Economics 201 — Game Theory",
+  "icon": "🎲",
+  "color": "#3498DB",
+  "intro": {
+    "text": "Welcome to the fascinating world of mixed strategies in game theory! In this guide, we'll explore how players can optimize their decisions when outcomes are uncertain. You'll learn how to calculate expected payoffs and understand the strategic interplay between opponents. Let's dive into the art of strategic thinking!",
+    "highlights": [
+      {
+        "label": "Expected Payoff",
+        "desc": "Learn how to calculate the average outcome of mixed strategies."
+      },
+      {
+        "label": "Probability Mix",
+        "desc": "Understand how to use probabilities to optimize decisions."
+      },
+      {
+        "label": "2x2 Game Shortcut",
+        "desc": "Discover a handy method for simplifying calculations in small games."
+      }
+    ]
+  },
+  "sections": [
+    {
+      "icon": "📊",
+      "title": "Expected Payoff (Weighing Your Chances)",
+      "tags": [
+        "expected payoff",
+        "mixed strategy",
+        "game theory",
+        "probability"
+      ],
+      "content": "In game theory, the expected payoff is the average result you can anticipate from a game, considering the probabilities of various outcomes. This concept helps players decide the best mix of strategies to employ.",
+      "subsections": [
+        {
+          "title": "Calculating Expected Payoff",
+          "content": "To find the expected payoff, you need to consider the probabilities of each outcome and the payoffs associated with them.",
+          "bullets": [
+            "Identify the payoff table with all possible outcomes.",
+            "Determine your strategy probabilities (p1, p2, ...), ensuring they sum to 1.",
+            "Consider your opponent's strategy probabilities (q1, q2, ...), also summing to 1.",
+            "Calculate the chance of each cell: your row probability times the opponent's column probability."
+          ]
+        }
+      ]
+    },
+    {
+      "icon": "🔄",
+      "title": "Two-Step Recipe (Strategic Mixing)",
+      "tags": [
+        "row averages",
+        "mixing strategies",
+        "game theory"
+      ],
+      "content": "To optimize your strategy, follow a two-step process that involves calculating row averages and mixing across your strategies.",
+      "subsections": [
+        {
+          "title": "Step 1: Row Averages",
+          "content": "Compute the average payoff for each row against the opponent's mix.",
+          "bullets": [
+            "For each row, multiply the payoff by the opponent's column probabilities.",
+            "Sum these products to get the RowPayoff for each row."
+          ]
+        },
+        {
+          "title": "Step 2: Mix Across Rows",
+          "content": "Combine the RowPayoffs using your strategy probabilities.",
+          "bullets": [
+            "Multiply each RowPayoff by your probability of playing that row.",
+            "Sum these products to get your overall expected payoff."
+          ]
+        }
+      ]
+    },
+    {
+      "icon": "✂️",
+      "title": "Handy 2x2 Shortcut (Simplifying Small Games)",
+      "tags": [
+        "2x2 game",
+        "shortcut",
+        "payoff calculation"
+      ],
+      "content": "For 2x2 games, there's a quick method to calculate expected payoffs without going through complex calculations.",
+      "subsections": [
+        {
+          "title": "Using the Shortcut",
+          "content": "Apply this formula when you have a simple 2x2 game setup.",
+          "bullets": [
+            "Assign probabilities p and (1-p) for your strategies, q and (1-q) for your opponent.",
+            "Use the formula: p·[q·a + (1-q)·b] + (1-p)·[q·c + (1-q)·d].",
+            "Ensure all probabilities are valid (≥0 and sum to 1)."
+          ]
+        }
+      ]
+    }
+  ],
+  "chatResponses": {
+    "expected payoff|average outcome|probability": "The expected payoff is like calculating the average result you can expect from a game, considering all possible outcomes and their probabilities. It's a way to make informed decisions in uncertain situations.",
+    "mixed strategy|probability mix|game theory": "A mixed strategy involves using probabilities to decide between different actions. It's about finding the right balance to maximize your expected payoff against an opponent's strategy.",
+    "row averages|mixing strategies|two-step": "The two-step process involves first calculating row averages against your opponent's mix, and then combining these averages using your own strategy probabilities to find the best overall strategy.",
+    "2x2 game|shortcut|simple game": "In a 2x2 game, you can use a shortcut formula to quickly calculate expected payoffs. This method simplifies the process by focusing on the key probabilities and payoffs.",
+    "sanity checks|probabilities|payoff range": "Sanity checks ensure your probabilities are valid and that your expected payoff lies within the range of possible outcomes. It's a way to verify your strategy calculations are sound."
+  },
+  "matchedQuestions": [
+    {
+      "id": "s1",
+      "number": 1,
+      "type": "multiple-choice",
+      "text": "If P(A) = 0.3 and P(B) = 0.4, and A and B are independent events, what is P(A and B)?",
+      "equation": null,
+      "options": [
+        {
+          "id": "a",
+          "text": "0.12"
+        },
+        {
+          "id": "b",
+          "text": "0.70"
+        },
+        {
+          "id": "c",
+          "text": "0.10"
+        },
+        {
+          "id": "d",
+          "text": "0.58"
+        }
+      ],
+      "correctAnswerId": "a"
+    },
+    {
+      "id": "s3",
+      "number": 3,
+      "type": "open-ended",
+      "text": "Explain the Central Limit Theorem and why it is important in statistics.",
+      "equation": null,
+      "modelAnswer": "The Central Limit Theorem states that when you take sufficiently large random samples from any population, the distribution of sample means will be approximately normally distributed, regardless of the original population's distribution. This is important because it allows us to use normal distribution properties to make inferences about population parameters, even when the population is not normally distributed. It forms the foundation for hypothesis testing and confidence intervals.",
+      "keyTerms": [
+        "sample means",
+        "normally distributed",
+        "large samples",
+        "any population",
+        "inferences",
+        "hypothesis testing",
+        "confidence intervals"
+      ]
+    },
+    {
+      "id": "s6",
+      "number": 6,
+      "type": "open-ended",
+      "text": "What is the difference between correlation and causation? Give an example of a correlation that does not imply causation.",
+      "equation": null,
+      "modelAnswer": "Correlation describes a statistical relationship between two variables where they tend to move together, while causation means one variable directly causes changes in another. Correlation does not imply causation because two variables can be related due to a third confounding variable or pure coincidence. For example, ice cream sales and drowning deaths are correlated because both increase in summer, but ice cream does not cause drowning - the confounding variable is hot weather.",
+      "keyTerms": [
+        "statistical relationship",
+        "directly causes",
+        "confounding variable",
+        "coincidence",
+        "third variable",
+        "move together"
+      ]
+    },
+    {
+      "id": "e4",
+      "number": 4,
+      "type": "open-ended",
+      "text": "Explain what happens to consumer surplus when the government imposes a price ceiling below the equilibrium price.",
+      "equation": null,
+      "modelAnswer": "When a price ceiling is set below equilibrium, there is a shortage as quantity demanded exceeds quantity supplied. Consumer surplus changes in two ways: some consumers benefit from lower prices, but overall consumer surplus may decrease because fewer units are available. Some consumers who would have bought at the higher price can no longer purchase the good due to shortages.",
+      "keyTerms": [
+        "shortage",
+        "quantity demanded",
+        "quantity supplied",
+        "lower price",
+        "fewer units",
+        "cannot purchase"
+      ]
+    }
+  ],
+  "questionCount": 4,
+  "paperId": "stats_201"
+}

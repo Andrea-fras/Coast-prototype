@@ -1,0 +1,235 @@
+{
+  "id": "personalized_learning_microdose",
+  "title": "Personalized Learning Micro-doses: Tailoring Education to You",
+  "course": "Human-Computer Interaction",
+  "icon": "🎓",
+  "color": "#3498DB",
+  "intro": {
+    "text": "Welcome to the world of personalized learning! This guide explores how small, tailored educational content can transform your learning experience. Discover how personalization enhances usability, making learning more relevant, efficient, and engaging.",
+    "highlights": [
+      {
+        "label": "Core Functionality",
+        "desc": "How micro-doses work and interact with users"
+      },
+      {
+        "label": "Personalization",
+        "desc": "Adapting content to user preferences"
+      },
+      {
+        "label": "Usability Enhancements",
+        "desc": "Improving relevance, efficiency, and engagement"
+      }
+    ]
+  },
+  "sections": [
+    {
+      "icon": "🔍",
+      "title": "Core Functionality (Bite-Sized Learning)",
+      "tags": [
+        "micro-dose",
+        "learning",
+        "functionality",
+        "user interaction"
+      ],
+      "content": "Imagine learning in small, digestible bites. The 'Personalized Daily Learning Micro-dose Suggester' offers just that. It provides users with tiny pieces of educational content, making learning a daily habit.",
+      "subsections": [
+        {
+          "title": "User Actions",
+          "content": "Users engage with the system through a series of actions:",
+          "bullets": [
+            "Request/Receive Content: Open the interface to get a new micro-dose.",
+            "Consume Content: Engage with the content, like a fun fact or new word.",
+            "Interact/Feedback: Provide feedback to tailor future content."
+          ]
+        }
+      ]
+    },
+    {
+      "icon": "🧠",
+      "title": "Personalization (Learning Tailored to You)",
+      "tags": [
+        "personalization",
+        "user model",
+        "adaptive learning"
+      ],
+      "content": "Personalization adapts learning content to fit your unique preferences and interactions. This makes each learning experience more relevant and engaging.",
+      "subsections": [
+        {
+          "title": "User Model",
+          "content": "The system tracks user characteristics to personalize content.",
+          "bullets": [
+            "Tracks interests and interactions.",
+            "Updates after each interaction.",
+            "Uses explicit and implicit data."
+          ]
+        },
+        {
+          "title": "Adaptation",
+          "content": "Content is selected based on your preferences, ensuring relevance.",
+          "bullets": [
+            "Delivers content related to your interests.",
+            "Links new content to what you've learned."
+          ]
+        }
+      ]
+    },
+    {
+      "icon": "⚙️",
+      "title": "Usability Enhancements (Making Learning Effortless)",
+      "tags": [
+        "usability",
+        "relevance",
+        "efficiency",
+        "engagement"
+      ],
+      "content": "Personalization enhances usability by making content more relevant, efficient, and engaging. This keeps users motivated and reduces effort.",
+      "subsections": [
+        {
+          "title": "Relevance of Content",
+          "content": "Personalization ensures content matches your interests.",
+          "bullets": [
+            "Tracks user preferences to deliver pertinent content.",
+            "Increases perceived value of learning."
+          ]
+        },
+        {
+          "title": "Efficiency",
+          "content": "Reduces time spent searching for valuable content.",
+          "bullets": [
+            "Delivers relevant content directly.",
+            "Minimizes effort in finding interesting material."
+          ]
+        },
+        {
+          "title": "User Engagement",
+          "content": "Keeps users interested and motivated.",
+          "bullets": [
+            "Fosters a sense of progress and discovery.",
+            "Encourages regular interaction."
+          ]
+        }
+      ]
+    }
+  ],
+  "chatResponses": {
+    "micro-dose|learning|content": "Micro-doses are small, easily digestible pieces of learning content designed to make education a daily habit. How do you think this could fit into your routine?",
+    "personalization|user model|preferences": "Personalization tailors content to your interests and interactions. What kind of content do you find most engaging?",
+    "usability|relevance|efficiency": "Usability enhancements make learning more relevant and efficient. How important is it for you to find content that matches your interests quickly?",
+    "engagement|motivation|interaction": "Engagement is key to sustained learning. What keeps you motivated to continue learning?",
+    "adaptation|content selection|learning": "Adaptation ensures the content you receive is relevant and engaging. How would you like your learning content to be adapted?"
+  },
+  "matchedQuestions": [
+    {
+      "id": "e1",
+      "number": 1,
+      "type": "multiple-choice",
+      "text": "What happens to demand when the price of a substitute good increases?",
+      "equation": null,
+      "options": [
+        {
+          "id": "a",
+          "text": "Demand decreases"
+        },
+        {
+          "id": "b",
+          "text": "Demand increases"
+        },
+        {
+          "id": "c",
+          "text": "Demand stays the same"
+        },
+        {
+          "id": "d",
+          "text": "Supply increases"
+        }
+      ],
+      "correctAnswerId": "b"
+    },
+    {
+      "id": "e2",
+      "number": 2,
+      "type": "multiple-choice",
+      "text": "Calculate the price elasticity of demand if quantity demanded falls from 100 to 80 units when price rises from $10 to $12.",
+      "equation": "E_d = \\frac{\\%\\Delta Q}{\\%\\Delta P}",
+      "options": [
+        {
+          "id": "a",
+          "text": "-1.0"
+        },
+        {
+          "id": "b",
+          "text": "-0.5"
+        },
+        {
+          "id": "c",
+          "text": "-2.0"
+        },
+        {
+          "id": "d",
+          "text": "-1.5"
+        }
+      ],
+      "correctAnswerId": "a"
+    },
+    {
+      "id": "e4",
+      "number": 4,
+      "type": "open-ended",
+      "text": "Explain what happens to consumer surplus when the government imposes a price ceiling below the equilibrium price.",
+      "equation": null,
+      "modelAnswer": "When a price ceiling is set below equilibrium, there is a shortage as quantity demanded exceeds quantity supplied. Consumer surplus changes in two ways: some consumers benefit from lower prices, but overall consumer surplus may decrease because fewer units are available. Some consumers who would have bought at the higher price can no longer purchase the good due to shortages.",
+      "keyTerms": [
+        "shortage",
+        "quantity demanded",
+        "quantity supplied",
+        "lower price",
+        "fewer units",
+        "cannot purchase"
+      ]
+    },
+    {
+      "id": "e5",
+      "number": 5,
+      "type": "multiple-choice",
+      "text": "If the cross-price elasticity between goods A and B is positive, the goods are:",
+      "equation": null,
+      "options": [
+        {
+          "id": "a",
+          "text": "Complements"
+        },
+        {
+          "id": "b",
+          "text": "Substitutes"
+        },
+        {
+          "id": "c",
+          "text": "Unrelated"
+        },
+        {
+          "id": "d",
+          "text": "Inferior goods"
+        }
+      ],
+      "correctAnswerId": "b"
+    },
+    {
+      "id": "e6",
+      "number": 6,
+      "type": "open-ended",
+      "text": "Describe the concept of opportunity cost and provide an example.",
+      "equation": null,
+      "modelAnswer": "Opportunity cost is the value of the next best alternative that must be given up when making a choice. It represents the benefits you could have received by taking an alternative action. For example, if you choose to spend $1000 on a vacation instead of investing it, the opportunity cost is the potential returns you would have earned from that investment.",
+      "keyTerms": [
+        "next best alternative",
+        "given up",
+        "choice",
+        "benefits",
+        "alternative action",
+        "foregone"
+      ]
+    }
+  ],
+  "questionCount": 5,
+  "paperId": "econ_101"
+}

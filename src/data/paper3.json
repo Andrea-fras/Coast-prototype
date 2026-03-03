@@ -1,0 +1,81 @@
+{
+  "id": "stats_201",
+  "title": "Statistics 201",
+  "description": "Probability and Statistical Inference",
+  "questions": [
+    {
+      "id": "s1",
+      "number": 1,
+      "type": "multiple-choice",
+      "text": "If P(A) = 0.3 and P(B) = 0.4, and A and B are independent events, what is P(A and B)?",
+      "equation": null,
+      "options": [
+        { "id": "a", "text": "0.12" },
+        { "id": "b", "text": "0.70" },
+        { "id": "c", "text": "0.10" },
+        { "id": "d", "text": "0.58" }
+      ],
+      "correctAnswerId": "a"
+    },
+    {
+      "id": "s2",
+      "number": 2,
+      "type": "multiple-choice",
+      "text": "The standard deviation of a sample is 4 and the sample size is 16. What is the standard error of the mean?",
+      "equation": "SE = \\frac{\\sigma}{\\sqrt{n}}",
+      "options": [
+        { "id": "a", "text": "0.25" },
+        { "id": "b", "text": "1" },
+        { "id": "c", "text": "4" },
+        { "id": "d", "text": "0.5" }
+      ],
+      "correctAnswerId": "b"
+    },
+    {
+      "id": "s3",
+      "number": 3,
+      "type": "open-ended",
+      "text": "Explain the Central Limit Theorem and why it is important in statistics.",
+      "equation": null,
+      "modelAnswer": "The Central Limit Theorem states that when you take sufficiently large random samples from any population, the distribution of sample means will be approximately normally distributed, regardless of the original population's distribution. This is important because it allows us to use normal distribution properties to make inferences about population parameters, even when the population is not normally distributed. It forms the foundation for hypothesis testing and confidence intervals.",
+      "keyTerms": ["sample means", "normally distributed", "large samples", "any population", "inferences", "hypothesis testing", "confidence intervals"]
+    },
+    {
+      "id": "s4",
+      "number": 4,
+      "type": "multiple-choice",
+      "text": "A 95% confidence interval means:",
+      "equation": null,
+      "options": [
+        { "id": "a", "text": "There is a 95% probability the true parameter is in this specific interval" },
+        { "id": "b", "text": "95% of the data falls within this interval" },
+        { "id": "c", "text": "If we repeated sampling many times, 95% of intervals would contain the true parameter" },
+        { "id": "d", "text": "The sample mean is 95% accurate" }
+      ],
+      "correctAnswerId": "c"
+    },
+    {
+      "id": "s5",
+      "number": 5,
+      "type": "multiple-choice",
+      "text": "In hypothesis testing, a Type I error occurs when:",
+      "equation": null,
+      "options": [
+        { "id": "a", "text": "We fail to reject a false null hypothesis" },
+        { "id": "b", "text": "We reject a true null hypothesis" },
+        { "id": "c", "text": "The sample size is too small" },
+        { "id": "d", "text": "The p-value equals alpha" }
+      ],
+      "correctAnswerId": "b"
+    },
+    {
+      "id": "s6",
+      "number": 6,
+      "type": "open-ended",
+      "text": "What is the difference between correlation and causation? Give an example of a correlation that does not imply causation.",
+      "equation": null,
+      "modelAnswer": "Correlation describes a statistical relationship between two variables where they tend to move together, while causation means one variable directly causes changes in another. Correlation does not imply causation because two variables can be related due to a third confounding variable or pure coincidence. For example, ice cream sales and drowning deaths are correlated because both increase in summer, but ice cream does not cause drowning - the confounding variable is hot weather.",
+      "keyTerms": ["statistical relationship", "directly causes", "confounding variable", "coincidence", "third variable", "move together"]
+    }
+  ]
+}

@@ -1,0 +1,146 @@
+{
+  "id": "cooperative_games",
+  "title": "Cooperative Games: Sharing the Pie",
+  "course": "Game Theory 201 — Cooperative Games",
+  "icon": "🤝",
+  "color": "#3498DB",
+  "intro": {
+    "text": "Welcome to the world of cooperative games, where players join forces to achieve better outcomes. In this guide, you'll explore how groups can fairly distribute rewards and manage dissatisfaction. Get ready to dive into concepts like the Core, Shapley Value, and Nucleolus, which help us understand how to share the pie in the most equitable way.",
+    "highlights": [
+      {
+        "label": "The Core",
+        "desc": "Ensuring fair distribution among players."
+      },
+      {
+        "label": "Shapley Value",
+        "desc": "Calculating each player's contribution."
+      },
+      {
+        "label": "Nucleolus",
+        "desc": "Minimizing dissatisfaction in allocations."
+      }
+    ]
+  },
+  "sections": [
+    {
+      "icon": "🔍",
+      "title": "Definitions (Setting the Stage)",
+      "tags": [
+        "players",
+        "coalitions",
+        "characteristic function",
+        "transferable utility"
+      ],
+      "content": "Before diving into cooperative games, it's essential to understand the basic elements. Players form coalitions to achieve common goals, and the characteristic function assigns a value to each coalition. In transferable utility games, this value is a single number that can be split among players.",
+      "subsections": [
+        {
+          "title": "Key Concepts",
+          "content": "Understanding the foundation of cooperative games.",
+          "bullets": [
+            "Players: Individuals or entities involved in the game.",
+            "Coalitions: Subsets of players working together.",
+            "Characteristic Function: Assigns a value to each coalition.",
+            "Transferable Utility: The coalition's value can be divided among players."
+          ]
+        }
+      ]
+    },
+    {
+      "icon": "⚖️",
+      "title": "The Core (Fairness in Distribution)",
+      "tags": [
+        "core",
+        "efficiency",
+        "coalitional rationality",
+        "imputation"
+      ],
+      "content": "The Core is a concept that ensures fair distribution of the total value among players. It requires that the total allocation is efficient and that no coalition can achieve a better outcome on its own.",
+      "subsections": [
+        {
+          "title": "Conditions for the Core",
+          "content": "What makes an allocation part of the Core?",
+          "bullets": [
+            "Efficiency: The sum of allocations equals the total value.",
+            "Coalitional Rationality: No coalition can improve its outcome by breaking away."
+          ]
+        }
+      ]
+    },
+    {
+      "icon": "🔢",
+      "title": "The Shapley Value (Measuring Contribution)",
+      "tags": [
+        "shapley value",
+        "marginal contribution",
+        "axioms"
+      ],
+      "content": "The Shapley Value provides a way to fairly distribute the total value based on each player's contribution. It considers all possible orders of players joining the coalition.",
+      "subsections": [
+        {
+          "title": "Axioms of the Shapley Value",
+          "content": "Principles guiding the calculation of the Shapley Value.",
+          "bullets": [
+            "Efficiency: Total value is distributed.",
+            "Symmetry: Identical players receive equal shares.",
+            "Dummy: Players with no contribution get nothing.",
+            "Additivity: Respects the sum of games."
+          ]
+        }
+      ]
+    },
+    {
+      "icon": "📉",
+      "title": "The Nucleolus (Minimizing Dissatisfaction)",
+      "tags": [
+        "nucleolus",
+        "excess",
+        "coalition dissatisfaction"
+      ],
+      "content": "The Nucleolus aims to minimize the maximum dissatisfaction among coalitions. It finds an allocation that balances complaints in the fairest way possible.",
+      "subsections": [
+        {
+          "title": "Understanding the Nucleolus",
+          "content": "How does the Nucleolus ensure fairness?",
+          "bullets": [
+            "Excess: Measures dissatisfaction of a coalition.",
+            "Unique Solution: Always provides a unique allocation.",
+            "Core Membership: Lies within the Core if it's non-empty."
+          ]
+        }
+      ]
+    },
+    {
+      "icon": "🔧",
+      "title": "Applications (Real-World Relevance)",
+      "tags": [
+        "applications",
+        "cost allocation",
+        "bankruptcy",
+        "voting power",
+        "network design"
+      ],
+      "content": "Cooperative game theory isn't just theoretical; it has practical applications in various fields. From cost allocation in joint projects to determining voting power, these concepts help solve real-world problems.",
+      "subsections": [
+        {
+          "title": "Where It's Used",
+          "content": "Examples of cooperative game theory in action.",
+          "bullets": [
+            "Cost Allocation: Fairly dividing costs in joint projects.",
+            "Bankruptcy Problems: Distributing assets among creditors.",
+            "Voting Power Indices: Assessing influence in decision-making bodies.",
+            "Network Design: Sharing costs in network infrastructure."
+          ]
+        }
+      ]
+    }
+  ],
+  "chatResponses": {
+    "core|efficiency|coalitional rationality": "The Core ensures that the total value is distributed efficiently and no coalition can improve its outcome by acting alone. Can you think of a situation where this might be important?",
+    "shapley value|contribution|axioms": "The Shapley Value calculates each player's contribution by considering all possible orders of joining the coalition. Why do you think considering all orders is important?",
+    "nucleolus|dissatisfaction|excess": "The Nucleolus minimizes the maximum dissatisfaction among coalitions by balancing complaints. How might this be useful in a real-world scenario?",
+    "applications|cost allocation|voting power": "Cooperative game theory is applied in cost allocation, voting power, and more. Can you think of other areas where these concepts might be useful?",
+    "players|coalitions|characteristic function": "Players form coalitions to achieve common goals, and the characteristic function assigns a value to each coalition. How do you think this value is determined?"
+  },
+  "matchedQuestions": [],
+  "questionCount": 0
+}

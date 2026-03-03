@@ -1,0 +1,172 @@
+.navbar {
+  display: flex;
+  justify-content: flex-start; /* Align items to start */
+  align-items: center;
+  padding: 0 0 2rem 0; /* Removed top padding */
+  margin: 0 8rem; /* Margin from edges */
+  background-color: #F7F7F7;
+  font-family: 'Nunito', system-ui, -apple-system, sans-serif;
+  gap: 6rem; /* Increased space between Logo and Links */
+}
+
+.navbar-left .logo {
+  display: flex;
+  align-items: center;
+  /* Removed font properties since it's an image now */
+}
+
+.logo-img {
+  height: 130px; /* Bigger logo */
+  width: auto;
+  display: block;
+}
+
+/* Removed old text-based logo styles */
+.logo-c-container, .bird-icon, .logo-text {
+  display: none;
+}
+
+.navbar-center {
+  display: flex;
+  gap: 2rem;
+  align-self: flex-end; /* Align to bottom of the container (logo height) */
+  margin-bottom: 15px; /* Adjust this to align perfectly with logo baseline/bottom */
+  margin-top: 0;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  text-decoration: none;
+  color: #999;
+  font-weight: 700;
+  font-size: 1.9rem; /* Bigger text */
+  transition: color 0.2s;
+}
+
+.nav-link.active {
+  color: #333;
+  font-weight: 800;
+}
+
+.nav-link:hover {
+  color: #555;
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  margin-left: auto; /* Push to right */
+}
+
+.stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  background-color: white;
+  padding: 0.8rem 1.7rem; /* Bigger pills */
+  border-radius: 9999px;
+  border: 1px solid #e0e0e0;
+  font-weight: 700;
+  color: #333;
+  font-size: 1.5rem; /* Bigger text */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.profile-area {
+  position: relative;
+  cursor: pointer;
+}
+
+.profile-icon {
+  cursor: pointer;
+  color: #333;
+}
+
+.user-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  padding: 0.75rem;
+  min-width: 180px;
+  z-index: 100;
+  animation: menuFadeIn 0.15s ease-out;
+}
+
+@keyframes menuFadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.user-menu-name {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #333;
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 0.4rem;
+}
+
+.user-menu-logout {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.85rem;
+  color: #888;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.user-menu-logout:hover {
+  background: #fef2f2;
+  color: #e74c3c;
+}
+
+/* ── Dark Mode ─────────────────────────────── */
+[data-theme="dark"] .navbar {
+  background-color: #0d1127;
+}
+[data-theme="dark"] .nav-link {
+  color: #6668;
+}
+[data-theme="dark"] .nav-link.active {
+  color: #ddd;
+}
+[data-theme="dark"] .nav-link:hover {
+  color: #aaa;
+}
+[data-theme="dark"] .stat-pill {
+  background-color: #1a1f3d;
+  border-color: #2a2f52;
+  color: #ddd;
+}
+[data-theme="dark"] .profile-icon {
+  color: #ddd;
+}
+[data-theme="dark"] .user-menu {
+  background: #1a1f3d;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+[data-theme="dark"] .user-menu-name {
+  color: #ddd;
+  border-bottom-color: #2a2f52;
+}
+[data-theme="dark"] .user-menu-logout {
+  color: #8888aa;
+}
+[data-theme="dark"] .user-menu-logout:hover {
+  background: rgba(231, 76, 60, 0.1);
+  color: #EF5350;
+}

@@ -1,0 +1,372 @@
+.dashboard-zoom {
+  zoom: 0.67;
+  display: flex;
+  flex-direction: column;
+  min-height: calc((100vh / 0.67) + 200px);
+}
+
+.main-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 2rem;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.content-wrapper {
+  display: flex;
+  width: 100%;
+  max-width: 1400px;
+  gap: 3rem;
+  align-items: stretch;
+}
+
+/* Left Column */
+.left-column {
+  flex: 1;
+  min-width: 689px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Right Panel (stacked cards — styled in Dashboard.css) */
+
+/* Middle Row */
+.middle-row {
+  display: flex;
+  gap: 1.5rem;
+  flex-grow: 0.3;
+  min-height: 0;
+}
+
+/* Card Base — Glassmorphism */
+.card {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  color: #555;
+  border-radius: 24px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  position: relative;
+}
+
+h3 {
+  margin-top: 0;
+  margin-bottom: 0.8rem;
+  font-size: 2rem;
+  color: #666;
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 800;
+  width: 100%;
+  text-align: left;
+}
+
+/* --- Top Card: Daily Quest --- */
+.top-card {
+  flex-grow: 0;
+  min-height: 100px;
+  justify-content: flex-start;
+}
+
+.quest-sub {
+  color: #999;
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700; 
+}
+
+.quest-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.progress-container {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.06);
+  height: 28px;
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-bar {
+  background: linear-gradient(to right, #FFB503, #FF7B02);
+  height: 100%;
+  border-radius: 14px;
+}
+
+.progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.9rem;
+  color: #888;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800; 
+}
+
+.claim-btn {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  padding: 0.6rem 1.5rem;
+  border-radius: 24px;
+  color: #666;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700; 
+  font-size: 1rem;
+}
+
+/* --- Middle Row Cards --- */
+.middle-row .card {
+  flex: 1;
+}
+
+/* Streak Card */
+.streak-card {
+  justify-content: space-between;
+}
+
+.streak-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 0.8rem;
+  margin-top: 0.5rem;
+}
+
+.streak-num {
+  font-size: 5rem;
+  line-height: 1;
+  background: linear-gradient(to right, #FFB503, #FF7B02);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: #FF7B02;
+  font-family: 'Nunito Sans', sans-serif; 
+  font-weight: 800; 
+}
+
+.streak-label {
+  color: #aaa;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700; 
+  font-size: 1.2rem;
+}
+
+.week-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.5rem;
+  width: 100%;
+}
+
+.day-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 1rem;
+  color: #999;
+  gap: 8px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700; 
+}
+
+.fish-icon {
+  color: #556;
+  width: 24px;
+  height: 24px;
+}
+.fish-icon.filled {
+  fill: #556;
+}
+.fish-icon.bone {
+  stroke-dasharray: 2 2;
+}
+.fish-icon.faint {
+  opacity: 0.2;
+}
+
+
+/* Bird Window Card */
+.customization-card {
+  flex: 1;
+  justify-content: flex-start;
+}
+
+.coming-soon-badge {
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  background: linear-gradient(to right, #FFB503, #FF7B02);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.bird-window-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* --- Bottom Card: Continue Course --- */
+.bottom-card {
+  flex-grow: 1.2;
+  min-height: 150px;
+  justify-content: flex-start;
+}
+
+.courses-grid {
+  display: flex;
+  gap: 3rem;
+  justify-content: center;
+  align-items: center;
+  margin: 2rem 0;
+  flex: 1;
+  width: 100%;
+}
+
+.course-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 130px;
+  text-align: center;
+}
+
+.course-item span {
+  font-size: 1rem;
+  color: #aaa;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700; 
+}
+
+.course-item.active span {
+  font-weight: 700; 
+  color: #666;
+}
+
+.book-cover-img {
+  width: 90px;
+  height: 120px;
+  border-radius: 8px;
+  object-fit: contain;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  background: none;
+  opacity: 0.75;
+}
+
+.book-cover-img.active-book {
+  transform: scale(1.15);
+  opacity: 1;
+}
+
+.jump-btn-container {
+  display: flex;
+  justify-content: center;
+  margin-top: auto;
+  width: 100%;
+}
+
+.jump-btn {
+  background: linear-gradient(to right, #FFB503, #FF7B02);
+  border: none;
+  padding: 1rem 3rem;
+  border-radius: 30px;
+  color: white;
+  font-size: 1.1rem;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  font-family: 'Nunito Sans', sans-serif; 
+  font-weight: 800; 
+  box-shadow: 0 4px 10px rgba(255, 123, 2, 0.3);
+}
+
+/* ═══════════════════════════════════════════════
+   DARK MODE – Dashboard (left column + body bg)
+   ═══════════════════════════════════════════════ */
+[data-theme="dark"] body {
+  background-color: #0d1127;
+  background-image: url('./assets/wavebgglass-dark.svg');
+  background-size: cover;
+  background-position: center 10vh;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+[data-theme="dark"] .card {
+  background: rgba(12, 12, 30, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #ddd;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+[data-theme="dark"] h3 {
+  color: #e0e0e0;
+}
+
+[data-theme="dark"] .quest-sub {
+  color: #8888aa;
+}
+[data-theme="dark"] .progress-container {
+  background: rgba(255, 255, 255, 0.06);
+}
+[data-theme="dark"] .progress-text {
+  color: #bbb;
+}
+[data-theme="dark"] .claim-btn {
+  background: rgba(30, 34, 62, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #ddd;
+}
+
+[data-theme="dark"] .streak-label {
+  color: #8888aa;
+}
+[data-theme="dark"] .day-col {
+  color: #8888aa;
+}
+[data-theme="dark"] .fish-icon {
+  color: #8888aa;
+}
+[data-theme="dark"] .fish-icon.filled {
+  color: #FFB503;
+  fill: #FFB503;
+}
+[data-theme="dark"] .fish-icon.faint {
+  opacity: 0.15;
+}
+
+[data-theme="dark"] .coming-soon-badge {
+  opacity: 0.8;
+}
+
+[data-theme="dark"] .course-item span {
+  color: #8888aa;
+}
+[data-theme="dark"] .course-item.active span {
+  color: #ddd;
+}
+[data-theme="dark"] .book-cover-img {
+  opacity: 0.6;
+}
+[data-theme="dark"] .book-cover-img.active-book {
+  opacity: 0.95;
+}

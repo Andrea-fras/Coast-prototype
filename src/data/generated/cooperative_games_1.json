@@ -1,0 +1,145 @@
+{
+  "id": "cooperative_games",
+  "title": "Cooperative Games: Sharing the Pie",
+  "course": "Game Theory 201 — Cooperative Games",
+  "icon": "🤝",
+  "color": "#FF5733",
+  "intro": {
+    "text": "Welcome to the world of cooperative games, where players work together to achieve the best outcomes. In this guide, you'll explore how groups can fairly divide rewards, ensuring everyone gets their due share. Let's dive into the core concepts of cooperation, fairness, and balance.",
+    "highlights": [
+      {
+        "label": "The Core",
+        "desc": "Ensuring fair distribution among players"
+      },
+      {
+        "label": "Shapley Value",
+        "desc": "Calculating fair shares based on contributions"
+      },
+      {
+        "label": "Nucleolus",
+        "desc": "Minimizing dissatisfaction in coalitions"
+      }
+    ]
+  },
+  "sections": [
+    {
+      "icon": "🔍",
+      "title": "Definitions (Setting the Stage)",
+      "tags": [
+        "players",
+        "coalitions",
+        "characteristic function",
+        "transferable utility"
+      ],
+      "content": "In cooperative games, players form groups called coalitions to achieve better outcomes. Each coalition has a value, representing the total benefit they can achieve together. The goal is to distribute this value fairly among the players.",
+      "subsections": [
+        {
+          "title": "Key Terms",
+          "content": "Understanding the basic terms is crucial for grasping cooperative games.",
+          "bullets": [
+            "Players: Individuals participating in the game.",
+            "Coalitions: Subsets of players working together.",
+            "Characteristic Function: Assigns a value to each coalition.",
+            "Transferable Utility: The total value is a single number to be split among players."
+          ]
+        }
+      ]
+    },
+    {
+      "icon": "⚖️",
+      "title": "The Core (Fair Distribution)",
+      "tags": [
+        "core",
+        "efficiency",
+        "coalitional rationality",
+        "imputation"
+      ],
+      "content": "The core is a concept ensuring that the distribution of rewards among players is both efficient and rational. It represents all possible ways to allocate the total value without leaving any player worse off.",
+      "subsections": [
+        {
+          "title": "Conditions for the Core",
+          "content": "For a distribution to be in the core, it must satisfy:",
+          "bullets": [
+            "Efficiency: The total allocated value equals the coalition's value.",
+            "Coalitional Rationality: No subset of players should receive less than their coalition's value."
+          ]
+        }
+      ]
+    },
+    {
+      "icon": "🔢",
+      "title": "The Shapley Value (Fair Shares)",
+      "tags": [
+        "shapley value",
+        "marginal contribution",
+        "axioms"
+      ],
+      "content": "The Shapley Value provides a method to fairly distribute the total value based on each player's contribution. It ensures that players are rewarded according to their impact on the coalition's success.",
+      "subsections": [
+        {
+          "title": "Axioms of the Shapley Value",
+          "content": "The Shapley Value is built on four key principles:",
+          "bullets": [
+            "Efficiency: Total value is distributed.",
+            "Symmetry: Identical players receive equal shares.",
+            "Dummy: Players with no contribution receive nothing.",
+            "Additivity: Respects the sum of games."
+          ]
+        }
+      ]
+    },
+    {
+      "icon": "📉",
+      "title": "The Nucleolus (Balancing Dissatisfaction)",
+      "tags": [
+        "nucleolus",
+        "excess",
+        "coalition dissatisfaction"
+      ],
+      "content": "The nucleolus aims to minimize dissatisfaction by ensuring the least unhappy coalition is as satisfied as possible. It's a unique solution that lies within the core if the core is non-empty.",
+      "subsections": [
+        {
+          "title": "Understanding Excess",
+          "content": "Excess measures how much a coalition feels shortchanged.",
+          "bullets": [
+            "Defined as the difference between the coalition's value and the allocated value.",
+            "The nucleolus minimizes the maximum excess."
+          ]
+        }
+      ]
+    },
+    {
+      "icon": "🔧",
+      "title": "Applications (Real-World Uses)",
+      "tags": [
+        "applications",
+        "cost allocation",
+        "bankruptcy",
+        "voting power",
+        "network design"
+      ],
+      "content": "Cooperative game theory isn't just theoretical; it has practical applications in various fields. From dividing costs in joint projects to determining voting power, these concepts help solve real-world problems.",
+      "subsections": [
+        {
+          "title": "Common Applications",
+          "content": "Here are some areas where cooperative games are applied:",
+          "bullets": [
+            "Cost allocation in joint projects.",
+            "Resolving bankruptcy issues.",
+            "Calculating voting power indices.",
+            "Designing efficient networks and cost-sharing."
+          ]
+        }
+      ]
+    }
+  ],
+  "chatResponses": {
+    "core|efficiency|coalitional rationality": "The core ensures that the distribution of rewards is both efficient and rational, meaning all players are satisfied with their share.",
+    "shapley value|fair shares|marginal contribution": "The Shapley Value calculates each player's fair share based on their contribution, ensuring everyone gets what they deserve.",
+    "nucleolus|dissatisfaction|minimizing excess": "The nucleolus minimizes dissatisfaction by balancing the excess, ensuring the least unhappy coalition is as content as possible.",
+    "applications|real-world|cost allocation": "Cooperative games are used in real-world scenarios like cost allocation, bankruptcy resolution, and voting power calculations.",
+    "players|coalitions|characteristic function": "In cooperative games, players form coalitions, and the characteristic function assigns a value to each coalition, representing their potential benefit."
+  },
+  "matchedQuestions": [],
+  "questionCount": 0
+}

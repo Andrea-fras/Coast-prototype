@@ -1,0 +1,415 @@
+[
+  {
+    "id": "nb_qm",
+    "title": "Quantitative Methods: The Intuitive Guide",
+    "course": "Quantitative Methods 3",
+    "icon": "📐",
+    "color": "#4FA3D1",
+    "questionCount": 7,
+    "paperId": "qm3_2024",
+    "intro": {
+      "text": "Mathematics isn't about memorizing formulas — it's about understanding patterns. In Quantitative Methods, every tool we learn is designed to answer a specific type of question. Let's build your intuition from the ground up.",
+      "highlights": [
+        { "label": "Problem Solving", "desc": "Translating word problems into equations" },
+        { "label": "Calculus", "desc": "Understanding rates of change" }
+      ]
+    },
+    "sections": [
+      {
+        "icon": "⚖️",
+        "title": "Linear Equations (The Balance Scale)",
+        "content": "Every equation is a balance scale. Whatever you do to one side, you must do to the other. The goal? Isolate your unknown variable by peeling away layers of operations.",
+        "subsections": [
+          {
+            "title": "The 'Undo' Strategy",
+            "content": "When you see 2x + 5 = 15, think of the operations applied to x: first multiply by 2, then add 5. To solve, undo them in reverse order. Subtract 5 first (2x = 10), then divide by 2 (x = 5). Always work backwards from the outermost operation.",
+            "bullets": [
+              "Step 1: Identify all operations applied to the variable",
+              "Step 2: Undo them in reverse order (PEMDAS backwards)",
+              "Step 3: Verify by plugging your answer back in: 2(5) + 5 = 15 ✓"
+            ]
+          }
+        ]
+      },
+      {
+        "icon": "📈",
+        "title": "Derivatives (The Rate Detective)",
+        "content": "A derivative answers one question: 'How fast is this changing right now?' If distance is how far you've gone, velocity is the derivative — how fast you're going at any instant.",
+        "subsections": [
+          {
+            "title": "The Power Rule: Drop and Reduce",
+            "content": "For any term x^n, the derivative is n·x^(n-1). Think of it as 'drop the exponent down as a multiplier, then reduce the exponent by 1.' So x² becomes 2x, x³ becomes 3x², and x⁴ becomes 4x³. Simple pattern, powerful tool.",
+            "bullets": [
+              "x² → 2x (rate of change of area is proportional to side length)",
+              "x³ → 3x² (rate of change of volume is proportional to surface area)",
+              "Constants disappear: the derivative of 5 is 0 (constants don't change!)"
+            ]
+          },
+          {
+            "title": "Why It Matters",
+            "content": "In economics, derivatives tell you marginal cost, marginal revenue, and marginal utility. When you hear 'marginal' in economics, think 'derivative' — it's the rate of change of one more unit."
+          }
+        ]
+      },
+      {
+        "icon": "🔢",
+        "title": "Percentages & Proportions",
+        "content": "Percentages are just fractions of 100. '15% of 200' means 15/100 × 200. The trick is breaking complex percentages into friendly chunks.",
+        "subsections": [
+          {
+            "title": "The Chunking Method",
+            "content": "Instead of reaching for a calculator, decompose: 15% = 10% + 5%. 10% of 200 is 20 (just move the decimal). 5% is half of 10%, so it's 10. Therefore 15% of 200 = 20 + 10 = 30. This works for any percentage — break it into 10%, 5%, and 1% building blocks."
+          }
+        ]
+      },
+      {
+        "icon": "⚡",
+        "title": "Market Equilibrium",
+        "content": "Equilibrium is the point where supply equals demand — the price at which buyers and sellers agree. Mathematically, we set the demand function equal to the supply function and solve.",
+        "subsections": [
+          {
+            "title": "Solving With Square Roots",
+            "content": "When you see D(P) = 90 - √P and S(P) = 2√P, the trick is recognizing √P as your variable. Set them equal: 90 - √P = 2√P. Add √P to both sides: 90 = 3√P. Divide: √P = 30. Square both sides: P = 900.",
+            "bullets": [
+              "Treat √P as a single variable — call it 'u' if that helps",
+              "90 = 3u → u = 30 → √P = 30 → P = 900",
+              "Always verify: D(900) = 90 - 30 = 60, S(900) = 2(30) = 60 ✓"
+            ]
+          }
+        ]
+      }
+    ],
+    "chatResponses": {
+      "equation|linear|solve": "To solve any linear equation, remember: undo operations in reverse order. If x has been multiplied then added to, subtract first, then divide. It's like unwrapping a gift — peel off layers from the outside in!",
+      "derivative|calculus|rate": "Derivatives measure instantaneous rate of change. The power rule (drop and reduce) handles polynomials: x^n becomes n·x^(n-1). In economics, 'marginal' literally means 'the derivative of.'",
+      "percent|proportion": "Break percentages into chunks of 10% and 5%. 10% is easy — move the decimal point. 5% is half of that. 23%? That's 2×10% + 3×1%. Mental math made easy!",
+      "equilibrium|supply|demand": "Set supply = demand and solve. The key insight: equilibrium is where no one wants to change their behavior. Below equilibrium price → shortage. Above → surplus."
+    }
+  },
+  {
+    "id": "nb_micro",
+    "title": "Microeconomics: How Markets Think",
+    "course": "Economics 101 — Microeconomics",
+    "icon": "💰",
+    "color": "#2ECC71",
+    "questionCount": 6,
+    "paperId": "econ_101",
+    "intro": {
+      "text": "Microeconomics is the study of choices — how individuals, firms, and markets allocate scarce resources. Every concept boils down to one question: 'What happens when incentives change?'",
+      "highlights": [
+        { "label": "Supply & Demand", "desc": "The engine of every market" },
+        { "label": "Elasticity", "desc": "How sensitive are people to price changes?" }
+      ]
+    },
+    "sections": [
+      {
+        "icon": "📊",
+        "title": "Supply, Demand & Substitutes",
+        "content": "The demand curve shows how much consumers want at each price. When something changes — like the price of a competitor — the entire curve shifts.",
+        "subsections": [
+          {
+            "title": "Substitute Goods: The Seesaw",
+            "content": "Coke and Pepsi are substitutes. If Pepsi's price rises, people switch to Coke — demand for Coke increases. The rule: when price of a substitute rises, demand for your good rises. They move in the same direction.",
+            "bullets": [
+              "Substitutes: positive cross-price elasticity (price of B ↑, demand for A ↑)",
+              "Complements: negative cross-price elasticity (price of B ↑, demand for A ↓)",
+              "Example: Cars and petrol are complements. If car prices rise, petrol demand drops."
+            ]
+          }
+        ]
+      },
+      {
+        "icon": "📏",
+        "title": "Price Elasticity of Demand",
+        "content": "Elasticity measures responsiveness. If a 20% price increase causes a 20% drop in quantity demanded, elasticity is -1.0 (unit elastic). The formula: %ΔQ / %ΔP.",
+        "subsections": [
+          {
+            "title": "Calculating Step by Step",
+            "content": "Price rises from $10 to $12 = 20% increase. Quantity falls from 100 to 80 = 20% decrease. Elasticity = -20%/20% = -1.0. The negative sign tells us it's the law of demand — price up, quantity down.",
+            "bullets": [
+              "|E| > 1: Elastic — consumers are very price sensitive (luxury goods)",
+              "|E| < 1: Inelastic — consumers buy regardless (necessities, addictions)",
+              "|E| = 1: Unit elastic — revenue stays constant when price changes"
+            ]
+          }
+        ]
+      },
+      {
+        "icon": "🏪",
+        "title": "Perfect Competition & Marginal Revenue",
+        "content": "In a perfectly competitive market, no single firm can influence the price. You're a 'price taker' — you sell at whatever the market decides.",
+        "subsections": [
+          {
+            "title": "Why MR = Price",
+            "content": "Since you can sell as many units as you want at the market price, each additional unit earns you exactly that price. Marginal revenue (the revenue from one more unit) equals the price. This is unique to perfect competition — in monopoly, MR < Price because selling more requires lowering the price for everyone."
+          }
+        ]
+      },
+      {
+        "icon": "🚧",
+        "title": "Price Ceilings & Government Intervention",
+        "content": "A price ceiling is a maximum price the government allows. If set below equilibrium, it creates a shortage — more people want to buy than sellers are willing to sell.",
+        "subsections": [
+          {
+            "title": "The Consumer Surplus Paradox",
+            "content": "You'd think lower prices always help consumers. But a price ceiling below equilibrium means fewer units are produced. Some lucky consumers pay less, but many can't buy at all. The net effect on consumer surplus depends on which effect dominates — the benefit of lower prices vs. the cost of reduced availability."
+          },
+          {
+            "title": "Opportunity Cost: The Hidden Price",
+            "content": "Every choice has a cost you don't see — the next best thing you gave up. If you spend Saturday studying instead of working a $100 shift, the opportunity cost of studying is $100. Understanding this transforms how you evaluate every decision."
+          }
+        ]
+      }
+    ],
+    "chatResponses": {
+      "demand|supply|substitute|complement": "Remember: substitutes move together (price of A rises → demand for B rises), complements move opposite (price of A rises → demand for B falls). Think about what you'd switch TO vs what you use TOGETHER.",
+      "elasticity|elastic|inelastic": "Elasticity = %ΔQ / %ΔP. If |E| > 1, consumers are sensitive (elastic). If |E| < 1, they're not (inelastic). Necessities tend to be inelastic, luxuries elastic. It's all about alternatives!",
+      "competition|marginal|revenue|MR": "In perfect competition, MR = Price because you can sell unlimited units at the market price. The moment a firm has pricing power (monopoly), MR < P because selling more means lowering price for everyone.",
+      "ceiling|floor|surplus|shortage": "Price ceiling below equilibrium → shortage (Qd > Qs). Price floor above equilibrium → surplus (Qs > Qd). Both create deadweight loss — the market can't reach its efficient outcome.",
+      "opportunity|cost": "Opportunity cost is the value of what you sacrifice. It's not just money — it's time, energy, other options. The best economists think in opportunity costs, not just dollar costs."
+    }
+  },
+  {
+    "id": "nb_stats",
+    "title": "Statistics: Making Sense of Uncertainty",
+    "course": "Statistics 201",
+    "icon": "📉",
+    "color": "#9B59B6",
+    "questionCount": 6,
+    "paperId": "stats_201",
+    "intro": {
+      "text": "Statistics is the science of learning from data under uncertainty. We can never be 100% sure of anything based on a sample — but we can quantify exactly how uncertain we are. That's the power of statistics.",
+      "highlights": [
+        { "label": "Probability", "desc": "The mathematics of uncertainty" },
+        { "label": "Inference", "desc": "Drawing conclusions from samples" }
+      ]
+    },
+    "sections": [
+      {
+        "icon": "🎲",
+        "title": "Probability Foundations",
+        "content": "Probability is just a number between 0 and 1 that measures how likely something is. Two events are independent if knowing one tells you nothing about the other.",
+        "subsections": [
+          {
+            "title": "The Multiplication Rule for Independent Events",
+            "content": "If A and B are independent, P(A and B) = P(A) × P(B). Think of it as: each event doesn't care about the other. Flipping two coins: P(heads AND heads) = 0.5 × 0.5 = 0.25. With P(A) = 0.3 and P(B) = 0.4: P(both) = 0.12.",
+            "bullets": [
+              "Independent: P(A and B) = P(A) × P(B)",
+              "NOT independent: P(A and B) = P(A) × P(B|A) — need conditional probability",
+              "Key test: Does knowing A happened change the probability of B? If no → independent"
+            ]
+          }
+        ]
+      },
+      {
+        "icon": "📊",
+        "title": "Standard Error & Sampling",
+        "content": "When you take a sample mean, it won't exactly equal the population mean. The standard error tells you how much sample means typically 'wiggle' around the true mean.",
+        "subsections": [
+          {
+            "title": "The Formula: SE = σ/√n",
+            "content": "Standard error equals the standard deviation divided by the square root of sample size. With SD = 4 and n = 16: SE = 4/√16 = 4/4 = 1. The beautiful insight: doubling your sample size doesn't halve the error — you need 4x the sample to halve the error (because of the square root).",
+            "bullets": [
+              "Larger sample → smaller SE → more precise estimates",
+              "To halve SE: quadruple n (because √4 = 2)",
+              "SE is the standard deviation of the sampling distribution"
+            ]
+          }
+        ]
+      },
+      {
+        "icon": "🔔",
+        "title": "The Central Limit Theorem",
+        "content": "This is arguably the most important theorem in statistics. No matter how weird your population distribution looks, sample means will be approximately normal if your sample is large enough.",
+        "subsections": [
+          {
+            "title": "Why This Changes Everything",
+            "content": "Without the CLT, we'd need to know the exact shape of every population before doing any analysis. The CLT says: 'Don't worry about it. Take a big enough sample, and the sampling distribution of means will be normal.' This is why z-tests and t-tests work — they rely on this normality."
+          }
+        ]
+      },
+      {
+        "icon": "📏",
+        "title": "Confidence Intervals & Hypothesis Testing",
+        "content": "A confidence interval gives a range of plausible values for a parameter. A hypothesis test asks: 'Is this result surprising enough to reject our assumption?'",
+        "subsections": [
+          {
+            "title": "The 95% CI Trap",
+            "content": "A 95% confidence interval does NOT mean 'there's a 95% chance the true value is in this interval.' The true value is fixed — it's either in there or it's not. The 95% refers to the method: if we repeated this process many times, 95% of our intervals would capture the true value. It's about the procedure, not this particular interval."
+          },
+          {
+            "title": "Type I vs Type II Errors",
+            "content": "Type I: You reject something that's actually true (false alarm). Type II: You fail to catch something that's actually false (missed detection). Memory trick: Type I is like convicting an innocent person. Type II is like letting a guilty person go free. We control Type I with our significance level (α = 0.05 means 5% chance of Type I error)."
+          }
+        ]
+      },
+      {
+        "icon": "🔗",
+        "title": "Correlation vs. Causation",
+        "content": "Correlation means two variables move together. Causation means one actually causes the other. The gap between these two concepts is where most bad statistics happens.",
+        "subsections": [
+          {
+            "title": "The Ice Cream Fallacy",
+            "content": "Ice cream sales and drowning deaths are correlated — both rise in summer. But ice cream doesn't cause drowning! The confounding variable is hot weather, which increases both independently. To prove causation, you need controlled experiments or very careful observational study designs.",
+            "bullets": [
+              "Correlation ≠ Causation (there might be a confounding variable)",
+              "Causation → Correlation (if A causes B, they will be correlated)",
+              "Randomized controlled trials are the gold standard for establishing causation"
+            ]
+          }
+        ]
+      }
+    ],
+    "chatResponses": {
+      "probability|independent|event": "For independent events, just multiply: P(A and B) = P(A) × P(B). The key question: does knowing one event happened change the probability of the other? If not, they're independent.",
+      "standard error|SE|sample": "SE = σ/√n tells you how much sample means vary. Bigger samples → smaller SE → more precise. The square root means you get diminishing returns: 4x the sample only halves the error.",
+      "CLT|central limit|normal": "The CLT is statistics' superpower: sample means are approximately normal regardless of the population shape, as long as n is large enough (usually n ≥ 30). This is why most statistical tests work!",
+      "confidence|interval|CI": "A 95% CI means: if we repeated sampling forever, 95% of intervals would contain the true value. It's NOT a probability statement about this specific interval. The true parameter is fixed — it's either in there or it isn't.",
+      "type I|type II|error|hypothesis": "Type I = false positive (rejecting truth). Type II = false negative (missing a real effect). We set α to control Type I risk. Increasing sample size reduces Type II risk (more power).",
+      "correlation|causation": "Correlation means 'moves together.' Causation means 'one drives the other.' Always ask: could there be a third variable causing both? If yes, you can't claim causation from correlation alone."
+    }
+  },
+  {
+    "id": "nb_cellbio",
+    "title": "Cell Structure & Function: The Complete Guide",
+    "course": "Biology",
+    "icon": "🧬",
+    "color": "#43A047",
+    "questionCount": 10,
+    "paperId": "cell_bio_101",
+    "intro": {
+      "text": "Every living organism is built from cells — the fundamental units of life. Understanding cell structure means understanding how life works at its most basic level. From the membrane that guards entry, to the nucleus that stores the blueprint, every organelle has a purpose.",
+      "highlights": [
+        { "label": "Organelles", "desc": "The specialized structures inside every cell" },
+        { "label": "Membrane Transport", "desc": "How cells control what enters and exits" }
+      ]
+    },
+    "sections": [
+      {
+        "icon": "🔬",
+        "title": "The Plasma Membrane (The Gatekeeper)",
+        "content": "The plasma membrane is a selectively permeable barrier made of a phospholipid bilayer. The fluid mosaic model describes it as a dynamic structure with proteins floating in a sea of lipids — not a rigid wall, but a flexible, moving boundary.",
+        "subsections": [
+          {
+            "title": "Phospholipid Bilayer",
+            "content": "Each phospholipid has a hydrophilic (water-loving) head and two hydrophobic (water-fearing) tails. They spontaneously arrange into a bilayer: heads face outward toward water, tails face inward away from it. This creates a barrier that water-soluble molecules cannot easily cross.",
+            "bullets": [
+              "Hydrophilic heads face the aqueous environment on both sides",
+              "Hydrophobic tails form the interior — blocking ions and polar molecules",
+              "Cholesterol molecules are interspersed to regulate fluidity"
+            ]
+          },
+          {
+            "title": "Membrane Proteins",
+            "content": "Integral proteins span the membrane (channels, carriers, receptors). Peripheral proteins sit on the surface (enzymes, structural anchors). Together they handle transport, signalling, and cell recognition — the membrane isn't just a wall, it's a communication hub."
+          }
+        ]
+      },
+      {
+        "icon": "🧫",
+        "title": "The Nucleus (Mission Control)",
+        "content": "The nucleus houses the cell's DNA — the complete instruction manual. Surrounded by a double membrane (nuclear envelope) with pores, it controls gene expression and coordinates cell activities like growth, metabolism, and reproduction.",
+        "subsections": [
+          {
+            "title": "Chromatin, Chromosomes & the Nucleolus",
+            "content": "DNA exists as loose chromatin during normal activity, allowing genes to be read. Before division, it condenses into visible chromosomes for accurate splitting. The nucleolus inside the nucleus manufactures ribosomal RNA (rRNA) — the building blocks of ribosomes.",
+            "bullets": [
+              "Chromatin = unwound DNA + histone proteins (active state)",
+              "Chromosomes = tightly coiled chromatin (division state)",
+              "Nucleolus = ribosome factory, produces rRNA subunits"
+            ]
+          }
+        ]
+      },
+      {
+        "icon": "⚡",
+        "title": "Mitochondria (The Powerhouse)",
+        "content": "Mitochondria generate most of the cell's ATP through aerobic respiration. They have a double membrane — the inner membrane is folded into cristae to maximise surface area for the electron transport chain. More active cells (like muscle) have more mitochondria.",
+        "subsections": [
+          {
+            "title": "Aerobic Respiration Overview",
+            "content": "Glucose is broken down in three stages: glycolysis (cytoplasm), the Krebs cycle (matrix), and oxidative phosphorylation (inner membrane). The net yield is approximately 36–38 ATP per glucose molecule — far more efficient than anaerobic pathways.",
+            "bullets": [
+              "Glycolysis: glucose → 2 pyruvate (2 ATP, cytoplasm)",
+              "Krebs Cycle: pyruvate → CO₂ + electron carriers (matrix)",
+              "Electron Transport Chain: NADH/FADH₂ → ~34 ATP (cristae)"
+            ]
+          },
+          {
+            "title": "Endosymbiotic Theory",
+            "content": "Mitochondria have their own circular DNA and double membrane — evidence they were once free-living bacteria engulfed by an ancestral cell. This endosymbiotic origin explains why they replicate independently within the cell."
+          }
+        ]
+      },
+      {
+        "icon": "📦",
+        "title": "Endomembrane System (The Production Line)",
+        "content": "The ER, Golgi apparatus, and lysosomes work as a connected production and delivery network. Proteins are made at the rough ER, refined at the Golgi, and either exported or sent to lysosomes for cleanup duty.",
+        "subsections": [
+          {
+            "title": "Rough ER vs Smooth ER",
+            "content": "Rough ER is studded with ribosomes — it synthesises and folds proteins destined for export or the membrane. Smooth ER lacks ribosomes and handles lipid synthesis, detoxification, and calcium storage. Think: rough = proteins, smooth = lipids.",
+            "bullets": [
+              "Rough ER: protein synthesis, folding, quality control",
+              "Smooth ER: lipid synthesis, drug detoxification, Ca²⁺ storage",
+              "Transitional ER: where transport vesicles bud off toward the Golgi"
+            ]
+          },
+          {
+            "title": "Golgi Apparatus & Lysosomes",
+            "content": "The Golgi modifies, sorts, and packages proteins into vesicles — like a post office labelling and routing parcels. Lysosomes are membrane-bound sacs of digestive enzymes (pH ~5) that break down waste, worn-out organelles, and engulfed pathogens via autophagy and phagocytosis."
+          }
+        ]
+      },
+      {
+        "icon": "🚚",
+        "title": "Membrane Transport (Getting In and Out)",
+        "content": "Cells must move substances across the plasma membrane. Passive transport (diffusion, osmosis, facilitated diffusion) requires no energy and follows concentration gradients. Active transport uses ATP to move substances against the gradient.",
+        "subsections": [
+          {
+            "title": "Passive Transport",
+            "content": "Simple diffusion: small nonpolar molecules (O₂, CO₂) pass directly through the bilayer. Facilitated diffusion: larger or polar molecules use channel or carrier proteins but still follow the gradient — no ATP needed. Osmosis is the special case of water diffusing through a selectively permeable membrane.",
+            "bullets": [
+              "Hypotonic solution → water enters cell → cell swells (lysis risk)",
+              "Hypertonic solution → water leaves cell → cell shrinks (crenation/plasmolysis)",
+              "Isotonic solution → no net water movement → cell stays stable"
+            ]
+          },
+          {
+            "title": "Active Transport & Bulk Transport",
+            "content": "The sodium-potassium pump (Na⁺/K⁺-ATPase) moves 3 Na⁺ out and 2 K⁺ in per ATP — maintaining the electrochemical gradient essential for nerve impulses. Endocytosis brings large particles in (phagocytosis, pinocytosis), exocytosis pushes them out. These processes move material the membrane can't handle passively."
+          }
+        ]
+      },
+      {
+        "icon": "🏗️",
+        "title": "Cytoskeleton & Cell Division",
+        "content": "The cytoskeleton is a network of protein filaments providing structural support, enabling movement, and organising organelles. During cell division, it forms the mitotic spindle that separates chromosomes.",
+        "subsections": [
+          {
+            "title": "The Three Filament Types",
+            "content": "Microfilaments (actin, 7nm) handle cell shape and movement. Intermediate filaments (keratin, 10nm) provide tensile strength. Microtubules (tubulin, 25nm) form tracks for intracellular transport and the mitotic spindle. Together, they're the cell's skeleton, muscles, and railway.",
+            "bullets": [
+              "Microfilaments: muscle contraction, cytokinesis, cell crawling",
+              "Intermediate filaments: resist mechanical stress, anchor organelles",
+              "Microtubules: chromosome separation, vesicle transport, cilia/flagella"
+            ]
+          },
+          {
+            "title": "Plant vs Animal Cells",
+            "content": "Plant cells have a rigid cell wall (cellulose), large central vacuole (turgor pressure), and chloroplasts (photosynthesis) — all absent in animal cells. Animal cells have centrioles for spindle formation and lack a cell wall, making them more flexible but more vulnerable to osmotic lysis."
+          }
+        ]
+      }
+    ],
+    "chatResponses": {
+      "mitochondria|ATP|powerhouse|respiration": "Mitochondria produce ~36-38 ATP per glucose via aerobic respiration. The inner membrane folds (cristae) maximise surface area for the electron transport chain. More active cells = more mitochondria.",
+      "membrane|phospholipid|fluid mosaic": "The plasma membrane is a phospholipid bilayer with proteins floating in it (fluid mosaic model). Hydrophilic heads face water, hydrophobic tails face inward. It's selectively permeable — controls what enters and exits.",
+      "osmosis|hypertonic|hypotonic|isotonic": "Osmosis = water moving through a selectively permeable membrane from high to low water potential. Hypotonic → cell swells. Hypertonic → cell shrinks. Isotonic → no net movement.",
+      "ER|endoplasmic reticulum|Golgi|lysosome": "Rough ER makes proteins, Smooth ER makes lipids. The Golgi sorts and packages them. Lysosomes break down waste. Think of it as a factory → post office → recycling centre pipeline.",
+      "nucleus|DNA|chromatin|chromosome": "The nucleus stores DNA as chromatin (loose, active) or chromosomes (condensed, for division). The nuclear envelope has pores for mRNA export. The nucleolus inside makes ribosomal RNA.",
+      "active transport|passive|diffusion": "Passive transport follows the gradient (no energy): diffusion, osmosis, facilitated diffusion. Active transport goes against the gradient using ATP — like the Na⁺/K⁺ pump moving 3 Na⁺ out and 2 K⁺ in per ATP.",
+      "plant|animal|cell wall|chloroplast|vacuole": "Plant cells have: cell wall (cellulose), large central vacuole (turgor), chloroplasts (photosynthesis). Animal cells have: centrioles, no cell wall. Both have: membrane, nucleus, mitochondria, ER, Golgi, ribosomes."
+    }
+  }
+]

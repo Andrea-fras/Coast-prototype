@@ -1,0 +1,390 @@
+/* ═══════════════════════════════════════════════
+   Dashboard – Right Panel Stacked Cards
+   (Left column uses existing App.css classes)
+   ═══════════════════════════════════════════════ */
+
+.right-panel-stack {
+  flex: 1.3;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  align-self: stretch;
+  min-width: 0;
+}
+
+/* ── Theme Toggle ──────────────────────────── */
+.dash-theme-toggle {
+  position: fixed;
+  bottom: 2rem;
+  left: 2rem;
+  z-index: 100;
+  background: #F7F7F7;
+  border: none;
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  color: #555;
+  transition: background 0.2s, color 0.2s;
+}
+.dash-theme-toggle:hover {
+  background: #eee;
+}
+[data-theme="dark"] .dash-theme-toggle {
+  background: #1a1f3d;
+  color: #FFB503;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+[data-theme="dark"] .dash-theme-toggle:hover {
+  background: #252a4d;
+}
+
+/* ── Base right-panel card — Glassmorphism ── */
+.rp-card {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 24px;
+  padding: 1.5rem 1.75rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+}
+.rp-card h3 {
+  margin: 0 0 0.75rem;
+  font-size: 2rem;
+  color: #666;
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 800;
+}
+
+/* ═══════════════════════════════════════════════
+   QUICK STATS – 2x2 grid
+   ═══════════════════════════════════════════════ */
+.rp-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+.rp-stat-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.025);
+}
+.rp-stat-icon {
+  color: #FFB503;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: rgba(255, 181, 3, 0.1);
+  flex-shrink: 0;
+}
+.rp-stat-text {
+  display: flex;
+  flex-direction: column;
+}
+.rp-stat-val {
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 800;
+  font-size: 1.35rem;
+  color: #555;
+  line-height: 1.15;
+}
+.rp-stat-lbl {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #999;
+}
+
+/* ═══════════════════════════════════════════════
+   RECENT SESSIONS
+   ═══════════════════════════════════════════════ */
+.rp-sessions {
+  flex: 1;
+  min-height: 0;
+}
+.rp-sess-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.rp-sess-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.7rem;
+  border-radius: 14px;
+  transition: background 0.15s;
+}
+.rp-sess-item:hover {
+  background: rgba(0, 0, 0, 0.025);
+}
+.rp-sess-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.rp-sess-name {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rp-sess-time {
+  font-size: 0.75rem;
+  color: #bbb;
+  font-weight: 600;
+}
+.rp-sess-score {
+  font-size: 0.85rem;
+  font-weight: 800;
+  padding: 0.25rem 0.65rem;
+  border-radius: 10px;
+  font-family: 'Nunito', sans-serif;
+  flex-shrink: 0;
+}
+.rp-sess-score.good {
+  background: rgba(67, 160, 71, 0.1);
+  color: #43A047;
+}
+.rp-sess-score.weak {
+  background: rgba(239, 83, 80, 0.1);
+  color: #EF5350;
+}
+
+/* ═══════════════════════════════════════════════
+   YOUR NOTEBOOKS
+   ═══════════════════════════════════════════════ */
+.rp-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.rp-card-head h3 {
+  margin-bottom: 0;
+}
+.rp-see-all {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  background: none;
+  border: none;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #FFB503;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.rp-see-all:hover { opacity: 0.7; }
+
+.rp-nb-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.75rem;
+}
+.rp-nb-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.rp-nb-item:hover {
+  background: rgba(0, 0, 0, 0.025);
+}
+.rp-nb-cover {
+  width: 32px;
+  height: 42px;
+  object-fit: contain;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.rp-nb-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.rp-nb-title {
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rp-nb-course {
+  font-size: 0.75rem;
+  color: #aaa;
+  font-weight: 600;
+}
+.rp-chevron {
+  color: #ccc;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════
+   ASK PEDRO
+   ═══════════════════════════════════════════════ */
+.rp-pedro {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.85rem;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+  padding: 1.15rem 1.5rem;
+}
+.rp-pedro:hover {
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.12);
+}
+.rp-pedro-img {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+}
+.rp-pedro-text {
+  flex: 1;
+}
+.rp-pedro-name {
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: #666;
+  display: block;
+}
+.rp-pedro-text p {
+  font-size: 0.8rem;
+  color: #999;
+  font-weight: 600;
+  margin: 0.1rem 0 0;
+}
+
+/* ═══════════════════════════════════════════════
+   EMPTY STATE
+   ═══════════════════════════════════════════════ */
+.rp-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 1.5rem;
+  color: #ccc;
+  cursor: pointer;
+  border-radius: 14px;
+  border: 2px dashed rgba(0, 0, 0, 0.06);
+  margin-top: 0.25rem;
+  transition: border-color 0.2s, color 0.2s;
+}
+.rp-empty:hover {
+  border-color: rgba(255, 181, 3, 0.3);
+  color: #FFB503;
+}
+.rp-empty p {
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin: 0;
+  text-align: center;
+}
+
+/* ═══════════════════════════════════════════════
+   DARK MODE – Right Panel
+   ═══════════════════════════════════════════════ */
+[data-theme="dark"] .rp-card {
+  background: rgba(12, 12, 30, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+[data-theme="dark"] .rp-card h3 {
+  color: #e0e0e0;
+}
+
+/* Stats */
+[data-theme="dark"] .rp-stat-chip {
+  background: rgba(255, 255, 255, 0.05);
+}
+[data-theme="dark"] .rp-stat-icon {
+  background: rgba(255, 181, 3, 0.15);
+}
+[data-theme="dark"] .rp-stat-val {
+  color: #eee;
+}
+[data-theme="dark"] .rp-stat-lbl {
+  color: #8888aa;
+}
+
+/* Sessions */
+[data-theme="dark"] .rp-sess-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+[data-theme="dark"] .rp-sess-name {
+  color: #ddd;
+}
+[data-theme="dark"] .rp-sess-time {
+  color: #6668;
+}
+[data-theme="dark"] .rp-sess-score.good {
+  background: rgba(67, 160, 71, 0.15);
+  color: #66BB6A;
+}
+[data-theme="dark"] .rp-sess-score.weak {
+  background: rgba(239, 83, 80, 0.15);
+  color: #EF5350;
+}
+
+/* Notebooks */
+[data-theme="dark"] .rp-nb-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+[data-theme="dark"] .rp-nb-title {
+  color: #ddd;
+}
+[data-theme="dark"] .rp-nb-course {
+  color: #7778;
+}
+[data-theme="dark"] .rp-chevron {
+  color: #555;
+}
+
+/* Pedro */
+[data-theme="dark"] .rp-pedro:hover {
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.4);
+}
+[data-theme="dark"] .rp-pedro-name {
+  color: #eee;
+}
+[data-theme="dark"] .rp-pedro-text p {
+  color: #7778;
+}
+
+/* Empty */
+[data-theme="dark"] .rp-empty {
+  color: #555;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+[data-theme="dark"] .rp-empty:hover {
+  border-color: rgba(255, 181, 3, 0.3);
+  color: #FFB503;
+}

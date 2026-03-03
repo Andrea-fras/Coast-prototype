@@ -1,0 +1,196 @@
+{
+  "id": "dsa_guide",
+  "title": "The \"Why\" Behind the Code: A Tutor's Guide to DSA",
+  "course": "Data Structures and Algorithms",
+  "tags": ["algorithms", "data-structures", "big-o", "sorting", "searching", "stacks", "queues", "trees"],
+  "sections": [
+    {
+      "icon": "🔍",
+      "title": "Algorithm Analysis (The \"Cost\" of Code)",
+      "content": "When we analyze code, we aren't counting seconds. We are counting steps. We want to know how the number of steps grows as our input (n) gets bigger.",
+      "subsections": [
+        {
+          "title": "The \"Big-Oh\" Notation (O)",
+          "content": "Think of Big-Oh as the \"Worst Case Scenario.\" It tells you the maximum amount of work an algorithm might have to do.",
+          "bullets": [
+            "$O(1)$ (Constant): Instant. It takes the same time regardless of $n$. (e.g., Accessing an array index).",
+            "$O(n)$ (Linear): Fair. If you double the data, you double the time. (e.g., Reading a book page by page).",
+            "$O(n^2)$ (Quadratic): Expensive. If you double the data, the time quadruples. (e.g., Comparing every person in a room with every other person).",
+            "$O(\\log n)$ (Logarithmic): Excellent. Even as $n$ gets huge, growth is tiny. (e.g., Binary search — cutting a phone book in half each time)."
+          ]
+        },
+        {
+          "title": "Why Does This Matter?",
+          "content": "Imagine you have 1 million records. An $O(n^2)$ algorithm would take 1,000,000,000,000 steps. An $O(n \\log n)$ algorithm? About 20,000,000 steps. That's the difference between waiting hours and waiting milliseconds. This is why we care about Big-Oh — it tells us if our code will scale."
+        }
+      ]
+    },
+    {
+      "icon": "📦",
+      "title": "Arrays and Linked Lists (How We Store Things)",
+      "content": "Think of these as two different ways to organize a bookshelf.",
+      "subsections": [
+        {
+          "title": "Arrays: The Numbered Bookshelf",
+          "content": "Every slot has a number. Want book #7? Go straight there — $O(1)$. But inserting a new book in the middle? You have to shift everything over — $O(n)$. Arrays are great when you know what position you want, but painful when the collection changes a lot.",
+          "bullets": [
+            "Access by index: $O(1)$ — instant",
+            "Search (unsorted): $O(n)$ — check every element",
+            "Insert at end: $O(1)$ — just add it",
+            "Insert in middle: $O(n)$ — shift everything"
+          ]
+        },
+        {
+          "title": "Linked Lists: The Chain",
+          "content": "Each item knows where the next one is, like a treasure hunt where each clue leads to the next. Inserting or removing is fast (just redirect the pointers), but finding the 50th element? You have to follow the chain from the start. There's no shortcut.",
+          "bullets": [
+            "Access by index: $O(n)$ — follow the chain",
+            "Insert at beginning: $O(1)$ — just update the head pointer",
+            "Delete a known node: $O(1)$ — redirect pointers",
+            "Search: $O(n)$ — walk the chain"
+          ]
+        },
+        {
+          "title": "So Which Should You Use?",
+          "content": "Ask yourself: \"Am I doing a lot of reading by position, or a lot of inserting and removing?\" Arrays for the former, linked lists for the latter. There's no universally \"better\" structure — only better choices for specific problems."
+        }
+      ]
+    },
+    {
+      "icon": "🥞",
+      "title": "Stacks & Queues (Rules of Access)",
+      "content": "These are simple but powerful. They restrict how you interact with data, and those restrictions are their strength.",
+      "subsections": [
+        {
+          "title": "Stacks: Last In, First Out (LIFO)",
+          "content": "Think of a stack of plates. You can only add to the top and remove from the top. The last plate you put on is the first one you take off. Why is this useful? Undo operations, browser back buttons, and function calls all use stacks. When your code calls a function, it gets \"pushed\" onto the call stack. When it returns, it gets \"popped\" off."
+        },
+        {
+          "title": "Queues: First In, First Out (FIFO)",
+          "content": "Think of a queue at a coffee shop. First person in line gets served first. Queues are used everywhere: print jobs, web server requests, breadth-first search. The fairness principle — whoever arrived first gets processed first."
+        }
+      ]
+    },
+    {
+      "icon": "🌳",
+      "title": "Trees & Binary Search Trees",
+      "content": "A tree is a hierarchical structure. Think of a family tree or a company org chart. Each node can have children, but only one parent (except the root, which has none).",
+      "subsections": [
+        {
+          "title": "Binary Search Trees (BST)",
+          "content": "A BST follows one simple rule: left children are smaller, right children are larger. This means searching is like playing \"higher or lower\" — you eliminate half the tree at each step. On average, search, insert, and delete are all $O(\\log n)$.",
+          "bullets": [
+            "Search: $O(\\log n)$ average — cut the search space in half each step",
+            "Insert: $O(\\log n)$ average — find the right spot, then add",
+            "Worst case: $O(n)$ — if the tree becomes a straight line (unbalanced)"
+          ]
+        },
+        {
+          "title": "Why Trees Get Unbalanced",
+          "content": "If you insert sorted data into a BST (1, 2, 3, 4, 5...), each node only has a right child. Your \"tree\" becomes a linked list. This is why balanced trees (AVL, Red-Black) exist — they automatically restructure to stay efficient."
+        }
+      ]
+    },
+    {
+      "icon": "🔄",
+      "title": "Sorting Algorithms (Putting Things in Order)",
+      "content": "Sorting seems simple, but how you sort makes an enormous difference at scale.",
+      "subsections": [
+        {
+          "title": "The Simple Sorts",
+          "content": "Bubble Sort and Insertion Sort are easy to understand but run in $O(n^2)$. They're fine for tiny lists, but on a million items? Unusable. Insertion Sort does have one trick though — it's nearly $O(n)$ on already-sorted data. So it's useful as a finishing pass."
+        },
+        {
+          "title": "The Efficient Sorts",
+          "content": "Merge Sort and Quick Sort both achieve $O(n \\log n)$ on average. Merge Sort divides the array in half, sorts each half, then merges them back — it's stable and predictable. Quick Sort picks a \"pivot\" and partitions around it — it's fast in practice but $O(n^2)$ in the worst case if you pick bad pivots."
+        },
+        {
+          "title": "The Takeaway",
+          "content": "You don't need to memorize every sort. Understand: (1) Why $O(n \\log n)$ is the theoretical best for comparison sorts, (2) When simple sorts are acceptable, (3) The divide-and-conquer principle that makes merge/quick sort fast."
+        }
+      ]
+    }
+  ],
+  "matchedQuestions": [
+    {
+      "id": "dsa1",
+      "number": 1,
+      "type": "multiple-choice",
+      "text": "What is the time complexity of accessing an element by index in an array?",
+      "tags": ["arrays", "big-o"],
+      "equation": null,
+      "options": [
+        { "id": "a", "text": "O(1)" },
+        { "id": "b", "text": "O(n)" },
+        { "id": "c", "text": "O(log n)" },
+        { "id": "d", "text": "O(n²)" }
+      ],
+      "correctAnswerId": "a"
+    },
+    {
+      "id": "dsa2",
+      "number": 2,
+      "type": "multiple-choice",
+      "text": "Which data structure uses Last In, First Out (LIFO) ordering?",
+      "tags": ["stacks", "data-structures"],
+      "equation": null,
+      "options": [
+        { "id": "a", "text": "Queue" },
+        { "id": "b", "text": "Array" },
+        { "id": "c", "text": "Stack" },
+        { "id": "d", "text": "Linked List" }
+      ],
+      "correctAnswerId": "c"
+    },
+    {
+      "id": "dsa3",
+      "number": 3,
+      "type": "multiple-choice",
+      "text": "What is the average time complexity of search in a balanced Binary Search Tree?",
+      "tags": ["trees", "big-o"],
+      "equation": null,
+      "options": [
+        { "id": "a", "text": "O(n)" },
+        { "id": "b", "text": "O(1)" },
+        { "id": "c", "text": "O(n log n)" },
+        { "id": "d", "text": "O(log n)" }
+      ],
+      "correctAnswerId": "d"
+    },
+    {
+      "id": "dsa4",
+      "number": 4,
+      "type": "open-ended",
+      "text": "Explain why Quick Sort has a worst-case time complexity of O(n²) and describe how this can be avoided.",
+      "tags": ["sorting", "algorithms", "big-o"],
+      "equation": null,
+      "modelAnswer": "Quick Sort's worst case occurs when the pivot selection consistently picks the smallest or largest element, leading to highly unbalanced partitions. Instead of dividing the array roughly in half each time, one partition has n-1 elements and the other has 0. This results in n levels of recursion, each doing O(n) work. To avoid this, use randomized pivot selection, median-of-three pivoting, or switch to a different sort like Insertion Sort for small subarrays.",
+      "keyTerms": ["pivot", "unbalanced", "smallest or largest", "n-1 elements", "randomized", "median-of-three"]
+    },
+    {
+      "id": "dsa5",
+      "number": 5,
+      "type": "multiple-choice",
+      "text": "An algorithm processes a list of n items. Each time, it cuts the remaining list in half. What is its time complexity?",
+      "tags": ["big-o", "algorithms", "searching"],
+      "equation": null,
+      "options": [
+        { "id": "a", "text": "O(n)" },
+        { "id": "b", "text": "O(n²)" },
+        { "id": "c", "text": "O(log n)" },
+        { "id": "d", "text": "O(n log n)" }
+      ],
+      "correctAnswerId": "c"
+    },
+    {
+      "id": "dsa6",
+      "number": 6,
+      "type": "open-ended",
+      "text": "Explain the difference between an array and a linked list. When would you choose one over the other?",
+      "tags": ["arrays", "data-structures"],
+      "equation": null,
+      "modelAnswer": "Arrays store elements in contiguous memory locations, allowing O(1) random access by index, but insertions and deletions in the middle require shifting elements, taking O(n). Linked lists store elements in nodes connected by pointers, allowing O(1) insertion and deletion at known positions, but accessing an element by position requires traversing the list, taking O(n). Choose arrays when you need frequent random access and the size is relatively stable. Choose linked lists when you frequently insert or remove elements and don't need random access.",
+      "keyTerms": ["contiguous memory", "random access", "O(1) access", "pointers", "traversing", "insertion", "deletion", "shifting"]
+    }
+  ]
+}
