@@ -119,7 +119,7 @@ const generateRecommendations = (wrongAnswers, stats) => {
   return { recommendations, overallAdvice, weakTopics };
 };
 
-const API_URL = 'http://localhost:8000';
+import { API_URL } from '../../config';
 
 const SessionSummary = ({ 
   stats, 

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-const API_URL = 'http://localhost:8000';
+import { API_URL } from '../config';
 const TOKEN_KEY = 'coast_token';
 const USER_KEY = 'coast_user';
 

@@ -13,7 +13,18 @@ import { Play } from 'lucide-react';
 
 const VIZ_MAP = {};
 
-const API_URL = 'http://localhost:8000';
+const DEMO_VIZ = {
+  nb_qm: [
+    {
+      topic: "Fourier Series Approximation",
+      description: "Watch how adding sine waves of increasing frequency progressively builds a perfect square wave — demonstrating how any periodic function can be decomposed into simple harmonics.",
+      url: "/viz/fourier.gif",
+      filename: "fourier.gif",
+    },
+  ],
+};
+
+import { API_URL } from '../../config';
 
 // Map paper IDs to data (for built-in notebooks)
 const paperMap = {
@@ -61,6 +72,7 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadInstructions, setUploadInstructions] = useState('');
   const fileInputRef = useRef(null);
+  const [fileInputKey, setFileInputKey] = useState(0);
 
   // Search & sidebar state
   const [searchQuery, setSearchQuery] = useState('');
@@ -237,7 +249,8 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
         if (contentRef.current) {
           const clone = contentRef.current.cloneNode(true);
           clone.querySelectorAll('.nb-explain-btn').forEach(b => b.remove());
-          localStorage.setItem(savedKey, clone.innerHTML);
+          clone.querySelectorAll('img[src^="data:"]').forEach(img => img.setAttribute('src', ''));
+          try { localStorage.setItem(savedKey, clone.innerHTML); } catch {}
         }
       }, 500);
     }
@@ -324,7 +337,8 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
     const savedKey = `coast_nb_html_${uid}_${selectedNotebook.id}`;
     const clone = contentRef.current.cloneNode(true);
     clone.querySelectorAll('.nb-explain-btn').forEach(b => b.remove());
-    localStorage.setItem(savedKey, clone.innerHTML);
+    clone.querySelectorAll('img[src^="data:"]').forEach(img => img.setAttribute('src', ''));
+    try { localStorage.setItem(savedKey, clone.innerHTML); } catch {}
     setHasUnsavedChanges(false);
   };
 
@@ -872,6 +886,7 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
       setIsUploading(false);
       setShowUploadModal(false);
       abortControllerRef.current = null;
+      setFileInputKey(k => k + 1);
 
       openNotebook(notebook);
 
@@ -882,15 +897,14 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
       setUploadStage('');
       setUploadPercent(0);
       setIsUploading(false);
-    }
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      setFileInputKey(k => k + 1);
     }
   };
 
   const handleDeleteGenerated = async (nb, e) => {
     e.stopPropagation();
+    e.preventDefault();
+    e.nativeEvent?.stopImmediatePropagation?.();
     if (!token) return;
 
     let savedId = nb._saved_id;
@@ -898,26 +912,41 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
       const match = myNotebooks.find(n => n.id === nb.id && n._saved_id != null);
       if (match) savedId = match._saved_id;
     }
+    if (savedId == null && nb.id != null) {
+      const matchById = myNotebooks.find(n => String(n._saved_id) === String(nb.id));
+      if (matchById) savedId = matchById._saved_id;
+    }
 
     const slug = nb.id;
 
-    if (savedId == null) {
-      setMyNotebooks(prev => prev.filter(n => n.id !== slug));
-      localStorage.removeItem(`coast_nb_html_${uid}_${slug}`);
-      return;
+    // Optimistically remove from UI immediately
+    setMyNotebooks(prev => prev.filter(n => !(n._saved_id === savedId || (savedId == null && n.id === slug))));
+    localStorage.removeItem(`coast_nb_html_${uid}_${slug}`);
+
+    if (selectedNotebook && (selectedNotebook._saved_id === savedId || selectedNotebook.id === slug)) {
+      setSelectedNotebook(null);
     }
+
+    if (savedId == null) return;
 
     try {
       const res = await fetch(`${API_URL}/api/notebooks/${savedId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) return;
-      setMyNotebooks(prev => prev.filter(n => n._saved_id !== savedId));
-      setNotebooksRemaining(prev => prev !== null ? prev + 1 : null);
-      localStorage.removeItem(`coast_nb_html_${uid}_${slug}`);
+
+      // Re-sync with backend regardless of outcome
+      const refetch = await fetch(`${API_URL}/api/notebooks`, { headers: { Authorization: `Bearer ${token}` } });
+      if (refetch.ok) {
+        setMyNotebooks(await refetch.json());
+      }
+      if (res.ok) {
+        setNotebooksRemaining(prev => prev !== null ? prev + 1 : null);
+      }
     } catch (err) {
       console.error('[delete] error:', err);
+      const refetch = await fetch(`${API_URL}/api/notebooks`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => null);
+      if (refetch?.ok) setMyNotebooks(await refetch.json());
     }
   };
 
@@ -957,6 +986,7 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
               </div>
 
               <input
+                key={fileInputKey}
                 ref={fileInputRef}
                 type="file"
                 accept=".pdf,.pptx,.png,.jpg,.jpeg,.tiff,.bmp,.webp,.gif"
@@ -1123,6 +1153,7 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
                       <button
                         className="nb-card-delete-btn"
                         onClick={(e) => handleDeleteGenerated(nb, e)}
+                        onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
                         title="Delete notebook"
                       >
                         <Trash2 size={14} />
@@ -1376,7 +1407,7 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
           {/* Visual Explanations — button, loading bar, and results */}
           {selectedNotebook && !isGenerating && (() => {
             const nbId = String(selectedNotebook._saved_id || selectedNotebook.id);
-            const dynViz = notebookViz[nbId] || [];
+            const dynViz = [...(notebookViz[nbId] || []), ...(DEMO_VIZ[nbId] || [])];
             const hasViz = dynViz.length > 0;
 
             return (

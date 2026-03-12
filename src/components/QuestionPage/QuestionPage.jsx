@@ -111,7 +111,7 @@ const getSocraticExplanation = (questionId, questionText, selectedAnswer, correc
   ];
 };
 
-const API_URL = 'http://localhost:8000';
+import { API_URL } from '../../config';
 
 const QuestionPage = ({ onClose, paper }) => {
   const { token } = useAuth();

@@ -4,7 +4,7 @@ import './PedroChat.css';
 import mascot from '../../assets/sessioncompletebird.svg';
 import { useAuth } from '../../context/AuthContext';
 
-const API_URL = 'http://localhost:8000';
+import { API_URL } from '../../config';
 
 const PedroChat = ({ onClose }) => {
   const { token } = useAuth();

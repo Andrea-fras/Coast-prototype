@@ -6,7 +6,7 @@ import mascot from '../../assets/sessioncompletebird.svg';
 import bookCover from '../../assets/bookcover.svg';
 import './Dashboard.css';
 
-const API_URL = 'http://localhost:8000';
+import { API_URL } from '../../config';
 
 function timeAgo(dateStr) {
   if (!dateStr) return '';

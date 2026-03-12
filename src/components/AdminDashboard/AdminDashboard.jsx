@@ -3,7 +3,7 @@ import { X, Users, BookOpen, MessageCircle, Brain, Trophy, Flame, ChevronDown, C
 import './AdminDashboard.css';
 import { useAuth } from '../../context/AuthContext';
 
-const API_URL = 'http://localhost:8000';
+import { API_URL } from '../../config';
 
 const AdminDashboard = ({ onClose }) => {
   const { token } = useAuth();
