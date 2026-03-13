@@ -36,3 +36,4 @@ Thumbs.db
 
 # Cursor / AI
 .cursor/
+.vercel

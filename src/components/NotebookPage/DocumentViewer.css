@@ -1,0 +1,314 @@
+.docview-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.docview-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #eee;
+  flex-shrink: 0;
+}
+
+.docview-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.82rem;
+  cursor: pointer;
+  color: #555;
+  transition: all 0.15s;
+}
+.docview-back-btn:hover {
+  border-color: #bbb;
+  color: #222;
+}
+
+.docview-header-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: #e67e22;
+}
+.docview-header-info > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.docview-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #222;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.docview-meta {
+  font-size: 0.75rem;
+  color: #999;
+}
+
+.docview-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  gap: 0;
+}
+
+.docview-pdf-area {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+  background: #f5f5f5;
+}
+
+.docview-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  min-height: 500px;
+}
+
+.docview-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.docview-no-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  color: #aaa;
+  text-align: center;
+  padding: 2rem;
+}
+.docview-no-preview p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.docview-download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  background: #3b82f6;
+  color: #fff;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+.docview-download-btn:hover {
+  background: #2563eb;
+}
+
+.docview-sidebar {
+  width: 320px;
+  flex-shrink: 0;
+  padding: 1.25rem;
+  border-left: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto;
+}
+
+.docview-action-card {
+  background: linear-gradient(135deg, #fdf6ee 0%, #fef9f3 100%);
+  border: 1px solid #f0dcc0;
+  border-radius: 14px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.docview-action-icon {
+  color: #e67e22;
+}
+.docview-action-card h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #222;
+}
+.docview-action-card p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #777;
+  line-height: 1.45;
+}
+
+.docview-gen-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.65rem 1rem;
+  background: #e67e22;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-top: 0.25rem;
+}
+.docview-gen-btn:hover:not(:disabled) {
+  background: #d35400;
+}
+.docview-gen-btn:disabled {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+.docview-gen-done {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #27ae60;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-top: 0.25rem;
+}
+
+.docview-info-card {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 1rem;
+}
+.docview-info-card h4 {
+  margin: 0 0 0.6rem 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.docview-info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #f5f5f5;
+  font-size: 0.82rem;
+}
+.docview-info-row:last-child {
+  border-bottom: none;
+}
+.docview-info-row span:first-child {
+  color: #888;
+}
+.docview-info-row span:last-child {
+  color: #333;
+  font-weight: 500;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Spinning animation ── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+/* ── Dark mode ── */
+.dark .docview-header {
+  border-color: #333;
+}
+.dark .docview-back-btn {
+  border-color: #444;
+  color: #aaa;
+}
+.dark .docview-back-btn:hover {
+  border-color: #666;
+  color: #ddd;
+}
+.dark .docview-title {
+  color: #eee;
+}
+.dark .docview-meta {
+  color: #777;
+}
+.dark .docview-pdf-area {
+  background: #1a1a1a;
+}
+.dark .docview-sidebar {
+  border-color: #333;
+}
+.dark .docview-action-card {
+  background: linear-gradient(135deg, #2a2015 0%, #1e1a15 100%);
+  border-color: #3a2e1e;
+}
+.dark .docview-action-card h3 {
+  color: #eee;
+}
+.dark .docview-action-card p {
+  color: #999;
+}
+.dark .docview-info-card {
+  background: #1e1e1e;
+  border-color: #333;
+}
+.dark .docview-info-card h4 {
+  color: #999;
+}
+.dark .docview-info-row {
+  border-color: #2a2a2a;
+}
+.dark .docview-info-row span:first-child {
+  color: #777;
+}
+.dark .docview-info-row span:last-child {
+  color: #ddd;
+}
+.dark .docview-loading {
+  color: #777;
+}
+.dark .docview-no-preview {
+  color: #666;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .docview-body {
+    flex-direction: column;
+  }
+  .docview-sidebar {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid #eee;
+  }
+  .dark .docview-sidebar {
+    border-top-color: #333;
+  }
+  .docview-iframe {
+    min-height: 400px;
+  }
+}

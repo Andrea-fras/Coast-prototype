@@ -15,6 +15,8 @@ import PedroMessage from '../PedroMessage';
 import ExerciseWidget from './ExerciseWidget';
 import MindMap from './MindMap';
 import FolderView from './FolderView';
+import LessonView from './LessonView';
+import DocumentViewer from './DocumentViewer';
 
 const VIZ_MAP = {};
 
@@ -118,6 +120,9 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
   const [selectedFolder, setSelectedFolder] = useState(null);
   const [showNewFolderInput, setShowNewFolderInput] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
+  const [folderMenuOpen, setFolderMenuOpen] = useState(null);
+  const [activeLessonFolder, setActiveLessonFolder] = useState(null);
+  const [activeDocument, setActiveDocument] = useState(null);
 
   // Visualization state
   const [expandedViz, setExpandedViz] = useState(null);
@@ -212,6 +217,14 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
     if (showColorPicker) document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, [showColorPicker]);
+
+  // Close folder menu on outside click
+  useEffect(() => {
+    if (folderMenuOpen == null) return;
+    const handleClick = () => setFolderMenuOpen(null);
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [folderMenuOpen]);
 
   // Reset state when opening a notebook
   const openNotebook = (nb) => {
@@ -1319,13 +1332,39 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
 
           {/* ── Right Content: search + card grid ── */}
           <div className="nb-content-area">
-            {selectedFolder ? (
+            {activeDocument ? (
+              <DocumentViewer
+                folderName={activeDocument.folderName}
+                source={activeDocument.source}
+                onClose={() => setActiveDocument(null)}
+                onNotebookGenerated={(nb) => {
+                  setActiveDocument(null);
+                  if (!token) return;
+                  fetch(`${API_URL}/api/notebooks`, { headers: { Authorization: `Bearer ${token}` } })
+                    .then(res => res.ok ? res.json() : null)
+                    .then(data => { if (data) setMyNotebooks(data); })
+                    .catch(() => {});
+                }}
+              />
+            ) : activeLessonFolder ? (
+              <LessonView
+                folderName={activeLessonFolder}
+                onClose={() => setActiveLessonFolder(null)}
+              />
+            ) : selectedFolder ? (
               <FolderView
                 folderName={selectedFolder}
                 onClose={() => setSelectedFolder(null)}
                 onOpenNotebook={(nb) => { setSelectedFolder(null); openNotebook(nb); }}
-                folders={folders}
-                onMoveToFolder={handleMoveToFolder}
+                onSourcesChanged={() => {
+                  if (!token) return;
+                  fetch(`${API_URL}/api/notebooks`, { headers: { Authorization: `Bearer ${token}` } })
+                    .then(res => res.ok ? res.json() : null)
+                    .then(data => { if (data) setMyNotebooks(data); })
+                    .catch(() => {});
+                }}
+                onStartLesson={(folder) => setActiveLessonFolder(folder)}
+                onOpenDocument={(src) => setActiveDocument({ folderName: selectedFolder, source: src })}
               />
             ) : (
             <>
@@ -1364,14 +1403,50 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
                     onClick={() => openNotebook(nb)}
                   >
                     {isGenerated && (
-                      <button
-                        className="nb-card-delete-btn"
-                        onClick={(e) => handleDeleteGenerated(nb, e)}
-                        onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
-                        title="Delete notebook"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                      <div className="nb-card-actions">
+                        <button
+                          className="nb-card-folder-btn"
+                          onClick={(e) => { e.stopPropagation(); setFolderMenuOpen(folderMenuOpen === nb.id ? null : nb.id); }}
+                          onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                          title="Move to folder"
+                        >
+                          <FolderPlus size={14} />
+                        </button>
+                        <button
+                          className="nb-card-delete-btn"
+                          onClick={(e) => handleDeleteGenerated(nb, e)}
+                          onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                          title="Delete notebook"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                        {folderMenuOpen === nb.id && (
+                          <div className="nb-card-folder-menu" onClick={(e) => e.stopPropagation()}>
+                            <div className="nb-card-folder-menu-title">Move to folder</div>
+                            {nb.folder && (
+                              <button
+                                className="nb-card-folder-menu-item remove"
+                                onClick={(e) => { e.stopPropagation(); handleMoveToFolder(nb, ''); setFolderMenuOpen(null); }}
+                              >
+                                Remove from folder
+                              </button>
+                            )}
+                            {folders.map(f => (
+                              <button
+                                key={f}
+                                className={`nb-card-folder-menu-item${nb.folder === f ? ' active' : ''}`}
+                                onClick={(e) => { e.stopPropagation(); handleMoveToFolder(nb, f); setFolderMenuOpen(null); }}
+                              >
+                                <Folder size={13} />
+                                {f}
+                              </button>
+                            ))}
+                            {folders.length === 0 && (
+                              <div className="nb-card-folder-menu-empty">No folders yet. Create one in the sidebar.</div>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     )}
                     <div className="nb-card-top">
                       <div className="nb-card-icon" style={{ background: nb.color || '#888' }}>
@@ -1381,6 +1456,12 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
                     </div>
                     <h3 className="nb-card-title">{nb.title}</h3>
                     <p className="nb-card-course">{nb.course}</p>
+                    {nb.folder && (
+                      <span className="nb-card-folder-tag">
+                        <Folder size={11} />
+                        {nb.folder}
+                      </span>
+                    )}
                     <div className="nb-card-footer">
                       <span className="nb-card-stat">
                         <BookOpen size={13} />

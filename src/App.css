@@ -370,3 +370,30 @@ h3 {
 [data-theme="dark"] .book-cover-img.active-book {
   opacity: 0.95;
 }
+
+/* SVG Visualizations in Pedro messages */
+.pedro-svg-viz svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+.pedro-svg-viz {
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 10px;
+  padding: 12px;
+}
+[data-theme="dark"] .pedro-svg-viz {
+  background: #1a1a2e;
+  border-color: rgba(255,255,255,0.1);
+}
+[data-theme="dark"] .pedro-svg-viz text {
+  fill: #e0e0e0;
+}
+[data-theme="dark"] .pedro-svg-viz rect[fill="#f8fafc"],
+[data-theme="dark"] .pedro-svg-viz rect[fill="#ffffff"],
+[data-theme="dark"] .pedro-svg-viz rect[fill="white"],
+[data-theme="dark"] .pedro-svg-viz rect[fill="#fff"] {
+  fill: #1a1a2e;
+}

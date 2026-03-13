@@ -165,13 +165,18 @@ export default function ReviewSession({ onClose }) {
                 onChange={e => setAnswer(e.target.value)}
                 onKeyDown={handleKeyDown}
                 rows={4}
+                disabled={feedbackLoading}
               />
               <button
                 className="review-submit-btn"
                 onClick={handleSubmitAnswer}
-                disabled={!answer.trim()}
+                disabled={!answer.trim() || feedbackLoading}
               >
-                Check Answer <ChevronRight size={16} />
+                {feedbackLoading ? (
+                  <><RotateCcw size={16} className="review-spinner" /> Checking...</>
+                ) : (
+                  <>Check Answer <ChevronRight size={16} /></>
+                )}
               </button>
             </div>
           </div>
