@@ -10,6 +10,7 @@ import mascot from '../../assets/sessioncompletebird.svg';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Play } from 'lucide-react';
+import PedroMessage from '../PedroMessage';
 
 const VIZ_MAP = {};
 
@@ -1490,7 +1491,7 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
                     <img src={mascot} alt="" className="pedro-msg-avatar" />
                   )}
                   <div className="pedro-msg-bubble">
-                    {msg.text}
+                    {msg.role === 'pedro' ? <PedroMessage text={msg.text} /> : msg.text}
                     {msg.role === 'pedro' && (
                       <button
                         className="pedro-add-to-notes-btn"

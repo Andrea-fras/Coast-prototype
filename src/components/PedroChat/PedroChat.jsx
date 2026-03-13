@@ -3,6 +3,7 @@ import { X, Send, MessageCircle, ArrowLeft, Plus, Trash2, BookOpen } from 'lucid
 import './PedroChat.css';
 import mascot from '../../assets/sessioncompletebird.svg';
 import { useAuth } from '../../context/AuthContext';
+import PedroMessage from '../PedroMessage';
 
 import { API_URL } from '../../config';
 
@@ -316,7 +317,9 @@ const PedroChat = ({ onClose }) => {
                   {msg.role === 'pedro' && (
                     <img src={mascot} alt="" className="pedro-chat-avatar" />
                   )}
-                  <div className="pedro-chat-bubble">{msg.text}</div>
+                  <div className="pedro-chat-bubble">
+                    {msg.role === 'pedro' ? <PedroMessage text={msg.text} /> : msg.text}
+                  </div>
                 </div>
               ))}
               {isLoading && (
