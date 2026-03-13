@@ -64,8 +64,243 @@
 }
 
 /* ═══════════════════════════════════════════════
+   PEDRO'S DAILY BRIEFING
+   ═══════════════════════════════════════════════ */
+.rp-briefing {
+  background: linear-gradient(135deg, rgba(255, 181, 3, 0.08) 0%, rgba(255, 255, 255, 0.75) 100%);
+  border: 1px solid rgba(255, 181, 3, 0.2);
+}
+.rp-briefing-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.rp-briefing-avatar {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+}
+.rp-briefing-title {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.rp-briefing-name {
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 800;
+  font-size: 1.15rem;
+  color: #555;
+}
+.rp-briefing-sub {
+  font-size: 0.78rem;
+  color: #999;
+  font-weight: 600;
+}
+.rp-briefing-sparkle {
+  color: #FFB503;
+  flex-shrink: 0;
+}
+.rp-briefing-body {
+  min-height: 40px;
+}
+.rp-briefing-text {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #555;
+  font-weight: 600;
+  margin: 0;
+}
+.rp-briefing-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.skeleton-line {
+  height: 12px;
+  background: linear-gradient(90deg, rgba(0,0,0,0.05) 25%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.05) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 6px;
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.rp-briefing-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.7rem 1.2rem;
+  border: none;
+  border-radius: 14px;
+  background: #FFB503;
+  color: #fff;
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 800;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+.rp-briefing-cta:hover {
+  background: #e6a200;
+  transform: translateY(-1px);
+}
+.rp-briefing-cta:active {
+  transform: translateY(0);
+}
+
+/* ═══════════════════════════════════════════════
+   REVIEW DECK CARD
+   ═══════════════════════════════════════════════ */
+.rp-review h3 {
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+}
+.rp-review-btn {
+  background: #FFB503;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 0.45rem 1rem;
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 800;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.rp-review-btn:hover {
+  background: #e6a200;
+}
+.rp-review-stats {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+.rp-review-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  padding: 0.6rem 0.4rem;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.025);
+}
+.rp-review-stat-val {
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 800;
+  font-size: 1.4rem;
+  color: #555;
+  line-height: 1.1;
+}
+.rp-review-stat-lbl {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  color: #999;
+  margin-top: 0.15rem;
+}
+.rp-review-progress {
+  margin-top: 0.25rem;
+}
+.rp-review-progress-track {
+  display: flex;
+  height: 8px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.04);
+}
+.rp-review-progress-fill.mastered {
+  background: #43A047;
+  transition: width 0.4s ease;
+}
+.rp-review-progress-fill.learning {
+  background: #FFB503;
+  transition: width 0.4s ease;
+}
+.rp-review-legend {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #999;
+  font-family: 'Nunito', sans-serif;
+}
+.rp-legend-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-left: 0.6rem;
+}
+.rp-legend-dot:first-child { margin-left: 0; }
+.rp-legend-dot.mastered { background: #43A047; }
+.rp-legend-dot.learning { background: #FFB503; }
+
+/* ═══════════════════════════════════════════════
+   WEAK SPOTS CARD
+   ═══════════════════════════════════════════════ */
+.rp-weak h3 {
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  color: #EF5350;
+}
+.rp-weak-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.rp-weak-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.rp-weak-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.rp-weak-topic {
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #666;
+  text-transform: capitalize;
+}
+.rp-weak-score {
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 800;
+  font-size: 0.82rem;
+  color: #999;
+}
+.rp-weak-bar-track {
+  height: 6px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+.rp-weak-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.4s ease;
+}
+.rp-weak-bar-fill.critical { background: #EF5350; }
+.rp-weak-bar-fill.moderate { background: #FFA726; }
+.rp-weak-bar-fill.ok { background: #66BB6A; }
+
+/* ═══════════════════════════════════════════════
    QUICK STATS – 2x2 grid
    ═══════════════════════════════════════════════ */
+.rp-stats h3 {
+  font-size: 1.3rem;
+}
 .rp-stats-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -319,6 +554,54 @@
 }
 [data-theme="dark"] .rp-card h3 {
   color: #e0e0e0;
+}
+
+/* Briefing dark */
+[data-theme="dark"] .rp-briefing {
+  background: linear-gradient(135deg, rgba(255, 181, 3, 0.06) 0%, rgba(12, 12, 30, 0.75) 100%);
+  border-color: rgba(255, 181, 3, 0.15);
+}
+[data-theme="dark"] .rp-briefing-name {
+  color: #eee;
+}
+[data-theme="dark"] .rp-briefing-sub {
+  color: #7778;
+}
+[data-theme="dark"] .rp-briefing-text {
+  color: #ccc;
+}
+[data-theme="dark"] .skeleton-line {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+/* Review dark */
+[data-theme="dark"] .rp-review-stat {
+  background: rgba(255, 255, 255, 0.05);
+}
+[data-theme="dark"] .rp-review-stat-val {
+  color: #eee;
+}
+[data-theme="dark"] .rp-review-stat-lbl {
+  color: #8888aa;
+}
+[data-theme="dark"] .rp-review-progress-track {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Weak spots dark */
+[data-theme="dark"] .rp-weak h3 {
+  color: #EF5350;
+}
+[data-theme="dark"] .rp-weak-topic {
+  color: #ddd;
+}
+[data-theme="dark"] .rp-weak-score {
+  color: #8888aa;
+}
+[data-theme="dark"] .rp-weak-bar-track {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 /* Stats */

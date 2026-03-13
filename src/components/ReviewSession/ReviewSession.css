@@ -1,0 +1,510 @@
+/* ═══════════════════════════════════════════════
+   Review Session — Full-screen overlay
+   ═══════════════════════════════════════════════ */
+
+.review-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.review-modal {
+  position: relative;
+  width: 95%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 28px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.2);
+  padding: 2rem 2.2rem;
+  animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.review-close {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.2rem;
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #888;
+  transition: background 0.15s;
+}
+.review-close:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #555;
+}
+
+/* Progress bar */
+.review-progress-bar {
+  height: 4px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+.review-progress-fill {
+  height: 100%;
+  background: #FFB503;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+/* Center state (loading) */
+.review-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3rem 0;
+  color: #999;
+}
+.review-spinner {
+  animation: spin 1.2s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.review-center p {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+/* Content wrapper */
+.review-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.review-card-counter {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: #bbb;
+  text-align: center;
+}
+
+/* Question card */
+.review-question-card {
+  background: linear-gradient(135deg, rgba(255, 181, 3, 0.06) 0%, rgba(108, 92, 231, 0.04) 100%);
+  border-radius: 20px;
+  padding: 1.5rem;
+  text-align: center;
+}
+.review-question-card.compact {
+  padding: 1rem;
+}
+.review-section-badge {
+  display: inline-block;
+  background: rgba(108, 92, 231, 0.1);
+  color: #6c5ce7;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  padding: 0.2rem 0.7rem;
+  border-radius: 20px;
+  margin-bottom: 0.6rem;
+}
+.review-concept-title {
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: #333;
+  margin: 0 0 0.3rem;
+}
+.review-prompt {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #888;
+  margin: 0;
+}
+
+/* Answer area */
+.review-answer-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.review-textarea {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #333;
+  resize: vertical;
+  min-height: 80px;
+  transition: border-color 0.2s;
+  outline: none;
+  box-sizing: border-box;
+}
+.review-textarea:focus {
+  border-color: #FFB503;
+}
+.review-textarea::placeholder {
+  color: #ccc;
+}
+.review-submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  align-self: flex-end;
+  padding: 0.6rem 1.4rem;
+  background: #FFB503;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 800;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+.review-submit-btn:hover { background: #e6a200; }
+.review-submit-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* Your answer display */
+.review-your-answer {
+  background: rgba(0, 0, 0, 0.025);
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+}
+.review-answer-label {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  color: #bbb;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
+  margin-bottom: 0.3rem;
+}
+.review-your-answer p {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #555;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Pedro feedback */
+.review-feedback {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+.review-pedro-avatar {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+}
+.review-feedback-bubble {
+  background: rgba(108, 92, 231, 0.06);
+  border-radius: 16px;
+  padding: 0.85rem 1rem;
+  flex: 1;
+  min-width: 0;
+}
+.review-feedback-bubble .pedro-rich-text {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #555;
+}
+.review-feedback-loading {
+  display: flex;
+  gap: 0.3rem;
+  padding: 0.3rem 0;
+}
+.review-feedback-loading span {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6c5ce7;
+  animation: dotBounce 0.6s infinite alternate;
+}
+.review-feedback-loading span:nth-child(2) { animation-delay: 0.2s; }
+.review-feedback-loading span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dotBounce {
+  to { opacity: 0.3; transform: translateY(-4px); }
+}
+
+/* Correct answer */
+.review-correct-answer {
+  background: rgba(67, 160, 71, 0.06);
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+  border-left: 3px solid #66BB6A;
+}
+.review-correct-answer p {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: #555;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Rating section */
+.review-rating-section {
+  text-align: center;
+}
+.review-rating-prompt {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #888;
+  margin: 0 0 0.6rem;
+}
+.review-rating-buttons {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+}
+.review-rate-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.65rem 1rem;
+  border: 2px solid rgba(0, 0, 0, 0.06);
+  border-radius: 14px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.1s, background 0.2s;
+  color: var(--rate-color, #888);
+  min-width: 70px;
+}
+.review-rate-btn span {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  color: #888;
+}
+.review-rate-btn:hover {
+  border-color: var(--rate-color, #FFB503);
+  background: rgba(0, 0, 0, 0.015);
+  transform: translateY(-2px);
+}
+.review-rate-btn:active {
+  transform: translateY(0);
+}
+
+/* Complete screen */
+.review-complete {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1rem 0;
+}
+.review-complete-mascot {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 1rem;
+}
+.review-complete h2 {
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 800;
+  font-size: 1.6rem;
+  color: #333;
+  margin: 0 0 0.3rem;
+}
+.review-complete-sub {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: #888;
+  margin: 0 0 1.2rem;
+}
+
+/* Stats row */
+.review-complete-stats {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.2rem;
+}
+.review-complete-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.review-complete-stat-val {
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 800;
+  font-size: 1.6rem;
+  color: #FFB503;
+}
+.review-complete-stat-lbl {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  color: #999;
+}
+
+/* Result list */
+.review-complete-list {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1.5rem;
+}
+.review-complete-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.8rem;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.025);
+}
+.review-complete-concept {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #555;
+}
+.review-complete-badge {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 8px;
+}
+.review-complete-badge.q1 { background: rgba(239, 83, 80, 0.1); color: #EF5350; }
+.review-complete-badge.q2 { background: rgba(239, 83, 80, 0.1); color: #EF5350; }
+.review-complete-badge.q3 { background: rgba(255, 167, 38, 0.1); color: #FFA726; }
+.review-complete-badge.q4 { background: rgba(102, 187, 106, 0.1); color: #66BB6A; }
+.review-complete-badge.q5 { background: rgba(67, 160, 71, 0.1); color: #43A047; }
+
+.review-done-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 2rem;
+  background: #FFB503;
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 800;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.review-done-btn:hover { background: #e6a200; }
+
+/* ═══════════════════════════════════════════════
+   DARK MODE
+   ═══════════════════════════════════════════════ */
+[data-theme="dark"] .review-modal {
+  background: #16192e;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+}
+[data-theme="dark"] .review-close {
+  background: rgba(255, 255, 255, 0.06);
+  color: #888;
+}
+[data-theme="dark"] .review-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ccc;
+}
+[data-theme="dark"] .review-progress-bar {
+  background: rgba(255, 255, 255, 0.06);
+}
+[data-theme="dark"] .review-question-card {
+  background: linear-gradient(135deg, rgba(255, 181, 3, 0.04) 0%, rgba(108, 92, 231, 0.04) 100%);
+}
+[data-theme="dark"] .review-section-badge {
+  background: rgba(108, 92, 231, 0.15);
+  color: #a29bfe;
+}
+[data-theme="dark"] .review-concept-title {
+  color: #eee;
+}
+[data-theme="dark"] .review-prompt {
+  color: #888;
+}
+[data-theme="dark"] .review-textarea {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #ddd;
+}
+[data-theme="dark"] .review-textarea:focus {
+  border-color: #FFB503;
+}
+[data-theme="dark"] .review-textarea::placeholder {
+  color: #555;
+}
+[data-theme="dark"] .review-your-answer {
+  background: rgba(255, 255, 255, 0.04);
+}
+[data-theme="dark"] .review-your-answer p,
+[data-theme="dark"] .review-correct-answer p {
+  color: #ccc;
+}
+[data-theme="dark"] .review-feedback-bubble {
+  background: rgba(108, 92, 231, 0.08);
+}
+[data-theme="dark"] .review-feedback-bubble .pedro-rich-text {
+  color: #ccc;
+}
+[data-theme="dark"] .review-correct-answer {
+  background: rgba(67, 160, 71, 0.06);
+  border-left-color: rgba(102, 187, 106, 0.5);
+}
+[data-theme="dark"] .review-rate-btn {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+[data-theme="dark"] .review-rate-btn span {
+  color: #888;
+}
+[data-theme="dark"] .review-rate-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+[data-theme="dark"] .review-complete h2 {
+  color: #eee;
+}
+[data-theme="dark"] .review-complete-sub {
+  color: #888;
+}
+[data-theme="dark"] .review-complete-item {
+  background: rgba(255, 255, 255, 0.04);
+}
+[data-theme="dark"] .review-complete-concept {
+  color: #ccc;
+}

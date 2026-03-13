@@ -9,6 +9,7 @@ import PedroChat from './components/PedroChat/PedroChat'
 import PomodoroPage from './components/PomodoroPage/PomodoroPage'
 import AdminDashboard from './components/AdminDashboard/AdminDashboard'
 import LoginPage from './components/LoginPage/LoginPage'
+import ReviewSession from './components/ReviewSession/ReviewSession'
 import { useAuth } from './context/AuthContext'
 
 // Import all papers
@@ -30,6 +31,7 @@ function App() {
   const [showPedroChat, setShowPedroChat] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [showPomodoro, setShowPomodoro] = useState(false);
+  const [showReview, setShowReview] = useState(false);
   const [activePaper, setActivePaper] = useState(null);
   const [selectedPaperIndex, setSelectedPaperIndex] = useState(1);
 
@@ -93,6 +95,9 @@ function App() {
       {showPomodoro && (
         <PomodoroPage onClose={() => setShowPomodoro(false)} />
       )}
+      {showReview && (
+        <ReviewSession onClose={() => setShowReview(false)} />
+      )}
       
       {!showQuestionPage && (
         <div className="dashboard-zoom">
@@ -105,6 +110,7 @@ function App() {
             onOpenNotebook={handleOpenNotebook}
             onOpenPedro={handleOpenPedro}
             onOpenPomodoro={handleOpenPomodoro}
+            onStartReview={() => setShowReview(true)}
           />
           <Footer />
         </div>

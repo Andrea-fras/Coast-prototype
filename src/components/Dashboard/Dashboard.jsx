@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Fish, Target, TrendingUp, BookOpen, ChevronRight, BarChart3, Sun, Moon } from 'lucide-react';
+import {
+  Fish, Target, TrendingUp, BookOpen, ChevronRight,
+  BarChart3, Sun, Moon, Brain, AlertTriangle, RotateCcw,
+  Sparkles, Clock,
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import mascot from '../../assets/sessioncompletebird.svg';
 import bookCover from '../../assets/bookcover.svg';
 import './Dashboard.css';
-
 import { API_URL } from '../../config';
 
 function timeAgo(dateStr) {
@@ -28,6 +31,7 @@ const Dashboard = ({
   onOpenNotebook,
   onOpenPedro,
   onOpenPomodoro,
+  onStartReview,
 }) => {
   const { token } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -37,6 +41,11 @@ const Dashboard = ({
   const [sessions, setSessions] = useState([]);
   const [notebooks, setNotebooks] = useState([]);
 
+  const [briefing, setBriefing] = useState(null);
+  const [briefingLoading, setBriefingLoading] = useState(true);
+  const [reviewStats, setReviewStats] = useState(null);
+  const [skillProfile, setSkillProfile] = useState(null);
+
   useEffect(() => {
     if (!token) return;
     const headers = { Authorization: `Bearer ${token}` };
@@ -45,14 +54,30 @@ const Dashboard = ({
       fetch(`${API_URL}/api/stats`, { headers }).then(r => r.ok ? r.json() : null).catch(() => null),
       fetch(`${API_URL}/api/sessions/history`, { headers }).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${API_URL}/api/notebooks`, { headers }).then(r => r.ok ? r.json() : []).catch(() => []),
-    ]).then(([s, sess, nbs]) => {
+      fetch(`${API_URL}/api/review/stats`, { headers }).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(`${API_URL}/api/skill-profile`, { headers }).then(r => r.ok ? r.json() : null).catch(() => null),
+    ]).then(([s, sess, nbs, rs, sp]) => {
       if (s) {
         setStats(s);
         setStreakData({ streak: s.streak || 0, week: s.week || [] });
       }
       setSessions(Array.isArray(sess) ? sess : []);
       setNotebooks(Array.isArray(nbs) ? nbs : []);
+      if (rs) setReviewStats(rs);
+      if (sp) setSkillProfile(sp);
     });
+
+    setBriefingLoading(true);
+    fetch(`${API_URL}/api/dashboard/briefing`, { headers })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data) {
+          setBriefing(data);
+          if (data.review_stats) setReviewStats(data.review_stats);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setBriefingLoading(false));
   }, [token]);
 
   const weekData = streakData.week.length > 0 ? streakData.week : [
@@ -62,7 +87,17 @@ const Dashboard = ({
     { label: 'Su', status: 'future' },
   ];
 
-  const recentSessions = sessions.slice(0, 4);
+  const recentSessions = sessions.slice(0, 3);
+
+  const weakTopics = React.useMemo(() => {
+    if (!skillProfile || typeof skillProfile !== 'object') return [];
+    const entries = Object.entries(skillProfile).filter(([k]) => k !== 'updated_at');
+    return entries.sort((a, b) => a[1] - b[1]).slice(0, 3);
+  }, [skillProfile]);
+
+  const dueCount = reviewStats?.due_today || 0;
+  const totalCards = reviewStats?.total_cards || 0;
+  const masteredCards = reviewStats?.mastered || 0;
 
   return (
     <div className="main-container">
@@ -71,7 +106,7 @@ const Dashboard = ({
       </button>
       <div className="content-wrapper">
 
-        {/* ── Left Column (original layout) ── */}
+        {/* Left Column */}
         <div className="left-column">
           {/* Daily Quest */}
           <div className="card top-card daily-quest">
@@ -86,7 +121,7 @@ const Dashboard = ({
             </div>
           </div>
 
-          {/* Streak + Customization */}
+          {/* Streak + Timer */}
           <div className="middle-row">
             <div className="card streak-card">
               <h3>Streak</h3>
@@ -141,10 +176,122 @@ const Dashboard = ({
           </div>
         </div>
 
-        {/* ── Right Panel (new stacked cards) ── */}
+        {/* Right Panel — Smart Dashboard */}
         <div className="right-panel-stack">
 
-          {/* Quick Stats 2x2 */}
+          {/* Pedro's Daily Briefing */}
+          <div className="rp-card rp-briefing">
+            <div className="rp-briefing-header">
+              <img src={mascot} alt="Pedro" className="rp-briefing-avatar" />
+              <div className="rp-briefing-title">
+                <span className="rp-briefing-name">Pedro's Briefing</span>
+                <span className="rp-briefing-sub">Your daily study plan</span>
+              </div>
+              <Sparkles size={20} className="rp-briefing-sparkle" />
+            </div>
+            <div className="rp-briefing-body">
+              {briefingLoading ? (
+                <div className="rp-briefing-skeleton">
+                  <div className="skeleton-line" style={{ width: '90%' }} />
+                  <div className="skeleton-line" style={{ width: '75%' }} />
+                  <div className="skeleton-line" style={{ width: '60%' }} />
+                </div>
+              ) : (
+                <p className="rp-briefing-text">
+                  {briefing?.message || "Welcome! Upload some lecture notes to get started with personalized study plans."}
+                </p>
+              )}
+            </div>
+            {dueCount > 0 && (
+              <button className="rp-briefing-cta" onClick={onStartReview}>
+                <RotateCcw size={16} />
+                Start Review ({dueCount} due)
+              </button>
+            )}
+          </div>
+
+          {/* Spaced Repetition Card */}
+          <div className="rp-card rp-review">
+            <div className="rp-card-head">
+              <h3>
+                <Brain size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />
+                Review Deck
+              </h3>
+              {dueCount > 0 && (
+                <button className="rp-review-btn" onClick={onStartReview}>
+                  Review Now
+                </button>
+              )}
+            </div>
+
+            {totalCards > 0 ? (
+              <>
+                <div className="rp-review-stats">
+                  <div className="rp-review-stat">
+                    <span className="rp-review-stat-val">{dueCount}</span>
+                    <span className="rp-review-stat-lbl">Due now</span>
+                  </div>
+                  <div className="rp-review-stat">
+                    <span className="rp-review-stat-val">{masteredCards}</span>
+                    <span className="rp-review-stat-lbl">Mastered</span>
+                  </div>
+                  <div className="rp-review-stat">
+                    <span className="rp-review-stat-val">{totalCards}</span>
+                    <span className="rp-review-stat-lbl">Total</span>
+                  </div>
+                </div>
+                <div className="rp-review-progress">
+                  <div className="rp-review-progress-track">
+                    <div
+                      className="rp-review-progress-fill mastered"
+                      style={{ width: `${totalCards > 0 ? (masteredCards / totalCards) * 100 : 0}%` }}
+                    />
+                    <div
+                      className="rp-review-progress-fill learning"
+                      style={{ width: `${totalCards > 0 ? ((totalCards - masteredCards) / totalCards) * 100 : 0}%` }}
+                    />
+                  </div>
+                  <div className="rp-review-legend">
+                    <span className="rp-legend-dot mastered" /> Mastered
+                    <span className="rp-legend-dot learning" /> Learning
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="rp-empty" onClick={onOpenNotebook}>
+                <Brain size={28} />
+                <p>Create a notebook to build your review deck</p>
+              </div>
+            )}
+          </div>
+
+          {/* Weak Spots */}
+          {weakTopics.length > 0 && (
+            <div className="rp-card rp-weak">
+              <h3>
+                <AlertTriangle size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} />
+                Weak Spots
+              </h3>
+              <div className="rp-weak-list">
+                {weakTopics.map(([topic, score]) => (
+                  <div className="rp-weak-item" key={topic}>
+                    <div className="rp-weak-info">
+                      <span className="rp-weak-topic">{topic}</span>
+                      <span className="rp-weak-score">{score}%</span>
+                    </div>
+                    <div className="rp-weak-bar-track">
+                      <div
+                        className={`rp-weak-bar-fill ${score < 40 ? 'critical' : score < 70 ? 'moderate' : 'ok'}`}
+                        style={{ width: `${score}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Quick Stats */}
           <div className="rp-card rp-stats">
             <h3>Quick Stats</h3>
             <div className="rp-stats-grid">
@@ -165,31 +312,6 @@ const Dashboard = ({
             </div>
           </div>
 
-          {/* Recent Sessions */}
-          <div className="rp-card rp-sessions">
-            <h3>Recent Sessions</h3>
-            {recentSessions.length > 0 ? (
-              <div className="rp-sess-list">
-                {recentSessions.map((s, i) => (
-                  <div className="rp-sess-item" key={s.id || i}>
-                    <div className="rp-sess-info">
-                      <span className="rp-sess-name">{s.paper_title || 'Practice'}</span>
-                      <span className="rp-sess-time">{timeAgo(s.completed_at || s.started_at)}</span>
-                    </div>
-                    <span className={`rp-sess-score ${s.total > 0 && (s.score / s.total) >= 0.7 ? 'good' : 'weak'}`}>
-                      {s.score}/{s.total}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="rp-empty">
-                <BarChart3 size={28} />
-                <p>Complete a quiz to see results</p>
-              </div>
-            )}
-          </div>
-
           {/* Your Notebooks */}
           <div className="rp-card rp-notebooks">
             <div className="rp-card-head">
@@ -200,7 +322,7 @@ const Dashboard = ({
             </div>
             {notebooks.length > 0 ? (
               <div className="rp-nb-list">
-                {notebooks.slice(0, 3).map((nb, i) => (
+                {notebooks.slice(0, 2).map((nb, i) => (
                   <div className="rp-nb-item" key={nb._saved_id || `nb${i}`} onClick={onOpenNotebook}>
                     <img src={bookCover} alt="" className="rp-nb-cover" />
                     <div className="rp-nb-info">
