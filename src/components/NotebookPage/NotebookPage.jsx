@@ -249,8 +249,12 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
         if (contentRef.current) {
           const clone = contentRef.current.cloneNode(true);
           clone.querySelectorAll('.nb-explain-btn').forEach(b => b.remove());
-          clone.querySelectorAll('img[src^="data:"]').forEach(img => img.setAttribute('src', ''));
-          try { localStorage.setItem(savedKey, clone.innerHTML); } catch {}
+          try {
+            localStorage.setItem(savedKey, clone.innerHTML);
+          } catch {
+            clone.querySelectorAll('img[src^="data:"]').forEach(img => img.setAttribute('src', ''));
+            try { localStorage.setItem(savedKey, clone.innerHTML); } catch {}
+          }
         }
       }, 500);
     }
@@ -337,8 +341,12 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
     const savedKey = `coast_nb_html_${uid}_${selectedNotebook.id}`;
     const clone = contentRef.current.cloneNode(true);
     clone.querySelectorAll('.nb-explain-btn').forEach(b => b.remove());
-    clone.querySelectorAll('img[src^="data:"]').forEach(img => img.setAttribute('src', ''));
-    try { localStorage.setItem(savedKey, clone.innerHTML); } catch {}
+    try {
+      localStorage.setItem(savedKey, clone.innerHTML);
+    } catch {
+      clone.querySelectorAll('img[src^="data:"]').forEach(img => img.setAttribute('src', ''));
+      try { localStorage.setItem(savedKey, clone.innerHTML); } catch {}
+    }
     setHasUnsavedChanges(false);
   };
 
@@ -507,7 +515,8 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
       });
 
       if (!res.ok) {
-        throw new Error('Failed to get response');
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.detail || `Server error ${res.status}`);
       }
 
       const data = await res.json();
@@ -516,6 +525,7 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
       }
       setChatMessages(prev => [...prev, { role: 'pedro', text: data.reply }]);
     } catch (err) {
+      console.error('[notebook-chat] error:', err);
       setChatMessages(prev => [...prev, {
         role: 'pedro',
         text: "Sorry, I'm having trouble connecting right now. Please try again in a moment."
