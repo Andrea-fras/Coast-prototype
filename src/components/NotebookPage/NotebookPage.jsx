@@ -855,8 +855,9 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
               throw new Error(evt.message || 'Pipeline error');
             }
           } catch (parseErr) {
-            if (parseErr.message && parseErr.message !== 'Pipeline error') continue;
-            throw parseErr;
+            if (parseErr.message && parseErr.message.includes('Pipeline error')) throw parseErr;
+            if (parseErr.message && !parseErr.message.startsWith('Unexpected token') && parseErr.message !== 'Unexpected end of JSON input') throw parseErr;
+            continue;
           }
         }
       }
