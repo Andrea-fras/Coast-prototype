@@ -2564,3 +2564,189 @@
 .notebook-page.dark .nb-notes-area.nb-editable *::selection {
   background: rgba(255, 181, 3, 0.25);
 }
+
+/* ═══════════════════════════════════════════════════════
+   EXERCISE WIDGET
+   ═══════════════════════════════════════════════════════ */
+
+.exercise-widget {
+  margin: 1rem 0 1.5rem;
+  border-radius: 12px;
+}
+
+.exercise-start-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.2rem;
+  border: 1.5px dashed rgba(108, 92, 231, 0.4);
+  background: rgba(108, 92, 231, 0.04);
+  color: #6c5ce7;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.exercise-start-btn:hover {
+  background: rgba(108, 92, 231, 0.1);
+  border-color: #6c5ce7;
+}
+.exercise-start-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.exercise-active {
+  border: 1.5px solid rgba(108, 92, 231, 0.25);
+  background: rgba(108, 92, 231, 0.03);
+  padding: 1rem 1.2rem;
+}
+
+.exercise-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+.exercise-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6c5ce7;
+}
+.exercise-close {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  color: #999;
+  cursor: pointer;
+  padding: 0 0.3rem;
+  line-height: 1;
+}
+.exercise-close:hover { color: #e74c3c; }
+
+.exercise-question {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  margin-bottom: 0.8rem;
+  font-size: 0.93rem;
+  line-height: 1.55;
+}
+
+.exercise-answer-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.exercise-input {
+  width: 100%;
+  padding: 0.65rem 0.9rem;
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  resize: vertical;
+  background: #fff;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+.exercise-input:focus {
+  outline: none;
+  border-color: #6c5ce7;
+}
+
+.exercise-submit-btn {
+  align-self: flex-end;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  background: #6c5ce7;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.exercise-submit-btn:hover { background: #5a4bd1; }
+.exercise-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.exercise-feedback {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  margin-top: 0.5rem;
+  font-size: 0.93rem;
+  line-height: 1.55;
+}
+
+.exercise-actions {
+  margin-top: 0.6rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.exercise-retry-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.9rem;
+  background: rgba(108, 92, 231, 0.08);
+  color: #6c5ce7;
+  border: 1px solid rgba(108, 92, 231, 0.2);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.exercise-retry-btn:hover {
+  background: rgba(108, 92, 231, 0.15);
+}
+
+@keyframes exercise-spin {
+  to { transform: rotate(360deg); }
+}
+.exercise-spin {
+  animation: exercise-spin 1s linear infinite;
+}
+
+/* Dark mode */
+.notebook-page.dark .exercise-start-btn {
+  color: #a29bfe;
+  border-color: rgba(162, 155, 254, 0.3);
+  background: rgba(162, 155, 254, 0.06);
+}
+.notebook-page.dark .exercise-start-btn:hover {
+  background: rgba(162, 155, 254, 0.12);
+}
+.notebook-page.dark .exercise-active {
+  border-color: rgba(162, 155, 254, 0.2);
+  background: rgba(162, 155, 254, 0.04);
+}
+.notebook-page.dark .exercise-label { color: #a29bfe; }
+.notebook-page.dark .exercise-question {
+  background: rgba(255, 255, 255, 0.05);
+}
+.notebook-page.dark .exercise-input {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #e8e8e8;
+}
+.notebook-page.dark .exercise-input:focus {
+  border-color: #a29bfe;
+}
+.notebook-page.dark .exercise-feedback {
+  background: rgba(255, 255, 255, 0.05);
+}
+.notebook-page.dark .exercise-retry-btn {
+  color: #a29bfe;
+  border-color: rgba(162, 155, 254, 0.2);
+  background: rgba(162, 155, 254, 0.06);
+}

@@ -11,6 +11,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Play } from 'lucide-react';
 import PedroMessage from '../PedroMessage';
+import ExerciseWidget from './ExerciseWidget';
 
 const VIZ_MAP = {};
 
@@ -91,6 +92,7 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
     } catch { return {}; }
   });
   const [sectionVizLoading, setSectionVizLoading] = useState({});
+  const [exerciseOpen, setExerciseOpen] = useState({});
   const [notebookViz, setNotebookViz] = useState(() => {
     try {
       const saved = localStorage.getItem('coast_notebook_viz');
@@ -1365,6 +1367,15 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
                     )}
                   </div>
                 ))}
+
+                {!isEditing && !isGenerating && (
+                  <ExerciseWidget
+                    key={`ex-${sIdx}`}
+                    section={section}
+                    token={token}
+                    onClose={() => setExerciseOpen(prev => ({ ...prev, [sIdx]: false }))}
+                  />
+                )}
               </div>
             ))}
 
