@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { X, Send, Paperclip, ArrowRight, ArrowLeft, BookOpen, Upload, FileText, Loader, CheckCircle, AlertCircle, PenLine, Search, Trash2, Sun, Moon, Layers, ChevronLeft, ChevronRight, RotateCcw, Shuffle } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { X, Send, Paperclip, ArrowRight, ArrowLeft, BookOpen, Upload, FileText, Loader, CheckCircle, AlertCircle, PenLine, Search, Trash2, Sun, Moon, Layers, ChevronLeft, ChevronRight, RotateCcw, Shuffle, Download, GitBranch, Maximize2, Minimize2, FolderPlus, Folder, ChevronDown, Plus } from 'lucide-react';
 import './NotebookPage.css';
 import builtInNotebooks from '../../data/notebooks.json';
 import paper1 from '../../data/samplePaper.json';
@@ -12,6 +13,8 @@ import { useTheme } from '../../context/ThemeContext';
 import { Play } from 'lucide-react';
 import PedroMessage from '../PedroMessage';
 import ExerciseWidget from './ExerciseWidget';
+import MindMap from './MindMap';
+import FolderView from './FolderView';
 
 const VIZ_MAP = {};
 
@@ -22,6 +25,32 @@ const DEMO_VIZ = {
       description: "Watch how adding sine waves of increasing frequency progressively builds a perfect square wave — demonstrating how any periodic function can be decomposed into simple harmonics.",
       url: "/viz/fourier.gif",
       filename: "fourier.gif",
+    },
+  ],
+  "parallel-programming-guide": [
+    {
+      topic: "Amdahl's Law — The Scalability Ceiling",
+      description: "See how the maximum speedup from adding processors depends on the parallelisable fraction (p). With p=0.5 you cap at 2×, with p=0.95 at 20×. Even a tiny serial fraction dominates at scale — this is why optimizing the serial bottleneck matters more than adding cores.",
+      url: "/viz/amdahl.gif",
+      filename: "amdahl.gif",
+    },
+    {
+      topic: "Fork-Join Model (OpenMP)",
+      description: "Watch a single Master thread fork into 4 parallel workers, each processing a task with progress bars, then joining back together. This is exactly how #pragma omp parallel works under the hood.",
+      url: "/viz/fork_join.gif",
+      filename: "fork_join.gif",
+    },
+    {
+      topic: "The Deadlock Trap (MPI Blocking Sends)",
+      description: "Two processes each hold a lock the other needs, creating a circular wait — the 'Mexican Standoff for CPUs.' See why all four Coffman conditions must be present and how breaking any one prevents deadlock.",
+      url: "/viz/deadlock.gif",
+      filename: "deadlock.gif",
+    },
+    {
+      topic: "Race Condition (Shared Variable Bug)",
+      description: "Step-by-step: two threads both read count=0, both compute 0+1=1, both write 1. Expected: 2. Got: 1. This is why read-modify-write on shared variables without synchronization is the #1 source of parallel bugs.",
+      url: "/viz/race_condition.gif",
+      filename: "race_condition.gif",
     },
   ],
 };
@@ -59,6 +88,10 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
   const colorPickerRef = useRef(null);
   const explainHandlerRef = useRef(null);
 
+  // Highlight & Ask Pedro state
+  const [selectionTooltip, setSelectionTooltip] = useState(null);
+  const [chatExpanded, setChatExpanded] = useState(false);
+
   const textColors = [
     '#333333', '#FFB503', '#FF7B02', '#e74c3c', '#2ECC71',
     '#3498db', '#9B59B6', '#1abc9c', '#e67e22', '#555555',
@@ -80,6 +113,12 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sidebarTab, setSidebarTab] = useState('notebooks');
 
+  // Folder state
+  const [folders, setFolders] = useState([]);
+  const [selectedFolder, setSelectedFolder] = useState(null);
+  const [showNewFolderInput, setShowNewFolderInput] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+
   // Visualization state
   const [expandedViz, setExpandedViz] = useState(null);
   const [vizLoading, setVizLoading] = useState(false);
@@ -93,6 +132,8 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
   });
   const [sectionVizLoading, setSectionVizLoading] = useState({});
   const [exerciseOpen, setExerciseOpen] = useState({});
+  const [exercisePortals, setExercisePortals] = useState([]);
+  const [showConceptMap, setShowConceptMap] = useState(false);
   const [notebookViz, setNotebookViz] = useState(() => {
     try {
       const saved = localStorage.getItem('coast_notebook_viz');
@@ -133,6 +174,11 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
     fetch(`${API_URL}/api/usage`, { headers })
       .then(res => res.ok ? res.json() : null)
       .then(data => { if (data) setNotebooksRemaining(data.notebooks_remaining); })
+      .catch(() => {});
+
+    fetch(`${API_URL}/api/notebooks/folders`, { headers })
+      .then(res => res.ok ? res.json() : [])
+      .then(data => setFolders(Array.isArray(data) ? data : []))
       .catch(() => {});
   }, [token]);
 
@@ -246,12 +292,16 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
     let autoSaveTimer;
 
     if (savedHtml && contentRef.current) {
-      contentRef.current.innerHTML = savedHtml;
+      const temp = document.createElement('div');
+      temp.innerHTML = savedHtml;
+      temp.querySelectorAll('.exercise-widget, .exercise-section-anchor, .exercise-portal').forEach(el => el.remove());
+      contentRef.current.innerHTML = temp.innerHTML;
     } else if (contentRef.current) {
       autoSaveTimer = setTimeout(() => {
         if (contentRef.current) {
           const clone = contentRef.current.cloneNode(true);
           clone.querySelectorAll('.nb-explain-btn').forEach(b => b.remove());
+          clone.querySelectorAll('.exercise-widget, .exercise-section-anchor, .exercise-portal').forEach(el => el.remove());
           try {
             localStorage.setItem(savedKey, clone.innerHTML);
           } catch {
@@ -306,6 +356,27 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
     return () => clearTimeout(timer);
   }, [selectedNotebook, isGenerating, isEditing, visibleSections]);
 
+  // Create portal containers inside each section for exercise widgets
+  useEffect(() => {
+    if (!selectedNotebook || !contentRef.current || isEditing || isGenerating) return;
+    const timer = setTimeout(() => {
+      const container = contentRef.current;
+      if (!container) return;
+      container.querySelectorAll('.exercise-portal').forEach(el => el.remove());
+      const sections = container.querySelectorAll('.nb-section');
+      const portals = [];
+      sections.forEach((sectionEl, idx) => {
+        if (idx >= (selectedNotebook.sections?.length || 0)) return;
+        const portalDiv = document.createElement('div');
+        portalDiv.className = 'exercise-portal';
+        sectionEl.appendChild(portalDiv);
+        portals.push({ idx, el: portalDiv });
+      });
+      setExercisePortals(portals);
+    }, 200);
+    return () => { clearTimeout(timer); setExercisePortals([]); };
+  }, [selectedNotebook, isGenerating, isEditing, visibleSections]);
+
   // Event delegation for explain + visualize button clicks
   useEffect(() => {
     const container = contentRef.current;
@@ -338,12 +409,116 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
     return () => container.removeEventListener('click', handler);
   }, [selectedNotebook]);
 
+  // Highlight & Ask Pedro — detect text selection in notebook
+  useEffect(() => {
+    const checkSelection = () => {
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed || !contentRef.current || !notesRef.current) {
+        setSelectionTooltip(null);
+        return;
+      }
+      const text = sel.toString().trim();
+      if (text.length < 3 || text.length > 2000) {
+        setSelectionTooltip(null);
+        return;
+      }
+      if (!contentRef.current.contains(sel.anchorNode)) {
+        setSelectionTooltip(null);
+        return;
+      }
+      const range = sel.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      setSelectionTooltip({
+        text,
+        top: rect.top - 44,
+        left: rect.left + rect.width / 2,
+      });
+    };
+
+    const scrollWrap = notesRef.current;
+    const handleMouseUp = () => setTimeout(checkSelection, 10);
+    const handleMouseDown = (e) => {
+      if (e.target.closest('.ask-pedro-tooltip')) return;
+      setSelectionTooltip(null);
+    };
+
+    document.addEventListener('mouseup', handleMouseUp);
+    if (scrollWrap) scrollWrap.addEventListener('mousedown', handleMouseDown);
+    return () => {
+      document.removeEventListener('mouseup', handleMouseUp);
+      if (scrollWrap) scrollWrap.removeEventListener('mousedown', handleMouseDown);
+    };
+  }, [selectedNotebook]);
+
+  const sendChatMessage = async (userMsg) => {
+    if (!userMsg.trim() || !selectedNotebook || isChatLoading) return;
+    setChatMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+    setChatInput('');
+    setIsChatLoading(true);
+
+    try {
+      const res = await fetch(`${API_URL}/api/chat/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          message: userMsg,
+          conversation_id: conversationId,
+          context_type: 'notebook',
+          context_id: selectedNotebook.id,
+        }),
+      });
+
+      if (!res.ok) throw new Error('Failed');
+      const data = await res.json();
+      if (data.conversation_id && !conversationId) setConversationId(data.conversation_id);
+      setChatMessages(prev => [...prev, { role: 'pedro', text: data.reply }]);
+    } catch {
+      setChatMessages(prev => [...prev, {
+        role: 'pedro',
+        text: "Sorry, I'm having trouble connecting right now. Please try again in a moment."
+      }]);
+    } finally {
+      setIsChatLoading(false);
+    }
+  };
+
+  const handleAskPedroAboutSelection = () => {
+    if (!selectionTooltip?.text) return;
+    const prompt = `Explain this to me from my notes: "${selectionTooltip.text}"`;
+    setSelectionTooltip(null);
+    window.getSelection()?.removeAllRanges();
+    sendChatMessage(prompt);
+  };
+
+  const handleExportPdf = async () => {
+    if (!contentRef.current || !selectedNotebook) return;
+    const html2pdf = (await import('html2pdf.js')).default;
+    const clone = contentRef.current.cloneNode(true);
+    clone.querySelectorAll('.nb-explain-btn, .nb-section-viz-btn, .exercise-portal').forEach(el => el.remove());
+    clone.style.padding = '2rem';
+    clone.style.background = 'white';
+    clone.style.color = '#222';
+    const title = selectedNotebook.title.replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '_');
+    html2pdf().set({
+      margin: [10, 10, 10, 10],
+      filename: `${title}.pdf`,
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+    }).from(clone).save();
+  };
+
   const saveNotebookHtml = () => {
     if (!selectedNotebook || !contentRef.current || !hasUnsavedChanges) return;
     const uid = user?.id || 'anon';
     const savedKey = `coast_nb_html_${uid}_${selectedNotebook.id}`;
     const clone = contentRef.current.cloneNode(true);
     clone.querySelectorAll('.nb-explain-btn').forEach(b => b.remove());
+    clone.querySelectorAll('.exercise-widget, .exercise-section-anchor, .exercise-portal').forEach(el => el.remove());
     try {
       localStorage.setItem(savedKey, clone.innerHTML);
     } catch {
@@ -494,48 +669,9 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!chatInput.trim() || !selectedNotebook || isChatLoading) return;
-
-    const userMsg = chatInput.trim();
-    setChatMessages(prev => [...prev, { role: 'user', text: userMsg }]);
-    setChatInput('');
-    setIsChatLoading(true);
-
-    try {
-      const res = await fetch(`${API_URL}/api/chat/send`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          message: userMsg,
-          conversation_id: conversationId,
-          context_type: 'notebook',
-          context_id: selectedNotebook.id,
-        }),
-      });
-
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => ({}));
-        throw new Error(errBody.detail || `Server error ${res.status}`);
-      }
-
-      const data = await res.json();
-      if (data.conversation_id && !conversationId) {
-        setConversationId(data.conversation_id);
-      }
-      setChatMessages(prev => [...prev, { role: 'pedro', text: data.reply }]);
-    } catch (err) {
-      console.error('[notebook-chat] error:', err);
-      setChatMessages(prev => [...prev, {
-        role: 'pedro',
-        text: "Sorry, I'm having trouble connecting right now. Please try again in a moment."
-      }]);
-    } finally {
-      setIsChatLoading(false);
-    }
+  const handleSendMessage = () => {
+    if (!chatInput.trim()) return;
+    sendChatMessage(chatInput.trim());
   };
 
   const handleKeyDown = (e) => {
@@ -545,16 +681,12 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
     }
   };
 
-  const handleExplainSection = async (section) => {
+  const handleExplainSection = (section) => {
     if (!selectedNotebook || isChatLoading) return;
 
     const stripHtml = (html) => {
       if (!html) return '';
-      return html
-        .replace(/<img[^>]*>/gi, '')
-        .replace(/<[^>]+>/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
+      return html.replace(/<img[^>]*>/gi, '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
     };
 
     let sectionText = section.title;
@@ -564,40 +696,8 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
       sub.bullets?.forEach(b => { sectionText += '\n- ' + stripHtml(b); });
     });
 
-    const userMsg = `Explain this section to me simply: "${section.title}"`;
-    setChatMessages(prev => [...prev, { role: 'user', text: userMsg }]);
-    setIsChatLoading(true);
-
-    try {
-      const res = await fetch(`${API_URL}/api/chat/send`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          message: userMsg + '\n\nSection content:\n' + sectionText.slice(0, 3000),
-          conversation_id: conversationId,
-          context_type: 'notebook',
-          context_id: selectedNotebook.id,
-        }),
-      });
-
-      if (!res.ok) throw new Error('Failed');
-
-      const data = await res.json();
-      if (data.conversation_id && !conversationId) {
-        setConversationId(data.conversation_id);
-      }
-      setChatMessages(prev => [...prev, { role: 'pedro', text: data.reply }]);
-    } catch {
-      setChatMessages(prev => [...prev, {
-        role: 'pedro',
-        text: "Sorry, I couldn't process that right now. Try again in a moment."
-      }]);
-    } finally {
-      setIsChatLoading(false);
-    }
+    const fullMsg = `Explain this section to me simply: "${section.title}"\n\nSection content:\n${sectionText.slice(0, 3000)}`;
+    sendChatMessage(fullMsg);
   };
 
   explainHandlerRef.current = handleExplainSection;
@@ -964,6 +1064,53 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
     }
   };
 
+  // =================== FOLDER MANAGEMENT ===================
+  const handleCreateFolder = async () => {
+    const name = newFolderName.trim();
+    if (!name || !token) return;
+    try {
+      const res = await fetch(`${API_URL}/api/notebooks/folders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name }),
+      });
+      if (res.ok) {
+        setFolders(prev => [...prev, name]);
+        setNewFolderName('');
+        setShowNewFolderInput(false);
+      }
+    } catch {}
+  };
+
+  const handleOpenFolder = (folderName) => {
+    setSelectedFolder(folderName);
+    setSelectedNotebook(null);
+  };
+
+  const handleMoveToFolder = async (nb, folderName) => {
+    if (!token) return;
+    const savedId = nb._saved_id || myNotebooks.find(n => n.id === nb.id)?._saved_id;
+    if (!savedId) return;
+    try {
+      await fetch(`${API_URL}/api/notebooks/${savedId}/move`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ folder: folderName }),
+      });
+      const refetch = await fetch(`${API_URL}/api/notebooks`, { headers: { Authorization: `Bearer ${token}` } });
+      if (refetch.ok) setMyNotebooks(await refetch.json());
+    } catch {}
+  };
+
+  const folderNotebookCounts = React.useMemo(() => {
+    const counts = {};
+    for (const nb of myNotebooks) {
+      const f = nb.folder || '';
+      if (f) counts[f] = (counts[f] || 0) + 1;
+    }
+    return counts;
+  }, [myNotebooks]);
+
   // =================== UPLOAD MODAL ===================
   const renderContent = (text) => {
     if (!text) return null;
@@ -1109,6 +1256,49 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
               </button>
             </nav>
 
+            {/* Folders section */}
+            <div className="nb-sidebar-folders">
+              <div className="nb-sidebar-folders-header">
+                <span className="nb-sidebar-folders-label">Folders</span>
+                <button
+                  className="nb-sidebar-folder-add-btn"
+                  onClick={() => setShowNewFolderInput(prev => !prev)}
+                  title="New folder"
+                >
+                  <Plus size={14} />
+                </button>
+              </div>
+
+              {showNewFolderInput && (
+                <div className="nb-sidebar-folder-input-row">
+                  <input
+                    type="text"
+                    className="nb-sidebar-folder-input"
+                    placeholder="Folder name..."
+                    value={newFolderName}
+                    onChange={e => setNewFolderName(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleCreateFolder()}
+                    autoFocus
+                  />
+                  <button className="nb-sidebar-folder-create-btn" onClick={handleCreateFolder}>
+                    <CheckCircle size={14} />
+                  </button>
+                </div>
+              )}
+
+              {folders.map(f => (
+                <button
+                  key={f}
+                  className={`nb-sidebar-folder-btn${selectedFolder === f ? ' active' : ''}`}
+                  onClick={() => handleOpenFolder(f)}
+                >
+                  <Folder size={16} />
+                  <span>{f}</span>
+                  <span className="nb-sidebar-nav-count">{folderNotebookCounts[f] || 0}</span>
+                </button>
+              ))}
+            </div>
+
             <div className="nb-sidebar-spacer" />
 
             <button
@@ -1129,6 +1319,16 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
 
           {/* ── Right Content: search + card grid ── */}
           <div className="nb-content-area">
+            {selectedFolder ? (
+              <FolderView
+                folderName={selectedFolder}
+                onClose={() => setSelectedFolder(null)}
+                onOpenNotebook={(nb) => { setSelectedFolder(null); openNotebook(nb); }}
+                folders={folders}
+                onMoveToFolder={handleMoveToFolder}
+              />
+            ) : (
+            <>
             <div className="nb-content-header">
               <h1 className="nb-list-title">
                 {sidebarTab === 'yours' ? 'Your Notebooks' : 'Notebooks'}
@@ -1208,6 +1408,8 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
                 </div>
               )}
             </div>
+            </>
+            )}
           </div>
         </div>
       </div>
@@ -1308,6 +1510,16 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
                 onClick={() => setIsEditing(prev => !prev)}
                 title={isEditing ? 'Lock editing' : 'Enable editing'}
               >✎</button>
+              <button
+                className="nb-tool-btn"
+                onClick={handleExportPdf}
+                title="Export as PDF"
+              ><Download size={16} /></button>
+              <button
+                className="nb-tool-btn"
+                onClick={() => setShowConceptMap(true)}
+                title="Mind Map"
+              ><GitBranch size={16} /></button>
             </div>
             {hasUnsavedChanges && (
               <>
@@ -1368,14 +1580,6 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
                   </div>
                 ))}
 
-                {!isEditing && !isGenerating && (
-                  <ExerciseWidget
-                    key={`ex-${sIdx}`}
-                    section={section}
-                    token={token}
-                    onClose={() => setExerciseOpen(prev => ({ ...prev, [sIdx]: false }))}
-                  />
-                )}
               </div>
             ))}
 
@@ -1388,6 +1592,21 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
               </div>
             )}
           </div>
+
+          {/* Exercise widgets rendered via portals into each section */}
+          {exercisePortals.map(({ idx, el }) => {
+            const section = selectedNotebook?.sections?.[idx];
+            if (!section) return null;
+            return createPortal(
+              <ExerciseWidget
+                key={`ex-${selectedNotebook.id}-${idx}`}
+                section={section}
+                token={token}
+                onClose={() => setExerciseOpen(prev => ({ ...prev, [idx]: false }))}
+              />,
+              el
+            );
+          })}
 
           {/* Per-section inline visualizations — outside contentEditable */}
           {selectedNotebook && !isGenerating && (() => {
@@ -1484,13 +1703,22 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
         </div>
 
         {/* Right Panel: Pedro Chat */}
-        <div className="notebook-right">
-          <div className="pedro-intro">
-            <img src={mascot} alt="Pedro" className="pedro-mascot" />
-            <h2 className="pedro-name">Hey, I'm Pedro</h2>
-            <p className="pedro-desc">
-              Pedro can work with you on your doc, create quizzes from real past paper questions for your course and answer any questions!
-            </p>
+        <div className={`notebook-right ${chatExpanded ? 'notebook-right-expanded' : ''}`}>
+          <div className="pedro-panel-header">
+            <div className={`pedro-intro ${chatMessages.length === 0 ? 'pedro-intro-centered' : ''}`}>
+              <img src={mascot} alt="Pedro" className="pedro-mascot" />
+              <h2 className="pedro-name">Hey, I'm Pedro</h2>
+              <p className="pedro-desc">
+                Pedro can work with you on your doc, create quizzes from real past paper questions for your course and answer any questions!
+              </p>
+            </div>
+            <button
+              className="pedro-expand-btn"
+              onClick={() => setChatExpanded(prev => !prev)}
+              title={chatExpanded ? 'Minimize chat' : 'Expand chat'}
+            >
+              {chatExpanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+            </button>
           </div>
 
           {/* Chat Messages */}
@@ -1659,6 +1887,37 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
           </div>
         );
       })()}
+
+      {/* Highlight & Ask Pedro tooltip (fixed position, outside scroll) */}
+      {selectionTooltip && !isEditing && (
+        <div
+          className="ask-pedro-tooltip"
+          style={{ top: selectionTooltip.top, left: selectionTooltip.left }}
+          onMouseDown={(e) => e.preventDefault()}
+        >
+          <button className="ask-pedro-tooltip-btn" onClick={handleAskPedroAboutSelection}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>
+            Ask Pedro
+          </button>
+        </div>
+      )}
+
+      {/* Mind Map Overlay */}
+      {showConceptMap && selectedNotebook?.sections?.length > 0 && (
+        <MindMap
+          notebook={selectedNotebook}
+          onClose={() => setShowConceptMap(false)}
+          onSectionClick={(idx) => {
+            setShowConceptMap(false);
+            setTimeout(() => {
+              const sections = contentRef.current?.querySelectorAll('.nb-section');
+              if (sections?.[idx]) {
+                sections[idx].scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }, 100);
+          }}
+        />
+      )}
     </div>
   );
 };

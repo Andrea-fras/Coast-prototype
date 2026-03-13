@@ -386,6 +386,45 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: flex-basis 0.35s ease;
+}
+.notebook-right-expanded {
+  flex: 0 0 55%;
+}
+
+.pedro-panel-header {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.pedro-expand-btn {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  border-radius: 8px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #888;
+  transition: all 0.15s;
+  z-index: 5;
+}
+.pedro-expand-btn:hover {
+  background: rgba(108, 92, 231, 0.12);
+  color: #6c5ce7;
+}
+.notebook-page.dark .pedro-expand-btn {
+  background: rgba(255, 255, 255, 0.06);
+  color: #888;
+}
+.notebook-page.dark .pedro-expand-btn:hover {
+  background: rgba(108, 92, 231, 0.2);
+  color: #a29bfe;
 }
 
 .pedro-intro {
@@ -395,6 +434,9 @@
   text-align: center;
   padding: 2rem 1.5rem 1.5rem;
   flex-shrink: 0;
+}
+
+.pedro-intro.pedro-intro-centered {
   margin-top: auto;
   margin-bottom: auto;
 }
@@ -1005,6 +1047,132 @@
   background: rgba(0, 0, 0, 0.15);
   padding: 0.15rem 0.45rem;
   border-radius: 6px;
+}
+
+/* ── Folder sidebar section ─────────────────── */
+.nb-sidebar-folders {
+  margin-top: 1rem;
+  border-top: 1px solid #eee;
+  padding-top: 0.75rem;
+}
+.nb-sidebar-folders-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+  padding: 0 0.3rem;
+}
+.nb-sidebar-folders-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #999;
+}
+.nb-sidebar-folder-add-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #999;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.nb-sidebar-folder-add-btn:hover {
+  background: #f0f0f0;
+  color: #555;
+}
+
+.nb-sidebar-folder-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-bottom: 0.3rem;
+}
+.nb-sidebar-folder-input {
+  flex: 1;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.8rem;
+  font-family: inherit;
+  outline: none;
+}
+.nb-sidebar-folder-input:focus {
+  border-color: #FFB503;
+}
+.nb-sidebar-folder-create-btn {
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 6px;
+  background: #FFB503;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nb-sidebar-folder-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: none;
+  background: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.85rem;
+  color: #555;
+  transition: all 0.15s;
+  text-align: left;
+}
+.nb-sidebar-folder-btn:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+.nb-sidebar-folder-btn.active {
+  background: #fff3e0;
+  color: #E68A00;
+  font-weight: 600;
+}
+.nb-sidebar-folder-btn .nb-sidebar-nav-count {
+  margin-left: auto;
+}
+
+/* Dark mode folders */
+.dark .nb-sidebar-folders {
+  border-top-color: #333;
+}
+.dark .nb-sidebar-folders-label {
+  color: #666;
+}
+.dark .nb-sidebar-folder-add-btn:hover {
+  background: #2a2a2a;
+  color: #ccc;
+}
+.dark .nb-sidebar-folder-input {
+  background: #1a1a1a;
+  border-color: #444;
+  color: #eee;
+}
+.dark .nb-sidebar-folder-btn {
+  color: #aaa;
+}
+.dark .nb-sidebar-folder-btn:hover {
+  background: #2a2a2a;
+  color: #ddd;
+}
+.dark .nb-sidebar-folder-btn.active {
+  background: #2a2010;
+  color: #FFB503;
 }
 
 /* ── Content Area ───────────────────────────── */
@@ -2569,8 +2737,79 @@
    EXERCISE WIDGET
    ═══════════════════════════════════════════════════════ */
 
+/* ═══════════════════════════════════════════════════════
+   HIGHLIGHT & ASK PEDRO TOOLTIP
+   ═══════════════════════════════════════════════════════ */
+
+.ask-pedro-tooltip {
+  position: fixed;
+  z-index: 9999;
+  transform: translateX(-50%);
+  pointer-events: auto;
+  animation: ask-pedro-pop 0.15s ease-out;
+}
+
+@keyframes ask-pedro-pop {
+  from { opacity: 0; transform: translateX(-50%) translateY(4px) scale(0.95); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+
+.ask-pedro-tooltip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.85rem;
+  background: #222;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: 'Nunito', sans-serif;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.ask-pedro-tooltip-btn:hover {
+  background: #6c5ce7;
+}
+
+.ask-pedro-tooltip-btn svg {
+  flex-shrink: 0;
+}
+
+.notebook-page.dark .ask-pedro-tooltip-btn {
+  background: #a29bfe;
+  color: #111;
+}
+.notebook-page.dark .ask-pedro-tooltip-btn:hover {
+  background: #6c5ce7;
+  color: #fff;
+}
+
+.exercise-section-anchor {
+  padding: 0 2.5rem;
+  margin-top: -0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.exercise-section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #aaa;
+  margin-bottom: 0.3rem;
+}
+
+.notebook-page.dark .exercise-section-label {
+  color: #666;
+}
+
 .exercise-widget {
-  margin: 1rem 0 1.5rem;
+  margin: 0 0 1rem;
   border-radius: 12px;
 }
 
@@ -2749,4 +2988,371 @@
   color: #a29bfe;
   border-color: rgba(162, 155, 254, 0.2);
   background: rgba(162, 155, 254, 0.06);
+}
+
+/* ═══════════════════════════════════════════════════════
+   MIND MAP — Spatial Canvas
+   ═══════════════════════════════════════════════════════ */
+
+.mm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: mm-fade-in 0.25s ease-out;
+}
+@keyframes mm-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.mm-container {
+  width: 94vw;
+  max-width: 1200px;
+  height: 85vh;
+  background: #f8f9fb;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.mm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.7rem 1.2rem;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  flex-shrink: 0;
+}
+.mm-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.mm-header-icon { font-size: 1.15rem; }
+.mm-title {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #222;
+  margin: 0;
+}
+.mm-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.mm-action-btn {
+  background: none;
+  border: 1px solid #e0e0e0;
+  color: #777;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mm-action-btn:hover {
+  background: #f0f0f0;
+  color: #333;
+  border-color: #bbb;
+}
+.mm-close {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #999;
+  cursor: pointer;
+  padding: 0.15rem 0.45rem;
+  border-radius: 8px;
+  margin-left: 0.2rem;
+  transition: all 0.15s;
+}
+.mm-close:hover {
+  background: #fef0f0;
+  color: #e74c3c;
+}
+
+/* ── Canvas ───────────────────────────────────── */
+
+.mm-canvas {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  cursor: grab;
+  touch-action: none;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(108,92,231,0.03) 0%, transparent 70%),
+    repeating-linear-gradient(0deg, transparent, transparent 39px, #eee 39px, #eee 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, #eee 39px, #eee 40px);
+}
+.mm-canvas:active { cursor: grabbing; }
+
+.mm-edge-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+
+.mm-node-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+}
+
+/* ── Cards ────────────────────────────────────── */
+
+.mm-card {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-family: 'Nunito', sans-serif;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+  transition: box-shadow 0.2s, background 0.2s;
+}
+
+.mm-card-root {
+  background: linear-gradient(135deg, var(--c), color-mix(in srgb, var(--c) 70%, #000));
+  color: #fff;
+  padding: 0.75rem 1.3rem;
+  border-radius: 16px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  box-shadow: 0 6px 24px color-mix(in srgb, var(--c) 35%, transparent);
+  max-width: 280px;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.3;
+}
+.mm-card-root:hover {
+  box-shadow: 0 8px 32px color-mix(in srgb, var(--c) 50%, transparent);
+  filter: brightness(1.08);
+}
+
+.mm-card-section {
+  background: #fff;
+  border: 2px solid var(--c);
+  color: #333;
+  padding: 0.5rem 0.9rem;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+  max-width: 200px;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.25;
+}
+.mm-card-section .mm-card-label { color: var(--c); }
+.mm-card-section:hover {
+  box-shadow: 0 5px 20px color-mix(in srgb, var(--c) 25%, transparent);
+  background: color-mix(in srgb, var(--c) 6%, #fff);
+}
+.mm-card-section.mm-expanded {
+  background: color-mix(in srgb, var(--c) 10%, #fff);
+}
+
+.mm-card-sub {
+  background: #fff;
+  border: 1.5px solid #ddd;
+  color: #555;
+  padding: 0.35rem 0.7rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  max-width: 180px;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.2;
+}
+.mm-card-sub:hover {
+  border-color: var(--c);
+  box-shadow: 0 3px 12px color-mix(in srgb, var(--c) 15%, transparent);
+}
+
+.mm-card-leaf {
+  background: color-mix(in srgb, var(--c) 8%, #fff);
+  border: 1px solid color-mix(in srgb, var(--c) 20%, #ddd);
+  color: #666;
+  padding: 0.25rem 0.55rem;
+  border-radius: 8px;
+  font-size: 0.68rem;
+  font-weight: 500;
+  max-width: 150px;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.2;
+}
+.mm-card-leaf:hover { border-color: var(--c); }
+
+.mm-card-icon { font-size: 1rem; flex-shrink: 0; }
+.mm-card-root .mm-card-icon { font-size: 1.15rem; }
+.mm-card-label { min-width: 0; }
+
+.mm-card-toggle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--c) 12%, #f0f0f0);
+  color: var(--c);
+  font-size: 0.85rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  line-height: 1;
+}
+.mm-card:hover .mm-card-toggle {
+  background: var(--c);
+  color: #fff;
+}
+
+.mm-card-count {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  background: var(--c);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+/* ── Zoom Controls ────────────────────────────── */
+
+.mm-zoom-btns {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 10;
+}
+.mm-zoom-btns button {
+  width: 32px;
+  height: 32px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #555;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.mm-zoom-btns button:hover {
+  background: #f0f0f0;
+  color: #222;
+  border-color: #bbb;
+}
+
+/* ── Footer ───────────────────────────────────── */
+
+.mm-footer {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.73rem;
+  color: #aaa;
+  text-align: center;
+  padding: 0.45rem;
+  background: #fff;
+  border-top: 1px solid #eee;
+  flex-shrink: 0;
+}
+
+/* ── Dark Mode ────────────────────────────────── */
+
+.notebook-page.dark .mm-container {
+  background: #111827;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+}
+.notebook-page.dark .mm-header {
+  background: #1a1a2e;
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+.notebook-page.dark .mm-title { color: #e8e8e8; }
+.notebook-page.dark .mm-action-btn {
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #888;
+}
+.notebook-page.dark .mm-action-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ccc;
+}
+.notebook-page.dark .mm-close:hover { background: rgba(255, 100, 100, 0.12); }
+.notebook-page.dark .mm-canvas {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(108,92,231,0.05) 0%, transparent 70%),
+    repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.04) 39px, rgba(255,255,255,0.04) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.04) 39px, rgba(255,255,255,0.04) 40px);
+}
+.notebook-page.dark .mm-card-section {
+  background: #1e293b;
+  border-color: var(--c);
+  color: #ddd;
+}
+.notebook-page.dark .mm-card-section:hover {
+  background: color-mix(in srgb, var(--c) 15%, #1e293b);
+}
+.notebook-page.dark .mm-card-section.mm-expanded {
+  background: color-mix(in srgb, var(--c) 18%, #1e293b);
+}
+.notebook-page.dark .mm-card-sub {
+  background: #1e293b;
+  border-color: rgba(255,255,255,0.1);
+  color: #bbb;
+}
+.notebook-page.dark .mm-card-sub:hover { border-color: var(--c); }
+.notebook-page.dark .mm-card-leaf {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.08);
+  color: #999;
+}
+.notebook-page.dark .mm-card-toggle { background: rgba(255,255,255,0.08); }
+.notebook-page.dark .mm-card:hover .mm-card-toggle { background: var(--c); color: #fff; }
+.notebook-page.dark .mm-zoom-btns button {
+  background: #1e293b;
+  border-color: rgba(255,255,255,0.1);
+  color: #aaa;
+}
+.notebook-page.dark .mm-zoom-btns button:hover { background: #2d3748; color: #eee; }
+.notebook-page.dark .mm-footer {
+  background: #1a1a2e;
+  color: #555;
+  border-top-color: rgba(255, 255, 255, 0.06);
 }
