@@ -411,5 +411,342 @@
       "active transport|passive|diffusion": "Passive transport follows the gradient (no energy): diffusion, osmosis, facilitated diffusion. Active transport goes against the gradient using ATP — like the Na⁺/K⁺ pump moving 3 Na⁺ out and 2 K⁺ in per ATP.",
       "plant|animal|cell wall|chloroplast|vacuole": "Plant cells have: cell wall (cellulose), large central vacuole (turgor), chloroplasts (photosynthesis). Animal cells have: centrioles, no cell wall. Both have: membrane, nucleus, mitochondria, ER, Golgi, ribosomes."
     }
+  },
+  {
+    "id": "parallel-programming-guide",
+    "title": "The Parallel Programming Bible: From Basics to Godhood",
+    "course": "Introduction to Parallel Programming",
+    "icon": "🚀",
+    "color": "#004F9F",
+    "questionCount": 9,
+    "paperId": "parallel_prog",
+    "intro": {
+      "text": "Ready to stop writing slow, single-threaded code and start harnessing the power of modern supercomputers? Parallel programming is like graduating from being a solo chef to managing a world-class kitchen. You'll learn how to split tasks, manage \"staff\" (processes and threads), and make sure nobody crashes into each other in the pantry.",
+      "highlights": [
+        { "label": "MPI", "desc": "Managing a kitchen where every chef has their own separate fridge (Distributed Memory)" },
+        { "label": "OpenMP", "desc": "Managing a kitchen where everyone shares one giant fridge (Shared Memory)" },
+        { "label": "Performance", "desc": "How to tell if your parallel code is actually fast or just \"busy\"" }
+      ]
+    },
+    "sections": [
+      {
+        "icon": "🏗️",
+        "title": "Performance Foundations (The \"Why\" and the Limits)",
+        "content": "Before we code, we need to understand the physics of the \"Multicore Era.\" Around 2005, we hit a wall: we couldn't make individual processor cores faster without them melting. The solution? Add more cores. Think of your data storage like your workspace — Registers are the tools in your hand (instant access), Caches (L1-L3) are items on your desk (very fast), and Main Memory (DRAM) is the supply cabinet in the hallway (slow). The DRAM Gap: it takes 100–1000 cycles to fetch data from DRAM. If your code isn't smart about using caches, your CPU is basically a world-class chef standing idle for 10 minutes waiting for a tomato.",
+        "subsections": [
+          {
+            "title": "Locality: The Key to Speed",
+            "content": "Temporal Locality: If you just used a piece of data, you'll probably use it again soon — keep it in the cache! Spatial Locality: If you used A[i], you'll probably need A[i+1] next. Hardware fetches data in \"blocks\" to exploit this.",
+            "bullets": [
+              "Good parallel code spends more time doing math than waiting for data to travel across the bus",
+              "Cache misses are the silent killer of parallel performance",
+              "Accessing memory in stride-1 order (A[0], A[1], A[2]...) is dramatically faster than random access"
+            ]
+          },
+          {
+            "title": "Speedup and Efficiency (The Math)",
+            "content": "Speedup S(p) = T(1) / T(p) — \"How many times faster is it with p processors?\" Efficiency E(p) = S(p) / p — \"Are my processors actually working, or are they 50% idle?\" The ideal case: S(p) = p (linear speedup) and E(p) = 1.0.",
+            "bullets": [
+              "If you use 10 processors but only get a 2× speedup, your efficiency is a miserable 0.2",
+              "Super-linear speedup (S > p) can happen when data fits in combined caches but not a single one",
+              "Efficiency always drops as you add more processors — the question is how fast"
+            ]
+          },
+          {
+            "title": "Amdahl's Law: The Scalability Ceiling",
+            "content": "Every program has a \"serial fraction\" (f) — code that cannot be parallelized (like reading a file or initializing variables). The formula: S(p) = 1 / [f + (1-f)/p]. If 20% of your code is serial (f=0.2), your maximum speedup is 1/0.2 = 5×. Even if you use a billion processors, you will never go 6× faster.",
+            "bullets": [
+              "Parallel programming is a battle against the serial part of your code",
+              "f = 0.1 (10% serial) → max speedup = 10×",
+              "f = 0.01 (1% serial) → max speedup = 100×",
+              "Gustafson's counter-argument: scale the problem size with processors, not just the speed"
+            ]
+          }
+        ]
+      },
+      {
+        "icon": "🌐",
+        "title": "MPI Basics (The Distributed Memory Model)",
+        "content": "MPI (Message Passing Interface) is for Clusters. Imagine a group of independent computers connected by a network. Each has its own memory; they cannot \"see\" each other's variables. To share data, they must explicitly send a message. We use Single Program Multiple Data (SPMD): you write one program, and it is launched N times. Each process gets a unique ID called a Rank.",
+        "subsections": [
+          {
+            "title": "The Identity Ritual",
+            "content": "Rank: A unique integer from [0, size-1], used to decide \"Who does what.\" Size: The total number of processes in the \"World.\" MPI_COMM_WORLD: The default \"group\" containing everyone.",
+            "bullets": [
+              "In MPI, your code is always asking: \"If I am Rank 0, I do the work; if I am Rank 1, I receive the result\"",
+              "Every process runs the SAME code — branching on rank determines behavior",
+              "Think of it like an orchestra: same sheet music, but each musician plays their assigned part"
+            ]
+          },
+          {
+            "title": "The MPI Boilerplate",
+            "content": "MPI_Init: The \"Hello\" to the environment — must be called first. MPI_Finalize: The \"Goodbye\" — no MPI calls allowed after this. Most MPI functions return an integer error code; the actual result (like your Rank) is returned via an output pointer.",
+            "bullets": [
+              "Forgetting MPI_Finalize is like leaving a restaurant without paying — it leads to undefined behavior (crashes)",
+              "MPI_Init(&argc, &argv) must be the first MPI call in your program",
+              "Always check return codes in production code — MPI_SUCCESS means it worked"
+            ]
+          },
+          {
+            "title": "Compiling and Running",
+            "content": "We use mpicc instead of gcc — it handles all the complex linking for you. We use mpiexec -n <number> ./program to launch the parallel team. The launcher doesn't just start the program; it helps the ranks \"find\" each other on the network.",
+            "bullets": [
+              "mpicc -o myprogram myprogram.c (compile)",
+              "mpiexec -n 4 ./myprogram (run with 4 processes)",
+              "On clusters, you submit jobs via a scheduler (SLURM, PBS) that allocates nodes"
+            ]
+          }
+        ]
+      },
+      {
+        "icon": "✉️",
+        "title": "Point-to-Point Communication (The \"Send and Recv\")",
+        "content": "The core of MPI is the Envelope. For a message to arrive, the \"Sender\" and \"Receiver\" must agree on the details: Source/Destination (who is involved?), Tag (an ID to distinguish different types of messages), Communicator (the context, usually MPI_COMM_WORLD), and Datatype (is it an MPI_INT, MPI_FLOAT, or MPI_CHAR?).",
+        "subsections": [
+          {
+            "title": "Blocking vs. Non-blocking",
+            "content": "Blocking (MPI_Send): The sender waits until it is \"safe\" to reuse its buffer. This can cause Deadlocks if Rank 0 and Rank 1 both try to Send at the same time. Non-blocking (MPI_Isend/MPI_Irecv): \"Fire and forget.\" The function returns immediately, allowing you to do math while the network hardware handles the data.",
+            "bullets": [
+              "Use MPI_Wait to pause until a non-blocking send/receive is actually done",
+              "Non-blocking calls let you overlap communication and computation to hide network slowness",
+              "MPI_Test checks if a non-blocking operation completed without blocking"
+            ]
+          },
+          {
+            "title": "The Deadlock Trap",
+            "content": "Scenario: Process A sends to B; Process B sends to A. If they both use blocking MPI_Send, they will stare at each other forever — a \"Mexican Standoff\" for CPUs.",
+            "bullets": [
+              "Cure 1: Change the order — one sends then receives; the other receives then sends",
+              "Cure 2: Use MPI_Sendrecv — a combined call guaranteed not to deadlock",
+              "Cure 3: Use non-blocking MPI_Isend to prevent the blocking stall"
+            ]
+          },
+          {
+            "title": "Wildcards and Probing",
+            "content": "MPI_ANY_SOURCE: Receive a message from anyone who happens to be ready. MPI_Probe: Peek at a message's metadata before receiving it — this is how you find out how big a message is so you can malloc the right amount of space.",
+            "bullets": [
+              "Wildcards are useful for master-worker patterns where you don't know which worker finishes first",
+              "MPI_Probe + MPI_Get_count lets you dynamically allocate exactly the right buffer size",
+              "MPI_ANY_TAG can be combined with MPI_ANY_SOURCE for maximum flexibility"
+            ]
+          }
+        ]
+      },
+      {
+        "icon": "🤝",
+        "title": "Collective Operations (The Group Rituals)",
+        "content": "Collectives involve ALL processes in a communicator. You don't need to write a loop of sends — MPI does it for you, usually much faster using optimized tree-based algorithms internally.",
+        "subsections": [
+          {
+            "title": "Data Movement Collectives",
+            "content": "MPI_Bcast: One process (the root) sends the same data to everyone. MPI_Scatter: The root takes an array and sends different chunks to everyone. MPI_Gather: The opposite of scatter — collect chunks from everyone back into a single array on the root. MPI_Alltoall: Everyone scatters data to everyone else — a complete data swap.",
+            "bullets": [
+              "Collectives are \"all-in\" — if one process doesn't call it, the whole program hangs!",
+              "MPI_Allgather = Gather + Broadcast (everyone gets the full collected array)",
+              "Internal implementations use tree algorithms — O(log n) steps instead of O(n)"
+            ]
+          },
+          {
+            "title": "Reduction Operations",
+            "content": "MPI_Reduce: Combine data from everyone using a math operator (like MPI_SUM, MPI_MAX, or MPI_PROD) and give the result to the root. MPI_Allreduce: Same as reduce, but everyone gets the final result.",
+            "bullets": [
+              "Don't reinvent the wheel — MPI's reduction algorithms are highly tuned for your specific hardware",
+              "Custom reduction operators can be created with MPI_Op_create for complex data types",
+              "MPI_Allreduce is the most commonly used collective in scientific computing"
+            ]
+          },
+          {
+            "title": "Barriers: The Great Pause",
+            "content": "MPI_Barrier: A synchronization point. No process can move past the barrier until every process has reached it. Barriers are the only collective guaranteed to synchronize processes. Use them sparingly — every barrier is wasted CPU time spent waiting.",
+            "bullets": [
+              "Barriers are useful for debugging (ensuring everyone reaches a checkpoint)",
+              "In production code, minimize barriers — they serialize your program",
+              "Most collectives have an implicit synchronization effect (but not a guarantee!)"
+            ]
+          }
+        ]
+      },
+      {
+        "icon": "📦",
+        "title": "Derived Datatypes (Beyond Simple Integers)",
+        "content": "What if you want to send a column of a matrix? In C, rows are contiguous in memory, but columns are \"scattered\" — each element is separated by the row length. Derived datatypes let you describe complex memory layouts so MPI can handle them in a single call.",
+        "subsections": [
+          {
+            "title": "Type Maps and Signatures",
+            "content": "Type Signature: The sequence of basic types (e.g., 3 ints, 2 doubles). Type Map: The signature plus their displacement in memory. The Sender and Receiver must have the same Signature, but their Maps (physical layout) can be different!",
+            "bullets": [
+              "This is how MPI handles heterogeneous data (structs with mixed types)",
+              "Type maps describe WHERE each element lives relative to the start of the buffer",
+              "MPI handles byte-order differences between architectures automatically"
+            ]
+          },
+          {
+            "title": "Constructing New Types",
+            "content": "Contiguous: Creates a type representing N elements in a row. Vector: Creates a type with \"strides\" (gaps) — perfect for matrix columns. Struct: The most powerful — combines different types and arbitrary gaps.",
+            "bullets": [
+              "After defining a type, you MUST call MPI_Type_commit before using it",
+              "MPI_Type_free releases the type when you're done — prevents memory leaks",
+              "Vector types are the workhorse for 2D array operations (rows, columns, subgrids)"
+            ]
+          },
+          {
+            "title": "Size vs. Extent",
+            "content": "Size: The actual number of bytes of data being sent. Extent: The \"footprint\" in memory (from the first byte to the last byte, including gaps). For a vector type representing a column, the Size might be 40 bytes, but the Extent could be 400 bytes.",
+            "bullets": [
+              "Size = how much data travels over the network",
+              "Extent = how much memory MPI steps over when packing/unpacking",
+              "Understanding extent is critical for correctly using types in arrays"
+            ]
+          }
+        ]
+      },
+      {
+        "icon": "🧵",
+        "title": "OpenMP Basics (Shared Memory Programming)",
+        "content": "Now we move inside a single computer. Every thread can see the same memory. There are no \"messages\" — just shared variables. Your program starts as a single Master Thread. When it hits a #pragma omp parallel region, it Forks into a team of threads. At the end of the region, they Join back, and only the Master continues.",
+        "subsections": [
+          {
+            "title": "Worksharing: Splitting the Loop",
+            "content": "#pragma omp parallel for — the \"bread and butter.\" It automatically divides loop iterations among threads. There is an implicit barrier at the end of every worksharing construct — threads wait for the slowpoke before moving on.",
+            "bullets": [
+              "OpenMP threads are like a relay team — they work together on the same track (memory)",
+              "schedule(static): divide iterations evenly upfront — good for predictable work",
+              "schedule(dynamic): threads grab chunks on-the-fly — good for uneven work"
+            ]
+          },
+          {
+            "title": "Data Scoping (Who Sees What?)",
+            "content": "Shared: One copy for the whole team — dangerous for writing (causes Data Races). Private: Every thread gets its own uninitialized copy. Firstprivate: Like private, but initialized with the value the variable had before the parallel region.",
+            "bullets": [
+              "If threads are all incrementing a shared counter, the final result will be wrong (data race!)",
+              "Loop index variables are automatically private in #pragma omp parallel for",
+              "When in doubt, make it private — shared-by-default is the #1 source of OpenMP bugs"
+            ]
+          },
+          {
+            "title": "The Reduction Clause",
+            "content": "Syntax: reduction(operator:variable). The magic: OpenMP gives each thread a private copy, they do their math, and then OpenMP safely merges them into the shared variable at the end. This is the safest way to perform a global sum, product, or min/max.",
+            "bullets": [
+              "reduction(+:sum) — each thread accumulates locally, then all are added together",
+              "reduction(max:biggest) — finds the maximum across all threads safely",
+              "Much faster than using a critical section for every update"
+            ]
+          }
+        ]
+      },
+      {
+        "icon": "📝",
+        "title": "Advanced OpenMP: Tasks and Dependencies",
+        "content": "Standard loops are \"structured.\" But what if you're traversing a linked list or solving a Sudoku puzzle where the work isn't a simple range? Use Tasks — units of work (code + data environment) that can be executed by any thread in the team.",
+        "subsections": [
+          {
+            "title": "The Task Concept",
+            "content": "A Task is a unit of work that can be deferred (put in a queue) or executed immediately by any available thread. Use #pragma omp single to let one thread create the tasks while others help execute them from the queue.",
+            "bullets": [
+              "Tasks decouple work creation from work execution",
+              "The runtime maintains a task queue — idle threads steal tasks from it",
+              "Perfect for irregular workloads: tree traversals, recursive algorithms, graph problems"
+            ]
+          },
+          {
+            "title": "Recursion and Fibonacci",
+            "content": "Tasks are perfect for recursive calls. Thread 1 forks Task A and B, Thread 2 picks up Task A, etc. Taskwait is the synchronization point — the parent task waits for its child tasks to finish before continuing. Without taskwait, you'd try to sum x + y before they've even been calculated!",
+            "bullets": [
+              "#pragma omp task creates a new task that any thread can execute",
+              "#pragma omp taskwait waits for all direct child tasks to complete",
+              "Task dependencies (#pragma omp task depend(in:x)) allow fine-grained ordering"
+            ]
+          },
+          {
+            "title": "Cut-off Strategies",
+            "content": "Creating a task has overhead. If the work is too small (e.g., fib(2)), the overhead is more than the math! The If Clause: #pragma omp task if(n > 20) — if false, the task is executed immediately instead of being queued. The Final Clause: once true, all nested tasks are also executed immediately.",
+            "bullets": [
+              "Don't parallelize the small stuff — task creation costs ~1000 cycles",
+              "Common pattern: parallelize the top levels of recursion, serialize the bottom",
+              "Tuning the cut-off threshold is problem-specific — profile to find the sweet spot"
+            ]
+          }
+        ]
+      },
+      {
+        "icon": "🧠",
+        "title": "Hardware Awareness: NUMA and Affinity",
+        "content": "In large servers, not all memory is \"equally far\" from every CPU. This is ccNUMA (Cache-Coherent Non-Uniform Memory Access). Understanding the hardware topology is what separates 2× speedup from 20× speedup.",
+        "subsections": [
+          {
+            "title": "The First Touch Policy",
+            "content": "In Linux, memory isn't physically placed until a thread actually writes to it for the first time. The Trap: If your Master thread initializes an array in a serial loop, ALL data sits on Node 0. When other threads try to use it, they suffer \"Remote Access\" penalties.",
+            "bullets": [
+              "The God-Tier Fix: Parallel Initialization — always initialize data using the same parallel loop pattern you'll use for computation",
+              "\"Touching\" data is as important as calculating with it",
+              "Use numactl --interleave=all as a quick fix for poorly-placed data"
+            ]
+          },
+          {
+            "title": "Thread Binding (Affinity)",
+            "content": "If the OS moves a thread from Core 1 to Core 10, it loses its cache! OMP_PROC_BIND: Use spread, close, or master to pin threads to specific cores. Pinning threads keeps their data \"warm\" in the local cache.",
+            "bullets": [
+              "spread: distribute threads evenly across sockets — maximizes bandwidth",
+              "close: pack threads together — maximizes cache sharing",
+              "Use hwloc or lstopo to visualize your machine's topology before deciding"
+            ]
+          },
+          {
+            "title": "SIMD (Vectorization)",
+            "content": "Use #pragma omp simd to tell the CPU to use its special \"wide\" registers to do 4, 8, or even 16 operations at once. SIMD is parallelism inside a single core — it multiplies with thread-level parallelism.",
+            "bullets": [
+              "AVX-512 can process 16 floats in a single instruction",
+              "Data must be aligned (e.g., 64-byte boundaries) for peak SIMD performance",
+              "Compiler auto-vectorization often fails on complex loops — explicit #pragma helps"
+            ]
+          }
+        ]
+      },
+      {
+        "icon": "🛠️",
+        "title": "Case Studies: Put It Into Practice",
+        "content": "Theory is great, but let's see how these concepts look in real algorithms. These case studies tie together everything from MPI communication patterns to OpenMP scheduling to hardware awareness.",
+        "subsections": [
+          {
+            "title": "Mandelbrot (Load Balancing)",
+            "content": "Some pixels take 1000 iterations; some take 1. If you split the image evenly, some threads will finish in a second while others take an hour! Solution: Master-Worker Pattern — ranks request small \"chunks\" of work dynamically.",
+            "bullets": [
+              "Static distribution is for predictable work; dynamic is for the unpredictable",
+              "OpenMP: schedule(dynamic, chunk_size) handles this automatically for loops",
+              "MPI: implement a task queue where workers request new work when idle"
+            ]
+          },
+          {
+            "title": "Sparse Matrices (Compressed Row Storage — CRS)",
+            "content": "Scientific matrices are 99% zeros. We don't store them! We use CRS format: values, column_indices, and row_pointers. In the Conjugate Gradient (CG) solver, the hotspot is the Matrix-Vector product — parallelizing it requires careful memory indexing to avoid cache misses.",
+            "bullets": [
+              "CRS stores only non-zero elements — huge memory savings for sparse problems",
+              "SpMV (Sparse Matrix-Vector multiply) is memory-bound, not compute-bound",
+              "Row-based partitioning in MPI maps naturally to CRS format"
+            ]
+          },
+          {
+            "title": "Hybrid Programming (MPI + OpenMP)",
+            "content": "Use MPI between nodes and OpenMP inside the node. It reduces memory usage and communication overhead. Support Levels: SINGLE, FUNNELED, SERIALIZED, MULTIPLE — you must tell MPI which level of thread safety you need at MPI_Init_thread.",
+            "bullets": [
+              "FUNNELED: only the master thread calls MPI — simplest and most common",
+              "MULTIPLE: any thread can call MPI — most flexible but highest overhead",
+              "Hybrid typically outperforms pure MPI at scale due to reduced message traffic"
+            ]
+          }
+        ]
+      }
+    ],
+    "chatResponses": {
+      "deadlock|send|recv|blocking": "Deadlock Alert! You've hit a situation where processes are waiting for each other in a circle. Check if you're using blocking MPI_Send calls. Try swapping the order on one rank, or use MPI_Sendrecv to break the cycle!",
+      "private|shared|scope|data race": "OpenMP Scoping 101: Shared means one variable everyone fights over (risk of data races!). Private means everyone gets their own secret copy. Use Reduction if you need to sum them all up at the end!",
+      "amdahl|speedup|efficiency|serial": "Amdahl's Limit: The serial part of your code is your ceiling. If 10% of your code is serial, you can never go faster than 10×. Focus on shrinking that serial fraction! Gustafson says: scale the problem too.",
+      "non-blocking|isend|irecv|overlap": "Speed Hack: Non-blocking calls (MPI_Isend) let you overlap work. Start the send, go do some heavy math, and then call MPI_Wait later. This hides network latency!",
+      "first touch|numa|affinity|binding": "NUMA Wisdom: Memory is physically located where it's first written. If you initialize data serially, you're creating a bottleneck. Always initialize your arrays in parallel!",
+      "task|taskwait|recursion|fibonacci": "OpenMP Tasks: Perfect for linked lists or recursion! Think of them as Post-it notes of work. Threads grab them whenever they're free. Don't forget taskwait to sync up!",
+      "vector|derived|type|stride|column": "MPI Vector Power: Need to send a column of a matrix? A Vector type lets you define strides so MPI knows to skip elements in memory and grab exactly what you need in one go!",
+      "scatter|gather|bcast|reduce|collective": "Collectives are all-in — every process must call them or the program hangs. MPI_Scatter splits data, MPI_Gather collects it, MPI_Bcast copies to all, MPI_Reduce combines with an operator. Don't write loops of sends when a collective exists!",
+      "openmp|parallel for|reduction|schedule": "OpenMP basics: #pragma omp parallel for splits loop iterations. Use reduction(+:sum) for safe accumulation. Choose schedule(static) for even work, schedule(dynamic) for uneven. Always check your data scoping!"
+    }
   }
 ]

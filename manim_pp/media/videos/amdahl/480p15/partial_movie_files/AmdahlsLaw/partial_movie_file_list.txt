@@ -1,0 +1,10 @@
+# This file is used internally by FFMPEG.
+file 'file:/Users/andreafraschetti/Desktop/Coast/testing/manim_pp/media/videos/amdahl/480p15/partial_movie_files/AmdahlsLaw/364067112_1254939485_223132457.mp4'
+file 'file:/Users/andreafraschetti/Desktop/Coast/testing/manim_pp/media/videos/amdahl/480p15/partial_movie_files/AmdahlsLaw/1026954337_3967774645_2229038288.mp4'
+file 'file:/Users/andreafraschetti/Desktop/Coast/testing/manim_pp/media/videos/amdahl/480p15/partial_movie_files/AmdahlsLaw/1026954337_534219285_114425243.mp4'
+file 'file:/Users/andreafraschetti/Desktop/Coast/testing/manim_pp/media/videos/amdahl/480p15/partial_movie_files/AmdahlsLaw/1026954337_3335939009_3841468259.mp4'
+file 'file:/Users/andreafraschetti/Desktop/Coast/testing/manim_pp/media/videos/amdahl/480p15/partial_movie_files/AmdahlsLaw/1026954337_3367914543_269796011.mp4'
+file 'file:/Users/andreafraschetti/Desktop/Coast/testing/manim_pp/media/videos/amdahl/480p15/partial_movie_files/AmdahlsLaw/1026954337_2339808461_3937758358.mp4'
+file 'file:/Users/andreafraschetti/Desktop/Coast/testing/manim_pp/media/videos/amdahl/480p15/partial_movie_files/AmdahlsLaw/1026954337_3393917774_1076935267.mp4'
+file 'file:/Users/andreafraschetti/Desktop/Coast/testing/manim_pp/media/videos/amdahl/480p15/partial_movie_files/AmdahlsLaw/1026954337_293619272_1389507019.mp4'
+file 'file:/Users/andreafraschetti/Desktop/Coast/testing/manim_pp/media/videos/amdahl/480p15/partial_movie_files/AmdahlsLaw/1026954337_2844360058_3345013533.mp4'

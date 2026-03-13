@@ -34,12 +34,18 @@ export default function ExerciseWidget({ section, token, onClose }) {
           action: 'generate',
         }),
       });
-      if (!res.ok) throw new Error('Failed');
+      if (!res.ok) {
+        const errBody = await res.text().catch(() => '');
+        console.error('[exercise] generate failed:', res.status, errBody);
+        throw new Error('Failed');
+      }
       const data = await res.json();
       setQuestion(data.question);
       setStage('question');
-    } catch {
+    } catch (err) {
+      console.error('[exercise] generate error:', err);
       setQuestion('Could not generate a question. Try again.');
+      setStage('question');
     } finally {
       setLoading(false);
     }

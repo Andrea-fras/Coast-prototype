@@ -172,25 +172,23 @@ const PedroChat = ({ onClose }) => {
       if (!res.ok) throw new Error('Failed');
 
       const data = await res.json();
-      if (data.usage) {
-        setChatRemaining(data.usage.chat_messages_remaining);
-      }
       if (data.conversation_id && !activeConvo) {
         setActiveConvo(data.conversation_id);
         setConversations(prev => [{
           conversation_id: data.conversation_id,
           context_type: 'global',
-          last_message: data.reply.substring(0, 100),
+          last_message: (data.reply || '').substring(0, 100),
           last_role: 'pedro',
           updated_at: new Date().toISOString(),
         }, ...prev]);
-      } else {
+      } else if (data.conversation_id) {
         setConversations(prev => prev.map(c =>
           c.conversation_id === data.conversation_id
-            ? { ...c, last_message: data.reply.substring(0, 100), updated_at: new Date().toISOString() }
+            ? { ...c, last_message: (data.reply || '').substring(0, 100), updated_at: new Date().toISOString() }
             : c
         ));
       }
+      if (data.usage) setChatRemaining(data.usage.chat_messages_remaining);
       setMessages(prev => [...prev, { role: 'pedro', text: data.reply }]);
     } catch {
       setMessages(prev => [...prev, {

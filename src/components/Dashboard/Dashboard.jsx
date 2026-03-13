@@ -90,9 +90,9 @@ const Dashboard = ({
   const recentSessions = sessions.slice(0, 3);
 
   const weakTopics = React.useMemo(() => {
-    if (!skillProfile || typeof skillProfile !== 'object') return [];
-    const entries = Object.entries(skillProfile).filter(([k]) => k !== 'updated_at');
-    return entries.sort((a, b) => a[1] - b[1]).slice(0, 3);
+    const topics = skillProfile?.topics;
+    if (!topics || typeof topics !== 'object') return [];
+    return Object.entries(topics).sort((a, b) => a[1] - b[1]).slice(0, 3);
   }, [skillProfile]);
 
   const dueCount = reviewStats?.due_today || 0;
