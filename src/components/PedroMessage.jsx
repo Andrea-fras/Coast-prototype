@@ -4,25 +4,37 @@ import rehypeKatex from 'rehype-katex';
 import remarkGfm from 'remark-gfm';
 import 'katex/dist/katex.min.css';
 
+function repairIncompleteSvg(text) {
+  const hasSvgOpen = /<svg[\s>]/i.test(text);
+  if (!hasSvgOpen) return text;
+  const hasSvgClose = /<\/svg>/i.test(text);
+  const hasDivClose = /<\/div>\s*$/i.test(text);
+  let repaired = text;
+  if (!hasSvgClose) repaired += '</svg>';
+  if (/<div[^>]*>[\s\S]*<svg/i.test(text) && !hasDivClose) repaired += '</div>';
+  return repaired;
+}
+
 function splitSvgBlocks(text) {
+  const repaired = repairIncompleteSvg(text);
   const svgRegex = /(<div[^>]*>[\s\S]*?<svg[\s\S]*?<\/svg>[\s\S]*?<\/div>|<svg[\s\S]*?<\/svg>)/gi;
   const parts = [];
   let lastIndex = 0;
   let match;
 
-  while ((match = svgRegex.exec(text)) !== null) {
+  while ((match = svgRegex.exec(repaired)) !== null) {
     if (match.index > lastIndex) {
-      parts.push({ type: 'markdown', content: text.slice(lastIndex, match.index) });
+      parts.push({ type: 'markdown', content: repaired.slice(lastIndex, match.index) });
     }
     parts.push({ type: 'svg', content: match[0] });
     lastIndex = svgRegex.lastIndex;
   }
 
-  if (lastIndex < text.length) {
-    parts.push({ type: 'markdown', content: text.slice(lastIndex) });
+  if (lastIndex < repaired.length) {
+    parts.push({ type: 'markdown', content: repaired.slice(lastIndex) });
   }
 
-  return parts.length > 0 ? parts : [{ type: 'markdown', content: text }];
+  return parts.length > 0 ? parts : [{ type: 'markdown', content: repaired }];
 }
 
 function MarkdownBlock({ text }) {
