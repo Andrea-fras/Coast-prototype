@@ -622,6 +622,74 @@
   fill: #e0e0e0;
 }
 
+/* ═══════════════════ Offline / Retry ═══════════════════ */
+
+.lv-offline-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.82rem;
+  font-weight: 500;
+  flex: none;
+}
+.dark .lv-offline-bar {
+  background: #78350f;
+  color: #fef3c7;
+}
+
+.lv-retry-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: #fef2f2;
+  border-top: 1px solid #fecaca;
+  color: #991b1b;
+  font-size: 0.82rem;
+  font-weight: 500;
+  flex: none;
+}
+.dark .lv-retry-bar {
+  background: #450a0a;
+  border-top-color: #7f1d1d;
+  color: #fecaca;
+}
+
+.lv-retry-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 14px;
+  border: none;
+  border-radius: 6px;
+  background: #5a67f6;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.lv-retry-btn:hover {
+  background: #4a55e0;
+}
+
+.lv-advance-error {
+  display: block;
+  text-align: center;
+  color: #dc2626;
+  font-size: 0.78rem;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.dark .lv-advance-error {
+  color: #fca5a5;
+}
+
 /* ═══════════════════ Responsive ═══════════════════ */
 
 @media (max-width: 768px) {

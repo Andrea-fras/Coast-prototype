@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Send, Paperclip, ArrowRight, ArrowLeft, BookOpen, Upload, FileText, Loader, CheckCircle, AlertCircle, PenLine, Search, Trash2, Sun, Moon, Layers, ChevronLeft, ChevronRight, RotateCcw, Shuffle, Download, GitBranch, Maximize2, Minimize2, FolderPlus, Folder, ChevronDown, Plus } from 'lucide-react';
+import { X, Send, Paperclip, ArrowRight, ArrowLeft, BookOpen, Upload, FileText, Loader, CheckCircle, AlertCircle, PenLine, Search, Trash2, Sun, Moon, Layers, ChevronLeft, ChevronRight, RotateCcw, Shuffle, Download, GitBranch, Maximize2, Minimize2, FolderPlus, Folder, ChevronDown, Plus, RefreshCw } from 'lucide-react';
 import './NotebookPage.css';
 import builtInNotebooks from '../../data/notebooks.json';
 import paper1 from '../../data/samplePaper.json';
@@ -58,6 +58,7 @@ const DEMO_VIZ = {
 };
 
 import { API_URL } from '../../config';
+import { fetchWithRetry } from '../../utils/fetchWithRetry';
 
 // Map paper IDs to data (for built-in notebooks)
 const paperMap = {
@@ -473,8 +474,9 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
 
     setChatMessages(prev => [...prev, { role: 'pedro', text: '' }]);
 
+    let res;
     try {
-      const res = await fetch(`${API_URL}/api/chat/stream`, {
+      res = await fetchWithRetry(`${API_URL}/api/chat/stream`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -489,7 +491,17 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
       });
 
       if (!res.ok) throw new Error('Failed');
+    } catch {
+      setChatMessages(prev => {
+        const updated = [...prev];
+        updated[updated.length - 1] = { role: 'pedro', text: "Connection error — please check your internet and try again." };
+        return updated;
+      });
+      setIsChatLoading(false);
+      return;
+    }
 
+    try {
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let fullText = '';
@@ -524,14 +536,19 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
       if (!fullText) {
         setChatMessages(prev => {
           const updated = [...prev];
-          updated[updated.length - 1] = { role: 'pedro', text: "Sorry, I'm having trouble connecting right now. Please try again in a moment." };
+          updated[updated.length - 1] = { role: 'pedro', text: "Sorry, something went wrong. Please try again." };
           return updated;
         });
       }
     } catch {
       setChatMessages(prev => {
         const updated = [...prev];
-        updated[updated.length - 1] = { role: 'pedro', text: "Sorry, I'm having trouble connecting right now. Please try again in a moment." };
+        const last = updated[updated.length - 1];
+        if (last?.text) {
+          updated[updated.length - 1] = { role: 'pedro', text: last.text + '\n\n*Connection interrupted — send your message again to continue.*' };
+        } else {
+          updated[updated.length - 1] = { role: 'pedro', text: "Connection lost mid-response. Please try again." };
+        }
         return updated;
       });
     } finally {

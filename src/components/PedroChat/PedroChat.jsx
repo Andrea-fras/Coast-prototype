@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import PedroMessage from '../PedroMessage';
 
 import { API_URL } from '../../config';
+import { fetchWithRetry } from '../../utils/fetchWithRetry';
 
 const PedroChat = ({ onClose }) => {
   const { token } = useAuth();
@@ -152,7 +153,7 @@ const PedroChat = ({ onClose }) => {
 
       setMessages(prev => [...prev, { role: 'pedro', text: '' }]);
 
-      const res = await fetch(`${API_URL}/api/chat/stream`, {
+      const res = await fetchWithRetry(`${API_URL}/api/chat/stream`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

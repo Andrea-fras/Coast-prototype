@@ -1,16 +1,20 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { X, ChevronRight, CheckCircle, Loader, Send, List, Clock, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { X, ChevronRight, CheckCircle, Loader, Send, List, Clock, ArrowLeft, RefreshCw, WifiOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { API_URL } from '../../config';
+import { fetchWithRetry } from '../../utils/fetchWithRetry';
 import PedroMessage from '../PedroMessage';
 import mascot from '../../assets/sessioncompletebird.svg';
 import './LessonView.css';
+
+const CHAT_STORAGE_PREFIX = 'coast_lesson_chat_';
 
 const LessonView = ({ folderName, onClose }) => {
   const { token } = useAuth();
 
   const [lessonState, setLessonState] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
@@ -20,11 +24,29 @@ const LessonView = ({ folderName, onClose }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sectionComplete, setSectionComplete] = useState(false);
   const [advancing, setAdvancing] = useState(false);
+  const [advanceError, setAdvanceError] = useState(false);
+
+  const [retryPayload, setRetryPayload] = useState(null);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
   const chatAreaRef = useRef(null);
   const inputRef = useRef(null);
+  const currentSectionRef = useRef(0);
+  const conversationIdRef = useRef(null);
 
-  const headers = () => ({ Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' });
+  const storageKey = CHAT_STORAGE_PREFIX + folderName;
+  const hdrs = () => ({ Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' });
+
+  useEffect(() => {
+    const goOffline = () => setIsOffline(true);
+    const goOnline = () => setIsOffline(false);
+    window.addEventListener('offline', goOffline);
+    window.addEventListener('online', goOnline);
+    return () => {
+      window.removeEventListener('offline', goOffline);
+      window.removeEventListener('online', goOnline);
+    };
+  }, []);
 
   useEffect(() => {
     fetchLessonState();
@@ -43,10 +65,28 @@ const LessonView = ({ folderName, onClose }) => {
     }
   }, [chatMessages]);
 
+  useEffect(() => {
+    if (chatMessages.length === 0) return;
+    const hasContent = chatMessages.some(m => m.content && m.content.length > 0);
+    if (!hasContent) return;
+    try {
+      sessionStorage.setItem(storageKey, JSON.stringify({
+        sectionIdx: currentSectionRef.current,
+        messages: chatMessages,
+        conversationId: conversationIdRef.current,
+        sectionComplete,
+      }));
+    } catch {}
+  }, [chatMessages, sectionComplete, storageKey]);
+
   const fetchLessonState = async () => {
     setLoading(true);
+    setLoadError(false);
     try {
-      const res = await fetch(`${API_URL}/api/folders/${encodeURIComponent(folderName)}/lesson`, { headers: headers() });
+      const res = await fetchWithRetry(
+        `${API_URL}/api/folders/${encodeURIComponent(folderName)}/lesson`,
+        { headers: hdrs() },
+      );
       if (res.ok) {
         const data = await res.json();
         setLessonState(data);
@@ -54,15 +94,33 @@ const LessonView = ({ folderName, onClose }) => {
           startSectionChat(data.current_section, data.sections);
         }
       }
-    } catch {}
+    } catch {
+      setLoadError(true);
+    }
     setLoading(false);
   };
 
   const startSectionChat = (sectionIdx, sections) => {
     setSectionComplete(false);
     setConversationId(null);
+    conversationIdRef.current = null;
+    setRetryPayload(null);
+    currentSectionRef.current = sectionIdx;
     const section = sections?.[sectionIdx];
     if (!section) return;
+
+    try {
+      const stored = JSON.parse(sessionStorage.getItem(storageKey));
+      if (stored?.sectionIdx === sectionIdx && stored.messages?.length > 0) {
+        setChatMessages(stored.messages);
+        if (stored.conversationId) {
+          setConversationId(stored.conversationId);
+          conversationIdRef.current = stored.conversationId;
+        }
+        if (stored.sectionComplete) setSectionComplete(true);
+        return;
+      }
+    } catch {}
 
     setChatMessages([]);
     setChatLoading(true);
@@ -75,6 +133,7 @@ const LessonView = ({ folderName, onClose }) => {
 
   const sendToApi = async (message, convId) => {
     setChatLoading(true);
+    setRetryPayload(null);
     setChatMessages(prev => [...prev, { role: 'pedro', content: '' }]);
 
     const updateLastPedro = (content) => {
@@ -85,10 +144,11 @@ const LessonView = ({ folderName, onClose }) => {
       });
     };
 
+    let res;
     try {
-      const res = await fetch(`${API_URL}/api/chat/stream`, {
+      res = await fetchWithRetry(`${API_URL}/api/chat/stream`, {
         method: 'POST',
-        headers: headers(),
+        headers: hdrs(),
         body: JSON.stringify({
           message,
           context_type: 'lesson',
@@ -96,13 +156,21 @@ const LessonView = ({ folderName, onClose }) => {
           conversation_id: convId,
         }),
       });
+    } catch {
+      updateLastPedro('');
+      setRetryPayload({ message, convId });
+      setChatLoading(false);
+      return;
+    }
 
-      if (!res.ok) {
-        updateLastPedro('Sorry, something went wrong. Try again!');
-        setChatLoading(false);
-        return;
-      }
+    if (!res.ok) {
+      updateLastPedro('Sorry, something went wrong. Try again!');
+      setRetryPayload({ message, convId });
+      setChatLoading(false);
+      return;
+    }
 
+    try {
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let fullText = '';
@@ -124,7 +192,10 @@ const LessonView = ({ folderName, onClose }) => {
               updateLastPedro(fullText.replace('[SECTION_COMPLETE]', '').trim());
             }
             if (evt.done) {
-              if (evt.conversation_id) setConversationId(evt.conversation_id);
+              if (evt.conversation_id) {
+                setConversationId(evt.conversation_id);
+                conversationIdRef.current = evt.conversation_id;
+              }
               if (fullText.includes('[SECTION_COMPLETE]')) setSectionComplete(true);
             }
           } catch {}
@@ -133,28 +204,45 @@ const LessonView = ({ folderName, onClose }) => {
 
       if (!fullText) {
         updateLastPedro('Sorry, something went wrong. Try again!');
+        setRetryPayload({ message, convId });
+      } else {
+        setRetryPayload(null);
       }
     } catch {
-      updateLastPedro('Connection error. Please try again.');
+      setRetryPayload({ message, convId });
     }
     setChatLoading(false);
   };
+
+  const handleRetry = useCallback(() => {
+    if (!retryPayload) return;
+    setChatMessages(prev => {
+      const last = prev[prev.length - 1];
+      if (last?.role === 'pedro' && !last.content) return prev.slice(0, -1);
+      return prev;
+    });
+    const { message, convId } = retryPayload;
+    sendToApi(message, convId);
+  }, [retryPayload]);
 
   const handleSend = async () => {
     const msg = chatInput.trim();
     if (!msg || chatLoading) return;
     setChatInput('');
+    setRetryPayload(null);
     setChatMessages(prev => [...prev, { role: 'user', content: msg }]);
     await sendToApi(msg, conversationId);
   };
 
   const handleAdvanceSection = async () => {
     setAdvancing(true);
+    setAdvanceError(false);
     try {
-      const res = await fetch(`${API_URL}/api/folders/${encodeURIComponent(folderName)}/lesson/advance`, {
-        method: 'POST',
-        headers: headers(),
-      });
+      sessionStorage.removeItem(storageKey);
+      const res = await fetchWithRetry(
+        `${API_URL}/api/folders/${encodeURIComponent(folderName)}/lesson/advance`,
+        { method: 'POST', headers: hdrs() },
+      );
       if (res.ok) {
         const data = await res.json();
         const newState = {
@@ -174,8 +262,12 @@ const LessonView = ({ folderName, onClose }) => {
         } else if (data.next_section) {
           startSectionChat(data.current_section, lessonState?.sections);
         }
+      } else {
+        setAdvanceError(true);
       }
-    } catch {}
+    } catch {
+      setAdvanceError(true);
+    }
     setAdvancing(false);
   };
 
@@ -185,6 +277,21 @@ const LessonView = ({ folderName, onClose }) => {
         <div className="lv-loading">
           <Loader size={28} className="spinning" />
           <span>Loading lesson...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="lv-container">
+        <div className="lv-loading">
+          <WifiOff size={28} />
+          <span>Couldn't load the lesson — check your connection</span>
+          <button className="lv-retry-btn" onClick={fetchLessonState}>
+            <RefreshCw size={14} />
+            Retry
+          </button>
         </div>
       </div>
     );
@@ -210,6 +317,14 @@ const LessonView = ({ folderName, onClose }) => {
 
   return (
     <div className="lv-container">
+      {/* Offline banner */}
+      {isOffline && (
+        <div className="lv-offline-bar">
+          <WifiOff size={14} />
+          <span>You're offline — reconnect to continue</span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="lv-header">
         <button className="lv-close-btn" onClick={onClose}>
@@ -317,9 +432,24 @@ const LessonView = ({ folderName, onClose }) => {
             )}
           </div>
 
+          {/* Retry bar */}
+          {retryPayload && !chatLoading && (
+            <div className="lv-retry-bar">
+              <WifiOff size={14} />
+              <span>Connection lost — your progress is saved</span>
+              <button className="lv-retry-btn" onClick={handleRetry}>
+                <RefreshCw size={14} />
+                Retry
+              </button>
+            </div>
+          )}
+
           {/* Next Section Button */}
           {sectionComplete && !isComplete && (
             <div className="lv-next-section-bar">
+              {advanceError && (
+                <span className="lv-advance-error">Connection error — tap to retry</span>
+              )}
               <button
                 className="lv-next-section-btn"
                 onClick={handleAdvanceSection}
@@ -327,10 +457,12 @@ const LessonView = ({ folderName, onClose }) => {
               >
                 {advancing ? (
                   <Loader size={18} className="spinning" />
+                ) : advanceError ? (
+                  <RefreshCw size={18} />
                 ) : (
                   <ChevronRight size={18} />
                 )}
-                <span>{advancing ? 'Loading next section...' : 'Next Section'}</span>
+                <span>{advancing ? 'Loading next section...' : advanceError ? 'Retry' : 'Next Section'}</span>
               </button>
             </div>
           )}
