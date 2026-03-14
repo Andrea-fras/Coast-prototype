@@ -80,7 +80,7 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
   const [conversationId, setConversationId] = useState(null);
   const notesRef = useRef(null);
   const contentRef = useRef(null);
-  const chatEndRef = useRef(null);
+  
 
   // Editing state
   const [isEditing, setIsEditing] = useState(false);
@@ -615,9 +615,10 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
   }, [visibleSections]);
 
   // Scroll chat
+  const chatAreaRef = useRef(null);
   useEffect(() => {
-    if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (chatAreaRef.current) {
+      chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
     }
   }, [chatMessages]);
 
@@ -1843,7 +1844,7 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
 
           {/* Chat Messages */}
           {chatMessages.length > 0 && (
-            <div className="pedro-messages">
+            <div className="pedro-messages" ref={chatAreaRef}>
               {chatMessages.map((msg, idx) => (
                 <div key={idx} className={`pedro-msg ${msg.role}`}>
                   {msg.role === 'pedro' && (
@@ -1874,7 +1875,7 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
                   </div>
                 </div>
               )}
-              <div ref={chatEndRef} />
+              <div />
             </div>
           )}
 

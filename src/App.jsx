@@ -10,6 +10,7 @@ import PomodoroPage from './components/PomodoroPage/PomodoroPage'
 import AdminDashboard from './components/AdminDashboard/AdminDashboard'
 import LoginPage from './components/LoginPage/LoginPage'
 import ReviewSession from './components/ReviewSession/ReviewSession'
+import OnboardingModal from './components/OnboardingModal/OnboardingModal'
 import { useAuth } from './context/AuthContext'
 
 // Import all papers
@@ -49,6 +50,8 @@ function App() {
     return <LoginPage />;
   }
 
+  const showOnboarding = user && !user.onboarding_completed;
+
   const handleStartQuest = () => {
     setActivePaper(papers[selectedPaperIndex].data);
     setShowQuestionPage(true);
@@ -79,6 +82,7 @@ function App() {
 
   return (
     <>
+      {showOnboarding && <OnboardingModal />}
       {showQuestionPage && <QuestionPage onClose={handleCloseQuest} paper={activePaper || papers[selectedPaperIndex].data} />}
       {showNotebook && (
         <NotebookPage 

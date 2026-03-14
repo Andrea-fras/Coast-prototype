@@ -19,7 +19,7 @@ const Navbar = ({ onNotebookClick, onPedroClick, onPomodoroClick, onLogoClick, u
           <Home size={31} />
           <span>Home</span>
         </a>
-        <a href="#" className="nav-link" onClick={(e) => { e.preventDefault(); onNotebookClick?.(); }}>
+        <a href="#" className="nav-link" data-tour="notebook-nav" onClick={(e) => { e.preventDefault(); onNotebookClick?.(); }}>
           <FileText size={31} />
           <span>Notebook</span>
         </a>

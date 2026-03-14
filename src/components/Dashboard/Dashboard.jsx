@@ -10,6 +10,7 @@ import mascot from '../../assets/sessioncompletebird.svg';
 import bookCover from '../../assets/bookcover.svg';
 import './Dashboard.css';
 import { API_URL } from '../../config';
+import TutorialTour from '../TutorialTour/TutorialTour';
 
 function timeAgo(dateStr) {
   if (!dateStr) return '';
@@ -33,8 +34,16 @@ const Dashboard = ({
   onOpenPomodoro,
   onStartReview,
 }) => {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const [showTour, setShowTour] = useState(false);
+
+  useEffect(() => {
+    if (user?.onboarding_completed && !localStorage.getItem(TutorialTour.STORAGE_KEY)) {
+      const timer = setTimeout(() => setShowTour(true), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [user?.onboarding_completed]);
 
   const [streakData, setStreakData] = useState({ streak: 0, week: [] });
   const [stats, setStats] = useState(null);
@@ -152,7 +161,7 @@ const Dashboard = ({
           </div>
 
           {/* Continue Course */}
-          <div className="card bottom-card continue-course">
+          <div className="card bottom-card continue-course" data-tour="courses">
             <h3>Continue course</h3>
             <div className="courses-grid">
               {papers.map((paper, index) => (
@@ -180,7 +189,7 @@ const Dashboard = ({
         <div className="right-panel-stack">
 
           {/* Pedro's Daily Briefing */}
-          <div className="rp-card rp-briefing">
+          <div className="rp-card rp-briefing" data-tour="briefing">
             <div className="rp-briefing-header">
               <img src={mascot} alt="Pedro" className="rp-briefing-avatar" />
               <div className="rp-briefing-title">
@@ -211,7 +220,7 @@ const Dashboard = ({
           </div>
 
           {/* Spaced Repetition Card */}
-          <div className="rp-card rp-review">
+          <div className="rp-card rp-review" data-tour="review-deck">
             <div className="rp-card-head">
               <h3>
                 <Brain size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />
@@ -313,7 +322,7 @@ const Dashboard = ({
           </div>
 
           {/* Your Notebooks */}
-          <div className="rp-card rp-notebooks">
+          <div className="rp-card rp-notebooks" data-tour="notebooks">
             <div className="rp-card-head">
               <h3>Your Notebooks</h3>
               <button className="rp-see-all" onClick={onOpenNotebook}>
@@ -342,7 +351,7 @@ const Dashboard = ({
           </div>
 
           {/* Ask Pedro */}
-          <div className="rp-card rp-pedro" onClick={onOpenPedro}>
+          <div className="rp-card rp-pedro" data-tour="ask-pedro" onClick={onOpenPedro}>
             <img src={mascot} alt="Pedro" className="rp-pedro-img" />
             <div className="rp-pedro-text">
               <span className="rp-pedro-name">Ask Pedro</span>
@@ -353,6 +362,7 @@ const Dashboard = ({
 
         </div>
       </div>
+      {showTour && <TutorialTour />}
     </div>
   );
 };
