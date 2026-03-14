@@ -1181,7 +1181,7 @@
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
-  flex-shrink: 0;
+  flex: none;
   margin-bottom: 0.75rem;
   padding: 0.65rem 1rem;
   background: rgba(255, 255, 255, 0.7);
