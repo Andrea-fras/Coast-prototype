@@ -76,7 +76,14 @@ const LessonView = ({ folderName, onClose }) => {
   const sendToApi = async (message, convId) => {
     setChatLoading(true);
     setChatMessages(prev => [...prev, { role: 'pedro', content: '' }]);
-    const pedroIdx = chatMessages.length + 1;
+
+    const updateLastPedro = (content) => {
+      setChatMessages(prev => {
+        const updated = [...prev];
+        updated[updated.length - 1] = { role: 'pedro', content };
+        return updated;
+      });
+    };
 
     try {
       const res = await fetch(`${API_URL}/api/chat/stream`, {
@@ -91,11 +98,7 @@ const LessonView = ({ folderName, onClose }) => {
       });
 
       if (!res.ok) {
-        setChatMessages(prev => {
-          const updated = [...prev];
-          updated[pedroIdx] = { role: 'pedro', content: 'Sorry, something went wrong. Try again!' };
-          return updated;
-        });
+        updateLastPedro('Sorry, something went wrong. Try again!');
         setChatLoading(false);
         return;
       }
@@ -118,12 +121,7 @@ const LessonView = ({ folderName, onClose }) => {
             const evt = JSON.parse(line.slice(6));
             if (evt.token) {
               fullText += evt.token;
-              const display = fullText.replace('[SECTION_COMPLETE]', '').trim();
-              setChatMessages(prev => {
-                const updated = [...prev];
-                updated[pedroIdx] = { role: 'pedro', content: display };
-                return updated;
-              });
+              updateLastPedro(fullText.replace('[SECTION_COMPLETE]', '').trim());
             }
             if (evt.done) {
               if (evt.conversation_id) setConversationId(evt.conversation_id);
@@ -134,20 +132,10 @@ const LessonView = ({ folderName, onClose }) => {
       }
 
       if (!fullText) {
-        setChatMessages(prev => {
-          const updated = [...prev];
-          updated[pedroIdx] = { role: 'pedro', content: 'Sorry, something went wrong. Try again!' };
-          return updated;
-        });
+        updateLastPedro('Sorry, something went wrong. Try again!');
       }
     } catch {
-      setChatMessages(prev => {
-        const updated = [...prev];
-        if (updated[pedroIdx]) {
-          updated[pedroIdx] = { role: 'pedro', content: 'Connection error. Please try again.' };
-        }
-        return updated;
-      });
+      updateLastPedro('Connection error. Please try again.');
     }
     setChatLoading(false);
   };
