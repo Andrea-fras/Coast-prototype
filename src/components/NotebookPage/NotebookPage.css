@@ -1176,6 +1176,92 @@
   color: #FFB503;
 }
 
+/* ── Pedro Tip (inside notebook page) ──────── */
+.nb-tip.pedro-tip-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+  padding: 0.85rem 1.1rem;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 181, 3, 0.2);
+  border-radius: 14px;
+  box-shadow: 0 3px 12px rgba(255, 181, 3, 0.06);
+  animation: tip-slideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes tip-slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.nb-tip .pedro-tip-avatar {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.nb-tip .pedro-tip-content {
+  flex: 1;
+  min-width: 0;
+}
+.nb-tip .pedro-tip-content strong {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #1a1a2e;
+}
+.nb-tip .pedro-tip-content p {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.8rem;
+  color: #555;
+  margin: 0.25rem 0 0;
+  line-height: 1.5;
+}
+.nb-tip .pedro-tip-content p b {
+  color: #333;
+  font-weight: 700;
+}
+.nb-tip .pedro-tip-close {
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.04);
+  border: none;
+  border-radius: 8px;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #aaa;
+  transition: all 0.15s;
+}
+.nb-tip .pedro-tip-close:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: #666;
+}
+.notebook-page.dark .nb-tip.pedro-tip-banner {
+  background: rgba(20, 22, 45, 0.6);
+  border-color: rgba(255, 181, 3, 0.12);
+}
+.notebook-page.dark .nb-tip .pedro-tip-content strong {
+  color: #eee;
+}
+.notebook-page.dark .nb-tip .pedro-tip-content p {
+  color: rgba(255, 255, 255, 0.55);
+}
+.notebook-page.dark .nb-tip .pedro-tip-content p b {
+  color: rgba(255, 255, 255, 0.8);
+}
+.notebook-page.dark .nb-tip .pedro-tip-close {
+  background: rgba(255, 255, 255, 0.06);
+  color: #666;
+}
+.notebook-page.dark .nb-tip .pedro-tip-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #aaa;
+}
+
 /* ── Content Area ───────────────────────────── */
 .nb-content-area {
   flex: 1;
@@ -2654,6 +2740,44 @@
 .notebook-page.dark .pedro-msg.pedro .pedro-msg-bubble {
   background: rgba(255, 255, 255, 0.06);
   color: rgba(255, 255, 255, 0.75);
+}
+.notebook-page.dark .pedro-msg.pedro .pedro-msg-bubble h1,
+.notebook-page.dark .pedro-msg.pedro .pedro-msg-bubble h2,
+.notebook-page.dark .pedro-msg.pedro .pedro-msg-bubble h3,
+.notebook-page.dark .pedro-msg.pedro .pedro-msg-bubble h4,
+.notebook-page.dark .pedro-msg.pedro .pedro-msg-bubble strong {
+  color: rgba(255, 255, 255, 0.92);
+}
+.notebook-page.dark .pedro-msg.pedro .pedro-msg-bubble code {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e0b0ff;
+}
+.notebook-page.dark .pedro-msg.pedro .pedro-msg-bubble pre {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.notebook-page.dark .pedro-msg.pedro .pedro-msg-bubble pre code {
+  background: transparent;
+  color: #c8d6e5;
+}
+.notebook-page.dark .pedro-msg.pedro .pedro-msg-bubble a {
+  color: #82b1ff;
+}
+.notebook-page.dark .pedro-msg.pedro .pedro-msg-bubble blockquote {
+  border-left-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.55);
+}
+.notebook-page.dark .pedro-msg.pedro .pedro-msg-bubble table {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.notebook-page.dark .pedro-msg.pedro .pedro-msg-bubble th {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.notebook-page.dark .pedro-msg.pedro .pedro-msg-bubble td {
+  border-color: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .notebook-page.dark .pedro-input-wrapper {

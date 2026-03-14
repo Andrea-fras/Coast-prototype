@@ -114,6 +114,7 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
   // Search & sidebar state
   const [searchQuery, setSearchQuery] = useState('');
   const [sidebarTab, setSidebarTab] = useState('notebooks');
+  const [showNbTip, setShowNbTip] = useState(() => !localStorage.getItem('coast_nb_tip_dismissed'));
 
   // Folder state
   const [folders, setFolders] = useState([]);
@@ -1408,6 +1409,21 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
               />
             ) : (
             <>
+            {showNbTip && (
+              <div className="pedro-tip-banner nb-tip">
+                <img src={mascot} alt="Pedro" className="pedro-tip-avatar" />
+                <div className="pedro-tip-content">
+                  <strong>Pedro's tips</strong>
+                  <p>
+                    <b>Notebooks</b> — upload a single PDF to get a study guide you can chat about, visualize, and download.
+                    <b> Folders</b> — add multiple sources (PDFs, slides) and I'll generate a complete interactive lesson with questions from all your materials.
+                  </p>
+                </div>
+                <button className="pedro-tip-close" onClick={() => { setShowNbTip(false); localStorage.setItem('coast_nb_tip_dismissed', '1'); }} aria-label="Dismiss tip">
+                  <X size={16} />
+                </button>
+              </div>
+            )}
             <div className="nb-content-header">
               <h1 className="nb-list-title">
                 {sidebarTab === 'yours' ? 'Your Notebooks' : 'Notebooks'}

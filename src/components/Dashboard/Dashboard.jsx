@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Fish, Target, TrendingUp, BookOpen, ChevronRight,
   BarChart3, Sun, Moon, Brain, AlertTriangle, RotateCcw,
-  Sparkles, Clock,
+  Sparkles, Clock, X, Lightbulb,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -10,7 +10,6 @@ import mascot from '../../assets/sessioncompletebird.svg';
 import bookCover from '../../assets/bookcover.svg';
 import './Dashboard.css';
 import { API_URL } from '../../config';
-import TutorialTour from '../TutorialTour/TutorialTour';
 
 function timeAgo(dateStr) {
   if (!dateStr) return '';
@@ -36,14 +35,7 @@ const Dashboard = ({
 }) => {
   const { token, user } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const [showTour, setShowTour] = useState(false);
-
-  useEffect(() => {
-    if (user?.onboarding_completed && !localStorage.getItem(TutorialTour.STORAGE_KEY)) {
-      const timer = setTimeout(() => setShowTour(true), 800);
-      return () => clearTimeout(timer);
-    }
-  }, [user?.onboarding_completed]);
+  const [showTip, setShowTip] = useState(() => !localStorage.getItem('coast_dash_tip_dismissed'));
 
   const [streakData, setStreakData] = useState({ streak: 0, week: [] });
   const [stats, setStats] = useState(null);
@@ -113,6 +105,22 @@ const Dashboard = ({
       <button className="dash-theme-toggle" onClick={toggleTheme} title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}>
         {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
       </button>
+      {showTip && (
+        <div className="pedro-tip-banner">
+          <img src={mascot} alt="Pedro" className="pedro-tip-avatar" />
+          <div className="pedro-tip-content">
+            <strong>Pedro's tips</strong>
+            <p>
+              Upload a PDF or lecture in <b>Notebooks</b> to generate a comprehensive study guide — then chat with me, create visualizations, and download your notes.
+              Create <b>Folders</b> to organize a full course with multiple sources and get a complete interactive lesson.
+              Browse <b>Pre-made courses</b> to jump into expert-curated lessons instantly!
+            </p>
+          </div>
+          <button className="pedro-tip-close" onClick={() => { setShowTip(false); localStorage.setItem('coast_dash_tip_dismissed', '1'); }} aria-label="Dismiss tip">
+            <X size={16} />
+          </button>
+        </div>
+      )}
       <div className="content-wrapper">
 
         {/* Left Column */}
@@ -161,7 +169,7 @@ const Dashboard = ({
           </div>
 
           {/* Continue Course */}
-          <div className="card bottom-card continue-course" data-tour="courses">
+          <div className="card bottom-card continue-course">
             <h3>Continue course</h3>
             <div className="courses-grid">
               {papers.map((paper, index) => (
@@ -189,7 +197,7 @@ const Dashboard = ({
         <div className="right-panel-stack">
 
           {/* Pedro's Daily Briefing */}
-          <div className="rp-card rp-briefing" data-tour="briefing">
+          <div className="rp-card rp-briefing">
             <div className="rp-briefing-header">
               <img src={mascot} alt="Pedro" className="rp-briefing-avatar" />
               <div className="rp-briefing-title">
@@ -220,7 +228,7 @@ const Dashboard = ({
           </div>
 
           {/* Spaced Repetition Card */}
-          <div className="rp-card rp-review" data-tour="review-deck">
+          <div className="rp-card rp-review">
             <div className="rp-card-head">
               <h3>
                 <Brain size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />
@@ -322,7 +330,7 @@ const Dashboard = ({
           </div>
 
           {/* Your Notebooks */}
-          <div className="rp-card rp-notebooks" data-tour="notebooks">
+          <div className="rp-card rp-notebooks">
             <div className="rp-card-head">
               <h3>Your Notebooks</h3>
               <button className="rp-see-all" onClick={onOpenNotebook}>
@@ -351,7 +359,7 @@ const Dashboard = ({
           </div>
 
           {/* Ask Pedro */}
-          <div className="rp-card rp-pedro" data-tour="ask-pedro" onClick={onOpenPedro}>
+          <div className="rp-card rp-pedro" onClick={onOpenPedro}>
             <img src={mascot} alt="Pedro" className="rp-pedro-img" />
             <div className="rp-pedro-text">
               <span className="rp-pedro-name">Ask Pedro</span>
@@ -362,7 +370,6 @@ const Dashboard = ({
 
         </div>
       </div>
-      {showTour && <TutorialTour />}
     </div>
   );
 };

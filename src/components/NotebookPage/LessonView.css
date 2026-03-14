@@ -537,6 +537,52 @@
 .dark .lv-chat-msg.pedro .lv-msg-bubble {
   background: #1e1e1e;
   border-color: #333;
+  color: rgba(255, 255, 255, 0.85);
+}
+.dark .lv-chat-msg.pedro .lv-msg-bubble h1,
+.dark .lv-chat-msg.pedro .lv-msg-bubble h2,
+.dark .lv-chat-msg.pedro .lv-msg-bubble h3,
+.dark .lv-chat-msg.pedro .lv-msg-bubble h4 {
+  color: rgba(255, 255, 255, 0.95);
+}
+.dark .lv-chat-msg.pedro .lv-msg-bubble p,
+.dark .lv-chat-msg.pedro .lv-msg-bubble li,
+.dark .lv-chat-msg.pedro .lv-msg-bubble span {
+  color: rgba(255, 255, 255, 0.82);
+}
+.dark .lv-chat-msg.pedro .lv-msg-bubble code {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e0b0ff;
+}
+.dark .lv-chat-msg.pedro .lv-msg-bubble pre {
+  background: #111;
+  border: 1px solid #333;
+}
+.dark .lv-chat-msg.pedro .lv-msg-bubble pre code {
+  background: transparent;
+  color: #c8d6e5;
+}
+.dark .lv-chat-msg.pedro .lv-msg-bubble strong {
+  color: rgba(255, 255, 255, 0.95);
+}
+.dark .lv-chat-msg.pedro .lv-msg-bubble a {
+  color: #82b1ff;
+}
+.dark .lv-chat-msg.pedro .lv-msg-bubble blockquote {
+  border-left-color: #555;
+  color: rgba(255, 255, 255, 0.6);
+}
+.dark .lv-chat-msg.pedro .lv-msg-bubble table {
+  border-color: #444;
+}
+.dark .lv-chat-msg.pedro .lv-msg-bubble th {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.9);
+  border-color: #444;
+}
+.dark .lv-chat-msg.pedro .lv-msg-bubble td {
+  border-color: #444;
+  color: rgba(255, 255, 255, 0.75);
 }
 .dark .lv-msg-user-text {
   background: #4a6be4;
@@ -566,6 +612,14 @@
 
 .dark .lv-loading {
   color: #777;
+}
+
+.dark .lv-msg-bubble .pedro-svg-viz {
+  background: #1a1a2e;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.dark .lv-msg-bubble .pedro-svg-viz text {
+  fill: #e0e0e0;
 }
 
 /* ═══════════════════ Responsive ═══════════════════ */
