@@ -35,7 +35,8 @@ const Dashboard = ({
 }) => {
   const { token, user } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const [showTip, setShowTip] = useState(() => !localStorage.getItem('coast_dash_tip_dismissed'));
+  const tipKey = `coast_dash_tip_dismissed_${user?.id || ''}`;
+  const [showTip, setShowTip] = useState(() => !localStorage.getItem(tipKey));
 
   const [streakData, setStreakData] = useState({ streak: 0, week: [] });
   const [stats, setStats] = useState(null);
@@ -118,7 +119,7 @@ const Dashboard = ({
                 Browse <b>Pre-made courses</b> to jump into expert-curated lessons instantly!
               </p>
             </div>
-            <button className="pedro-tip-close" onClick={() => { setShowTip(false); localStorage.setItem('coast_dash_tip_dismissed', '1'); }} aria-label="Dismiss tip">
+            <button className="pedro-tip-close" onClick={() => { setShowTip(false); localStorage.setItem(tipKey, '1'); }} aria-label="Dismiss tip">
               <X size={16} />
             </button>
           </div>

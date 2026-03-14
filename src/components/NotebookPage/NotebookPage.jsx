@@ -114,7 +114,8 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
   // Search & sidebar state
   const [searchQuery, setSearchQuery] = useState('');
   const [sidebarTab, setSidebarTab] = useState('notebooks');
-  const [showNbTip, setShowNbTip] = useState(() => !localStorage.getItem('coast_nb_tip_dismissed'));
+  const nbTipKey = `coast_nb_tip_dismissed_${user?.id || ''}`;
+  const [showNbTip, setShowNbTip] = useState(() => !localStorage.getItem(nbTipKey));
 
   // Folder state
   const [folders, setFolders] = useState([]);
@@ -1419,7 +1420,7 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
                     <b> Folders</b> — add multiple sources (PDFs, slides) and I'll generate a complete interactive lesson with questions from all your materials.
                   </p>
                 </div>
-                <button className="pedro-tip-close" onClick={() => { setShowNbTip(false); localStorage.setItem('coast_nb_tip_dismissed', '1'); }} aria-label="Dismiss tip">
+                <button className="pedro-tip-close" onClick={() => { setShowNbTip(false); localStorage.setItem(nbTipKey, '1'); }} aria-label="Dismiss tip">
                   <X size={16} />
                 </button>
               </div>
