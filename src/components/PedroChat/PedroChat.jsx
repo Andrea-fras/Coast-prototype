@@ -150,7 +150,9 @@ const PedroChat = ({ onClose }) => {
         body.notebook_ids = nbIds;
       }
 
-      const res = await fetch(`${API_URL}/api/chat/send`, {
+      setMessages(prev => [...prev, { role: 'pedro', text: '' }]);
+
+      const res = await fetch(`${API_URL}/api/chat/stream`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -162,39 +164,77 @@ const PedroChat = ({ onClose }) => {
       if (res.status === 429) {
         const err = await res.json().catch(() => ({}));
         setChatRemaining(0);
-        setMessages(prev => [...prev, {
-          role: 'pedro',
-          text: err.detail || "You've reached your weekly message limit. Thanks for testing Coast!"
-        }]);
+        setMessages(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1] = {
+            role: 'pedro',
+            text: err.detail || "You've reached your weekly message limit. Thanks for testing Coast!"
+          };
+          return updated;
+        });
         setIsLoading(false);
         return;
       }
       if (!res.ok) throw new Error('Failed');
 
-      const data = await res.json();
-      if (data.conversation_id && !activeConvo) {
-        setActiveConvo(data.conversation_id);
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = '';
+      let buffer = '';
+      let newConversationId = null;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const evt = JSON.parse(line.slice(6));
+            if (evt.token) {
+              fullText += evt.token;
+              setMessages(prev => {
+                const updated = [...prev];
+                updated[updated.length - 1] = { role: 'pedro', text: fullText };
+                return updated;
+              });
+            }
+            if (evt.done && evt.conversation_id && !activeConvo) {
+              newConversationId = evt.conversation_id;
+            }
+            if (evt.usage) setChatRemaining(evt.usage.chat_messages_remaining);
+          } catch {}
+        }
+      }
+
+      if (newConversationId) {
+        setActiveConvo(newConversationId);
         setConversations(prev => [{
-          conversation_id: data.conversation_id,
+          conversation_id: newConversationId,
           context_type: 'global',
-          last_message: (data.reply || '').substring(0, 100),
+          last_message: fullText.substring(0, 100),
           last_role: 'pedro',
           updated_at: new Date().toISOString(),
         }, ...prev]);
-      } else if (data.conversation_id) {
+      } else if (activeConvo) {
         setConversations(prev => prev.map(c =>
-          c.conversation_id === data.conversation_id
-            ? { ...c, last_message: (data.reply || '').substring(0, 100), updated_at: new Date().toISOString() }
+          c.conversation_id === activeConvo
+            ? { ...c, last_message: fullText.substring(0, 100), updated_at: new Date().toISOString() }
             : c
         ));
       }
-      if (data.usage) setChatRemaining(data.usage.chat_messages_remaining);
-      setMessages(prev => [...prev, { role: 'pedro', text: data.reply }]);
     } catch {
-      setMessages(prev => [...prev, {
-        role: 'pedro',
-        text: "Sorry, I'm having trouble connecting. Please try again."
-      }]);
+      setMessages(prev => {
+        const updated = [...prev];
+        updated[updated.length - 1] = {
+          role: 'pedro',
+          text: "Sorry, I'm having trouble connecting. Please try again."
+        };
+        return updated;
+      });
     } finally {
       setIsLoading(false);
     }

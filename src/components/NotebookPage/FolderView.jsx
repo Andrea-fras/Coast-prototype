@@ -16,6 +16,7 @@ const FolderView = ({ folderName, onClose, onOpenNotebook, onSourcesChanged, onS
   const [generating, setGenerating] = useState(false);
 
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState('');
 
   useEffect(() => {
     fetchSources();
@@ -77,30 +78,43 @@ const FolderView = ({ folderName, onClose, onOpenNotebook, onSourcesChanged, onS
   };
 
   const handleUploadToFolder = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file || !token) return;
+    const files = Array.from(e.target.files || []);
+    if (!files.length || !token) return;
     setUploading(true);
-    try {
+    setUploadProgress(`Uploading ${files.length} file${files.length > 1 ? 's' : ''}...`);
+
+    let succeeded = 0;
+    let failed = 0;
+
+    const uploadOne = async (file) => {
       const formData = new FormData();
       formData.append('file', file);
-
-      const res = await fetch(`${API_URL}/api/folders/${encodeURIComponent(folderName)}/upload`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-
-      if (res.ok) {
-        await fetchSources();
-        if (onSourcesChanged) onSourcesChanged();
-      } else {
-        const err = await res.json().catch(() => ({}));
-        alert(err.detail || 'Upload failed');
+      try {
+        const res = await fetch(`${API_URL}/api/folders/${encodeURIComponent(folderName)}/upload`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        });
+        if (res.ok) {
+          succeeded++;
+        } else {
+          failed++;
+        }
+      } catch {
+        failed++;
       }
-    } catch {
-      alert('Upload failed. Please try again.');
+      setUploadProgress(`Uploaded ${succeeded + failed}/${files.length}...`);
+    };
+
+    await Promise.all(files.map(uploadOne));
+
+    if (failed > 0) {
+      alert(`${succeeded} uploaded, ${failed} failed.`);
     }
+    await fetchSources();
+    if (onSourcesChanged) onSourcesChanged();
     setUploading(false);
+    setUploadProgress('');
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -152,6 +166,7 @@ const FolderView = ({ folderName, onClose, onOpenNotebook, onSourcesChanged, onS
         ref={fileInputRef}
         style={{ display: 'none' }}
         accept=".pdf,.pptx"
+        multiple
         onChange={handleUploadToFolder}
       />
 
@@ -249,7 +264,7 @@ const FolderView = ({ folderName, onClose, onOpenNotebook, onSourcesChanged, onS
               disabled={uploading}
             >
               {uploading ? <Loader size={16} className="spinning" /> : <Upload size={16} />}
-              <span>{uploading ? 'Uploading...' : 'Upload Source'}</span>
+              <span>{uploading ? (uploadProgress || 'Uploading...') : 'Upload Sources'}</span>
             </button>
           </div>
         </div>

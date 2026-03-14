@@ -469,8 +469,10 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
     setChatInput('');
     setIsChatLoading(true);
 
+    setChatMessages(prev => [...prev, { role: 'pedro', text: '' }]);
+
     try {
-      const res = await fetch(`${API_URL}/api/chat/send`, {
+      const res = await fetch(`${API_URL}/api/chat/stream`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -485,14 +487,51 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
       });
 
       if (!res.ok) throw new Error('Failed');
-      const data = await res.json();
-      if (data.conversation_id && !conversationId) setConversationId(data.conversation_id);
-      setChatMessages(prev => [...prev, { role: 'pedro', text: data.reply }]);
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = '';
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const evt = JSON.parse(line.slice(6));
+            if (evt.token) {
+              fullText += evt.token;
+              setChatMessages(prev => {
+                const updated = [...prev];
+                updated[updated.length - 1] = { role: 'pedro', text: fullText };
+                return updated;
+              });
+            }
+            if (evt.done && evt.conversation_id && !conversationId) {
+              setConversationId(evt.conversation_id);
+            }
+          } catch {}
+        }
+      }
+
+      if (!fullText) {
+        setChatMessages(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1] = { role: 'pedro', text: "Sorry, I'm having trouble connecting right now. Please try again in a moment." };
+          return updated;
+        });
+      }
     } catch {
-      setChatMessages(prev => [...prev, {
-        role: 'pedro',
-        text: "Sorry, I'm having trouble connecting right now. Please try again in a moment."
-      }]);
+      setChatMessages(prev => {
+        const updated = [...prev];
+        updated[updated.length - 1] = { role: 'pedro', text: "Sorry, I'm having trouble connecting right now. Please try again in a moment." };
+        return updated;
+      });
     } finally {
       setIsChatLoading(false);
     }

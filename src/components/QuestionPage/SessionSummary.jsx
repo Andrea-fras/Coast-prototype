@@ -216,7 +216,9 @@ const SessionSummary = ({
     setIsPedroLoading(true);
 
     try {
-      const res = await fetch(`${API_URL}/api/chat/send`, {
+      setPedroMessages(prev => [...prev, { role: 'pedro', text: '' }]);
+
+      const res = await fetch(`${API_URL}/api/chat/stream`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -232,16 +234,45 @@ const SessionSummary = ({
 
       if (!res.ok) throw new Error('Failed');
 
-      const data = await res.json();
-      if (data.conversation_id && !pedroConvoId) {
-        setPedroConvoId(data.conversation_id);
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = '';
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const evt = JSON.parse(line.slice(6));
+            if (evt.token) {
+              fullText += evt.token;
+              setPedroMessages(prev => {
+                const updated = [...prev];
+                updated[updated.length - 1] = { role: 'pedro', text: fullText };
+                return updated;
+              });
+            }
+            if (evt.done && evt.conversation_id && !pedroConvoId) {
+              setPedroConvoId(evt.conversation_id);
+            }
+          } catch {}
+        }
       }
-      setPedroMessages(prev => [...prev, { role: 'pedro', text: data.reply }]);
     } catch {
-      setPedroMessages(prev => [...prev, {
-        role: 'pedro',
-        text: "Sorry, I couldn't connect. Try again in a moment."
-      }]);
+      setPedroMessages(prev => {
+        const updated = [...prev];
+        updated[updated.length - 1] = {
+          role: 'pedro',
+          text: "Sorry, I couldn't connect. Try again in a moment."
+        };
+        return updated;
+      });
     } finally {
       setIsPedroLoading(false);
     }

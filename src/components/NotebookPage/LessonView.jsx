@@ -75,8 +75,11 @@ const LessonView = ({ folderName, onClose }) => {
 
   const sendToApi = async (message, convId) => {
     setChatLoading(true);
+    setChatMessages(prev => [...prev, { role: 'pedro', content: '' }]);
+    const pedroIdx = chatMessages.length + 1;
+
     try {
-      const res = await fetch(`${API_URL}/api/chat/send`, {
+      const res = await fetch(`${API_URL}/api/chat/stream`, {
         method: 'POST',
         headers: headers(),
         body: JSON.stringify({
@@ -86,20 +89,65 @@ const LessonView = ({ folderName, onClose }) => {
           conversation_id: convId,
         }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        let reply = data.reply || '';
-        const cleanReply = reply.replace('[SECTION_COMPLETE]', '').trim();
-        const isComplete = reply.includes('[SECTION_COMPLETE]');
 
-        setChatMessages(prev => [...prev, { role: 'pedro', content: cleanReply }]);
-        if (data.conversation_id) setConversationId(data.conversation_id);
-        if (isComplete) setSectionComplete(true);
-      } else {
-        setChatMessages(prev => [...prev, { role: 'pedro', content: 'Sorry, something went wrong. Try again!' }]);
+      if (!res.ok) {
+        setChatMessages(prev => {
+          const updated = [...prev];
+          updated[pedroIdx] = { role: 'pedro', content: 'Sorry, something went wrong. Try again!' };
+          return updated;
+        });
+        setChatLoading(false);
+        return;
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = '';
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const evt = JSON.parse(line.slice(6));
+            if (evt.token) {
+              fullText += evt.token;
+              const display = fullText.replace('[SECTION_COMPLETE]', '').trim();
+              setChatMessages(prev => {
+                const updated = [...prev];
+                updated[pedroIdx] = { role: 'pedro', content: display };
+                return updated;
+              });
+            }
+            if (evt.done) {
+              if (evt.conversation_id) setConversationId(evt.conversation_id);
+              if (fullText.includes('[SECTION_COMPLETE]')) setSectionComplete(true);
+            }
+          } catch {}
+        }
+      }
+
+      if (!fullText) {
+        setChatMessages(prev => {
+          const updated = [...prev];
+          updated[pedroIdx] = { role: 'pedro', content: 'Sorry, something went wrong. Try again!' };
+          return updated;
+        });
       }
     } catch {
-      setChatMessages(prev => [...prev, { role: 'pedro', content: 'Connection error. Please try again.' }]);
+      setChatMessages(prev => {
+        const updated = [...prev];
+        if (updated[pedroIdx]) {
+          updated[pedroIdx] = { role: 'pedro', content: 'Connection error. Please try again.' };
+        }
+        return updated;
+      });
     }
     setChatLoading(false);
   };
