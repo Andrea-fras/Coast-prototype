@@ -17,6 +17,7 @@
 
 .content-wrapper {
   display: flex;
+  flex-wrap: wrap;
   width: 100%;
   max-width: 1400px;
   gap: 3rem;

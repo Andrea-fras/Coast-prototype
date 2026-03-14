@@ -105,23 +105,24 @@ const Dashboard = ({
       <button className="dash-theme-toggle" onClick={toggleTheme} title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}>
         {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
       </button>
-      {showTip && (
-        <div className="pedro-tip-banner">
-          <img src={mascot} alt="Pedro" className="pedro-tip-avatar" />
-          <div className="pedro-tip-content">
-            <strong>Pedro's tips</strong>
-            <p>
-              Upload a PDF or lecture in <b>Notebooks</b> to generate a comprehensive study guide — then chat with me, create visualizations, and download your notes.
-              Create <b>Folders</b> to organize a full course with multiple sources and get a complete interactive lesson.
-              Browse <b>Pre-made courses</b> to jump into expert-curated lessons instantly!
-            </p>
-          </div>
-          <button className="pedro-tip-close" onClick={() => { setShowTip(false); localStorage.setItem('coast_dash_tip_dismissed', '1'); }} aria-label="Dismiss tip">
-            <X size={16} />
-          </button>
-        </div>
-      )}
       <div className="content-wrapper">
+
+        {showTip && (
+          <div className="pedro-tip-banner">
+            <img src={mascot} alt="Pedro" className="pedro-tip-avatar" />
+            <div className="pedro-tip-content">
+              <strong>Pedro's tips</strong>
+              <p>
+                Upload a PDF or lecture in <b>Notebooks</b> to generate a comprehensive study guide — then chat with me, create visualizations, and download your notes.
+                Create <b>Folders</b> to organize a full course with multiple sources and get a complete interactive lesson.
+                Browse <b>Pre-made courses</b> to jump into expert-curated lessons instantly!
+              </p>
+            </div>
+            <button className="pedro-tip-close" onClick={() => { setShowTip(false); localStorage.setItem('coast_dash_tip_dismissed', '1'); }} aria-label="Dismiss tip">
+              <X size={16} />
+            </button>
+          </div>
+        )}
 
         {/* Left Column */}
         <div className="left-column">
