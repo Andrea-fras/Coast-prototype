@@ -2,6 +2,7 @@
   "id": "qm3_2024",
   "title": "Quantitative Methods 3",
   "description": "Mathematical Foundations",
+  "course": "QM1",
   "questions": [
     {
       "id": "q1",
@@ -15,7 +16,8 @@
         { "id": "c", "text": "2.5" },
         { "id": "d", "text": "7.5" }
       ],
-      "correctAnswerId": "a"
+      "correctAnswerId": "a",
+      "tags": ["linear equations", "algebra"]
     },
     {
       "id": "q2",
@@ -29,7 +31,8 @@
         { "id": "c", "text": "2" },
         { "id": "d", "text": "x^3/3" }
       ],
-      "correctAnswerId": "b"
+      "correctAnswerId": "b",
+      "tags": ["derivatives", "calculus"]
     },
     {
       "id": "q3",
@@ -43,7 +46,8 @@
         { "id": "c", "text": "3π" },
         { "id": "d", "text": "12π" }
       ],
-      "correctAnswerId": "a"
+      "correctAnswerId": "a",
+      "tags": ["geometry", "area"]
     },
     {
       "id": "q4",
@@ -57,7 +61,8 @@
         { "id": "c", "text": "30" },
         { "id": "d", "text": "35" }
       ],
-      "correctAnswerId": "c"
+      "correctAnswerId": "c",
+      "tags": ["percentages", "arithmetic"]
     },
     {
       "id": "q5",
@@ -71,7 +76,8 @@
         { "id": "c", "text": "8" },
         { "id": "d", "text": "14" }
       ],
-      "correctAnswerId": "a"
+      "correctAnswerId": "a",
+      "tags": ["functions", "linear equations"]
     },
     {
       "id": "q6",
@@ -85,7 +91,8 @@
         { "id": "c", "text": "Triangle" },
         { "id": "d", "text": "Rectangle" }
       ],
-      "correctAnswerId": "b"
+      "correctAnswerId": "b",
+      "tags": ["geometry"]
     },
     {
       "id": "q7",
@@ -100,7 +107,8 @@
         { "id": "d", "text": "P = 3600" },
         { "id": "e", "text": "P = 90" }
       ],
-      "correctAnswerId": "a"
+      "correctAnswerId": "a",
+      "tags": ["supply and demand", "equilibrium", "functions"]
     }
   ]
 }

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, BookOpen, Loader, FileText, Upload, Clock, Sparkles, Play, CheckCircle, RotateCcw, File, Trash2 } from 'lucide-react';
+import { ArrowLeft, BookOpen, Loader, FileText, Upload, Clock, Sparkles, Play, CheckCircle, RotateCcw, File, Trash2, Presentation } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { API_URL } from '../../config';
 import './FolderView.css';
 
-const FolderView = ({ folderName, onClose, onOpenNotebook, onSourcesChanged, onStartLesson, onOpenDocument }) => {
+const FolderView = ({ folderName, isCurated, onClose, onOpenNotebook, onSourcesChanged, onStartLesson, onOpenDocument }) => {
   const { token } = useAuth();
   const fileInputRef = useRef(null);
 
@@ -157,7 +157,8 @@ const FolderView = ({ folderName, onClose, onOpenNotebook, onSourcesChanged, onS
   const totalSections = lessonState?.total_sections || 0;
   const sections = lessonState?.sections || [];
   const progressPercent = lessonState?.progress_percent || 0;
-  const isInProgress = hasOutline && currentSection > 0 && !isComplete;
+  const hasStarted = !!sessionStorage.getItem(`coast_lesson_chat_${folderName}`);
+  const isInProgress = hasOutline && !isComplete && (currentSection > 0 || hasStarted);
 
   return (
     <div className="fv-container">
@@ -211,8 +212,8 @@ const FolderView = ({ folderName, onClose, onOpenNotebook, onSourcesChanged, onS
                       className="fv-source-card fv-source-doc"
                       onClick={() => onOpenDocument && onOpenDocument(src)}
                     >
-                      <div className="fv-source-icon fv-source-icon-doc">
-                        <File size={16} />
+                      <div className={`fv-source-icon ${src.source_type === 'pptx' ? 'fv-source-icon-pptx' : 'fv-source-icon-doc'}`}>
+                        {src.source_type === 'pptx' ? <Presentation size={16} /> : <File size={16} />}
                       </div>
                       <div className="fv-source-info">
                         <span className="fv-source-title">{src.title}</span>
@@ -220,13 +221,15 @@ const FolderView = ({ folderName, onClose, onOpenNotebook, onSourcesChanged, onS
                           {src.source_type?.toUpperCase()} · {src.page_count} page{src.page_count !== 1 ? 's' : ''}
                         </span>
                       </div>
-                      <button
-                        className="fv-source-delete"
-                        onClick={(e) => handleDeleteSource(src, e)}
-                        title="Remove source"
-                      >
-                        <Trash2 size={13} />
-                      </button>
+                      {!isCurated && (
+                        <button
+                          className="fv-source-delete"
+                          onClick={(e) => handleDeleteSource(src, e)}
+                          title="Remove source"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      )}
                     </div>
                   ))}
                   {nbSources.map(src => (
@@ -258,14 +261,16 @@ const FolderView = ({ folderName, onClose, onOpenNotebook, onSourcesChanged, onS
               <div className="fv-coming-soon">Coming soon</div>
             </div>
 
-            <button
-              className="fv-upload-btn"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-            >
-              {uploading ? <Loader size={16} className="spinning" /> : <Upload size={16} />}
-              <span>{uploading ? (uploadProgress || 'Uploading...') : 'Upload Sources'}</span>
-            </button>
+            {!isCurated && (
+              <button
+                className="fv-upload-btn"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+              >
+                {uploading ? <Loader size={16} className="spinning" /> : <Upload size={16} />}
+                <span>{uploading ? (uploadProgress || 'Uploading...') : 'Upload Sources'}</span>
+              </button>
+            )}
           </div>
         </div>
 

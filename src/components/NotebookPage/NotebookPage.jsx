@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, Send, Paperclip, ArrowRight, ArrowLeft, BookOpen, Upload, FileText, Loader, CheckCircle, AlertCircle, PenLine, Search, Trash2, Sun, Moon, Layers, ChevronLeft, ChevronRight, RotateCcw, Shuffle, Download, GitBranch, Maximize2, Minimize2, FolderPlus, Folder, ChevronDown, Plus, RefreshCw } from 'lucide-react';
 import './NotebookPage.css';
 import builtInNotebooks from '../../data/notebooks.json';
+import curatedLessons from '../../data/curatedLessons.json';
 import paper1 from '../../data/samplePaper.json';
 import paper2 from '../../data/paper2.json';
 import paper3 from '../../data/paper3.json';
@@ -1154,9 +1155,19 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
     } catch {}
   };
 
-  const handleOpenFolder = (folderName) => {
+  const handleOpenFolder = async (folderName) => {
     setSelectedFolder(folderName);
     setSelectedNotebook(null);
+    if (token && !folders.includes(folderName)) {
+      try {
+        await fetch(`${API_URL}/api/notebooks/folders`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ name: folderName }),
+        });
+        setFolders(prev => prev.includes(folderName) ? prev : [...prev, folderName]);
+      } catch {}
+    }
   };
 
   const handleMoveToFolder = async (nb, folderName) => {
@@ -1315,15 +1326,15 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
                 onClick={() => { setSidebarTab('notebooks'); setSearchQuery(''); }}
               >
                 <BookOpen size={18} />
-                <span>Notebooks</span>
-                <span className="nb-sidebar-nav-count">{builtInList.length}</span>
+                <span>Lessons</span>
+                <span className="nb-sidebar-nav-count">{curatedLessons.length}</span>
               </button>
               <button
                 className={`nb-sidebar-nav-btn${sidebarTab === 'yours' ? ' active' : ''}`}
                 onClick={() => { setSidebarTab('yours'); setSearchQuery(''); }}
               >
                 <FileText size={18} />
-                <span>Your Notebooks</span>
+                <span>Your Lessons</span>
                 <span className="nb-sidebar-nav-count">{generatedList.length}</span>
               </button>
             </nav>
@@ -1358,7 +1369,9 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
                 </div>
               )}
 
-              {folders.map(f => (
+              {folders
+                .filter(f => !curatedLessons.some(cl => cl.folderName === f))
+                .map(f => (
                 <button
                   key={f}
                   className={`nb-sidebar-folder-btn${selectedFolder === f ? ' active' : ''}`}
@@ -1366,7 +1379,6 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
                 >
                   <Folder size={16} />
                   <span>{f}</span>
-                  <span className="nb-sidebar-nav-count">{folderNotebookCounts[f] || 0}</span>
                 </button>
               ))}
             </div>
@@ -1377,7 +1389,7 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
               className="nb-sidebar-upload-btn"
               onClick={handleUploadClick}
               disabled={notebooksRemaining === 0}
-              title={notebooksRemaining === 0 ? 'Notebook limit reached' : ''}
+              title={notebooksRemaining === 0 ? 'Upload limit reached' : ''}
             >
               <Upload size={18} />
               <span>Upload Notes</span>
@@ -1413,6 +1425,7 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
             ) : selectedFolder ? (
               <FolderView
                 folderName={selectedFolder}
+                isCurated={curatedLessons.some(cl => cl.folderName === selectedFolder)}
                 onClose={() => setSelectedFolder(null)}
                 onOpenNotebook={(nb) => { setSelectedFolder(null); openNotebook(nb); }}
                 onSourcesChanged={() => {
@@ -1433,7 +1446,7 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
                 <div className="pedro-tip-content">
                   <strong>Pedro's tips</strong>
                   <p>
-                    <b>Notebooks</b> — upload a single PDF to get a study guide you can chat about, visualize, and download.
+                    <b>Study Guides</b> — upload a single PDF to get a study guide you can chat about, visualize, and download.
                     <b> Folders</b> — add multiple sources (PDFs, slides) and I'll generate a complete interactive lesson with questions from all your materials.
                   </p>
                 </div>
@@ -1444,7 +1457,7 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
             )}
             <div className="nb-content-header">
               <h1 className="nb-list-title">
-                {sidebarTab === 'yours' ? 'Your Notebooks' : 'Notebooks'}
+                {sidebarTab === 'yours' ? 'Your Lessons' : 'Lessons'}
               </h1>
 
               <div className="nb-content-search">
@@ -1452,7 +1465,7 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
                 <input
                   type="text"
                   className="nb-content-search-input"
-                  placeholder="Search notebooks..."
+                  placeholder="Search lessons..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -1465,102 +1478,137 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
             </div>
 
             <div className="nb-card-grid">
-              {visibleNotebooks.map((nb, idx) => {
-                const isGenerated = nb._saved_id != null || myNotebooks.some(g => g.id === nb.id);
-                const qCount = nb.questionCount || nb.matchedQuestions?.length || 0;
-                const sectionCount = nb.sections?.length || 0;
+              {sidebarTab === 'notebooks' ? (
+                <>
+                  {curatedLessons
+                    .filter(cl => !searchQuery.trim() || cl.title.toLowerCase().includes(searchQuery.toLowerCase()) || cl.course.toLowerCase().includes(searchQuery.toLowerCase()))
+                    .map(cl => (
+                    <div
+                      key={cl.id}
+                      className="nb-card nb-card-curated"
+                      onClick={() => handleOpenFolder(cl.folderName)}
+                    >
+                      <div className="nb-card-top">
+                        <div className="nb-card-icon" style={{ background: cl.color || '#888' }}>
+                          <span>{cl.icon || '📚'}</span>
+                        </div>
+                        <span className="nb-card-curated-badge">Curated</span>
+                      </div>
+                      <h3 className="nb-card-title">{cl.title}</h3>
+                      <p className="nb-card-course">{cl.course}</p>
+                      <p className="nb-card-description">{cl.description}</p>
+                      <div className="nb-card-footer">
+                        <span className="nb-card-stat">
+                          <Play size={13} />
+                          Full lesson included
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                  {curatedLessons.length === 0 && (
+                    <div className="nb-empty-state">
+                      <p>No curated lessons available yet. Check back soon!</p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  {visibleNotebooks.map((nb, idx) => {
+                    const isGenerated = nb._saved_id != null || myNotebooks.some(g => g.id === nb.id);
+                    const qCount = nb.questionCount || nb.matchedQuestions?.length || 0;
+                    const sectionCount = nb.sections?.length || 0;
 
-                return (
-                  <div
-                    key={nb._saved_id ? `s${nb._saved_id}` : `b${nb.id}_${idx}`}
-                    className="nb-card"
-                    onClick={() => openNotebook(nb)}
-                  >
-                    {isGenerated && (
-                      <div className="nb-card-actions">
-                        <button
-                          className="nb-card-folder-btn"
-                          onClick={(e) => { e.stopPropagation(); setFolderMenuOpen(folderMenuOpen === nb.id ? null : nb.id); }}
-                          onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
-                          title="Move to folder"
-                        >
-                          <FolderPlus size={14} />
-                        </button>
-                        <button
-                          className="nb-card-delete-btn"
-                          onClick={(e) => handleDeleteGenerated(nb, e)}
-                          onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
-                          title="Delete notebook"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                        {folderMenuOpen === nb.id && (
-                          <div className="nb-card-folder-menu" onClick={(e) => e.stopPropagation()}>
-                            <div className="nb-card-folder-menu-title">Move to folder</div>
-                            {nb.folder && (
-                              <button
-                                className="nb-card-folder-menu-item remove"
-                                onClick={(e) => { e.stopPropagation(); handleMoveToFolder(nb, ''); setFolderMenuOpen(null); }}
-                              >
-                                Remove from folder
-                              </button>
-                            )}
-                            {folders.map(f => (
-                              <button
-                                key={f}
-                                className={`nb-card-folder-menu-item${nb.folder === f ? ' active' : ''}`}
-                                onClick={(e) => { e.stopPropagation(); handleMoveToFolder(nb, f); setFolderMenuOpen(null); }}
-                              >
-                                <Folder size={13} />
-                                {f}
-                              </button>
-                            ))}
-                            {folders.length === 0 && (
-                              <div className="nb-card-folder-menu-empty">No folders yet. Create one in the sidebar.</div>
+                    return (
+                      <div
+                        key={nb._saved_id ? `s${nb._saved_id}` : `b${nb.id}_${idx}`}
+                        className="nb-card"
+                        onClick={() => openNotebook(nb)}
+                      >
+                        {isGenerated && (
+                          <div className="nb-card-actions">
+                            <button
+                              className="nb-card-folder-btn"
+                              onClick={(e) => { e.stopPropagation(); setFolderMenuOpen(folderMenuOpen === nb.id ? null : nb.id); }}
+                              onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                              title="Move to folder"
+                            >
+                              <FolderPlus size={14} />
+                            </button>
+                            <button
+                              className="nb-card-delete-btn"
+                              onClick={(e) => handleDeleteGenerated(nb, e)}
+                              onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                              title="Delete lesson"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                            {folderMenuOpen === nb.id && (
+                              <div className="nb-card-folder-menu" onClick={(e) => e.stopPropagation()}>
+                                <div className="nb-card-folder-menu-title">Move to folder</div>
+                                {nb.folder && (
+                                  <button
+                                    className="nb-card-folder-menu-item remove"
+                                    onClick={(e) => { e.stopPropagation(); handleMoveToFolder(nb, ''); setFolderMenuOpen(null); }}
+                                  >
+                                    Remove from folder
+                                  </button>
+                                )}
+                                {folders.map(f => (
+                                  <button
+                                    key={f}
+                                    className={`nb-card-folder-menu-item${nb.folder === f ? ' active' : ''}`}
+                                    onClick={(e) => { e.stopPropagation(); handleMoveToFolder(nb, f); setFolderMenuOpen(null); }}
+                                  >
+                                    <Folder size={13} />
+                                    {f}
+                                  </button>
+                                ))}
+                                {folders.length === 0 && (
+                                  <div className="nb-card-folder-menu-empty">No folders yet. Create one in the sidebar.</div>
+                                )}
+                              </div>
                             )}
                           </div>
                         )}
+                        <div className="nb-card-top">
+                          <div className="nb-card-icon" style={{ background: nb.color || '#888' }}>
+                            <span>{nb.icon || '📄'}</span>
+                          </div>
+                          {isGenerated && <span className="nb-card-generated-badge">Generated</span>}
+                        </div>
+                        <h3 className="nb-card-title">{nb.title}</h3>
+                        <p className="nb-card-course">{nb.course}</p>
+                        {nb.folder && (
+                          <span className="nb-card-folder-tag">
+                            <Folder size={11} />
+                            {nb.folder}
+                          </span>
+                        )}
+                        <div className="nb-card-footer">
+                          <span className="nb-card-stat">
+                            <BookOpen size={13} />
+                            {sectionCount} sections
+                          </span>
+                          {qCount > 0 && (
+                            <span className="nb-card-stat">
+                              <FileText size={13} />
+                              {qCount} questions
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    )}
-                    <div className="nb-card-top">
-                      <div className="nb-card-icon" style={{ background: nb.color || '#888' }}>
-                        <span>{nb.icon || '📄'}</span>
-                      </div>
-                      {isGenerated && <span className="nb-card-generated-badge">Generated</span>}
-                    </div>
-                    <h3 className="nb-card-title">{nb.title}</h3>
-                    <p className="nb-card-course">{nb.course}</p>
-                    {nb.folder && (
-                      <span className="nb-card-folder-tag">
-                        <Folder size={11} />
-                        {nb.folder}
-                      </span>
-                    )}
-                    <div className="nb-card-footer">
-                      <span className="nb-card-stat">
-                        <BookOpen size={13} />
-                        {sectionCount} sections
-                      </span>
-                      {qCount > 0 && (
-                        <span className="nb-card-stat">
-                          <FileText size={13} />
-                          {qCount} questions
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+                    );
+                  })}
 
-              {visibleNotebooks.length === 0 && (
-                <div className="nb-empty-state">
-                  {searchQuery
-                    ? <p>No notebooks match your search.</p>
-                    : sidebarTab === 'yours'
-                      ? <p>No generated notebooks yet. Upload your lecture notes to get started!</p>
-                      : <p>No notebooks available.</p>
-                  }
-                </div>
+                  {visibleNotebooks.length === 0 && (
+                    <div className="nb-empty-state">
+                      {searchQuery
+                        ? <p>No lessons match your search.</p>
+                        : <p>No study guides yet. Upload your lecture notes to get started!</p>
+                      }
+                    </div>
+                  )}
+                </>
               )}
             </div>
             </>
@@ -1590,7 +1638,7 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
           <div className="nb-toolbar">
             <button className="nb-back-btn" onClick={goBack}>
               <ArrowLeft size={18} />
-              <span>All Notebooks</span>
+              <span>All Lessons</span>
             </button>
             <div className="nb-toolbar-spacer"></div>
             <div className="nb-size-control">
@@ -1693,7 +1741,7 @@ const NotebookPage = ({ onClose, onStartQuestions }) => {
             suppressContentEditableWarning
             onInput={() => setHasUnsavedChanges(true)}
           >
-            <div className="nb-course-label">Notebook: {selectedNotebook.course}</div>
+            <div className="nb-course-label">{selectedNotebook.course}</div>
             
             <h1 className="nb-title">{selectedNotebook.title}</h1>
 

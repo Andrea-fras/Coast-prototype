@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { X, ChevronRight, CheckCircle, Loader, Send, List, Clock, ArrowLeft, RefreshCw, WifiOff } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { X, ChevronRight, CheckCircle, Loader, Send, List, Clock, ArrowLeft, RefreshCw, WifiOff, BookOpen } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { API_URL } from '../../config';
 import { fetchWithRetry } from '../../utils/fetchWithRetry';
 import PedroMessage from '../PedroMessage';
+import QuestionPage from '../QuestionPage/QuestionPage';
 import mascot from '../../assets/sessioncompletebird.svg';
 import './LessonView.css';
 
@@ -28,6 +30,11 @@ const LessonView = ({ folderName, onClose }) => {
 
   const [retryPayload, setRetryPayload] = useState(null);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  const [examPaper, setExamPaper] = useState(null);
+  const [examLoading, setExamLoading] = useState(false);
+  const [showExamPage, setShowExamPage] = useState(false);
+  const [examCompleted, setExamCompleted] = useState(false);
 
   const chatAreaRef = useRef(null);
   const inputRef = useRef(null);
@@ -64,6 +71,41 @@ const LessonView = ({ folderName, onClose }) => {
       setSectionComplete(true);
     }
   }, [chatMessages]);
+
+  useEffect(() => {
+    if (!sectionComplete || examPaper !== null || examLoading) return;
+    const fetchExamQuestions = async () => {
+      setExamLoading(true);
+      try {
+        const res = await fetchWithRetry(
+          `${API_URL}/api/folders/${encodeURIComponent(folderName)}/section-questions`,
+          { headers: hdrs() },
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (data.questions && data.questions.length > 0) {
+            const deduped = data.questions.map((q, i) => ({
+              ...q,
+              id: q._paper_id ? `${q._paper_id}_${q.id}` : `${q.id}_${i}`,
+            }));
+            setExamPaper({
+              id: `lesson_${folderName}_s${currentSectionRef.current}`,
+              title: `Past Paper Questions — ${data.section_title || 'Section Review'}`,
+              questions: deduped,
+            });
+          } else {
+            setExamPaper(false);
+          }
+        } else {
+          setExamPaper(false);
+        }
+      } catch {
+        setExamPaper(false);
+      }
+      setExamLoading(false);
+    };
+    fetchExamQuestions();
+  }, [sectionComplete]);
 
   useEffect(() => {
     if (chatMessages.length === 0) return;
@@ -234,9 +276,17 @@ const LessonView = ({ folderName, onClose }) => {
     await sendToApi(msg, conversationId);
   };
 
+  const handleExamClose = () => {
+    setShowExamPage(false);
+    setExamCompleted(true);
+  };
+
   const handleAdvanceSection = async () => {
     setAdvancing(true);
     setAdvanceError(false);
+    setExamPaper(null);
+    setShowExamPage(false);
+    setExamCompleted(false);
     try {
       sessionStorage.removeItem(storageKey);
       const res = await fetchWithRetry(
@@ -444,27 +494,52 @@ const LessonView = ({ folderName, onClose }) => {
             </div>
           )}
 
-          {/* Next Section Button */}
+          {/* Section Complete: Exam Button + Next Section */}
           {sectionComplete && !isComplete && (
-            <div className="lv-next-section-bar">
-              {advanceError && (
-                <span className="lv-advance-error">Connection error — tap to retry</span>
-              )}
-              <button
-                className="lv-next-section-btn"
-                onClick={handleAdvanceSection}
-                disabled={advancing}
-              >
-                {advancing ? (
+            <>
+              {examLoading && (
+                <div className="lv-exam-loading">
                   <Loader size={18} className="spinning" />
-                ) : advanceError ? (
-                  <RefreshCw size={18} />
-                ) : (
-                  <ChevronRight size={18} />
-                )}
-                <span>{advancing ? 'Loading next section...' : advanceError ? 'Retry' : 'Next Section'}</span>
-              </button>
-            </div>
+                  <span>Finding past paper questions...</span>
+                </div>
+              )}
+
+              {examPaper && !examCompleted && !examLoading && (
+                <div className="lv-exam-prompt">
+                  <BookOpen size={20} />
+                  <div className="lv-exam-prompt-text">
+                    <strong>{examPaper.questions.length} past paper questions</strong> matched this section's topics.
+                    Test yourself with real exam questions!
+                  </div>
+                  <button className="lv-exam-start-btn" onClick={() => setShowExamPage(true)}>
+                    Start Questions
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              )}
+
+              {(examPaper === false || examCompleted || (!examPaper && !examLoading)) && (
+                <div className="lv-next-section-bar">
+                  {advanceError && (
+                    <span className="lv-advance-error">Connection error — tap to retry</span>
+                  )}
+                  <button
+                    className="lv-next-section-btn"
+                    onClick={handleAdvanceSection}
+                    disabled={advancing}
+                  >
+                    {advancing ? (
+                      <Loader size={18} className="spinning" />
+                    ) : advanceError ? (
+                      <RefreshCw size={18} />
+                    ) : (
+                      <ChevronRight size={18} />
+                    )}
+                    <span>{advancing ? 'Loading next section...' : advanceError ? 'Retry' : 'Next Section'}</span>
+                  </button>
+                </div>
+              )}
+            </>
           )}
 
           {/* Completed state */}
@@ -495,6 +570,17 @@ const LessonView = ({ folderName, onClose }) => {
           )}
         </div>
       </div>
+
+      {showExamPage && examPaper && createPortal(
+        <div className="lv-exam-overlay">
+          <QuestionPage
+            paper={examPaper}
+            onClose={handleExamClose}
+            skipIntro
+          />
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

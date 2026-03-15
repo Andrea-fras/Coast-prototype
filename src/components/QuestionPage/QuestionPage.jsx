@@ -1,10 +1,56 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Check, XCircle, MessageCircle, Loader, Sun, Moon } from 'lucide-react';
+import { X, Check, XCircle, Loader, Sun, Moon, Send } from 'lucide-react';
 import './QuestionPage.css';
 import SessionSummary from './SessionSummary';
 import QuestionIntro from './QuestionIntro';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import katex from 'katex';
+import 'katex/dist/katex.min.css';
+
+function renderMathText(text) {
+  if (!text) return text;
+
+  const trimmed = text.trim();
+  const isPureLatex = /^[\\^_{}\d\s()+\-*/=.,|<>!a-zA-Z]*$/.test(trimmed)
+    && /\\[a-zA-Z]+/.test(trimmed)
+    && !/\s{2,}\w{4,}\s+\w{4,}/.test(trimmed);
+
+  if (isPureLatex) {
+    try {
+      const html = katex.renderToString(trimmed, { displayMode: false, throwOnError: true, trust: true });
+      return <span dangerouslySetInnerHTML={{ __html: html }} />;
+    } catch { /* fall through to mixed rendering */ }
+  }
+
+  const mathPattern = /(\$\$[\s\S]+?\$\$|\$[^$\n]+?\$|\\frac\{[^}]*\}\{[^}]*\}|\\sqrt(?:\[[^\]]*\])?\{[^}]*\}|\\(?:infty|pi|alpha|beta|gamma|delta|sigma|mu|theta|lambda|epsilon|omega|leq|geq|neq|approx|cdot|times|pm|mp|sum|prod|int|partial|nabla|forall|exists|in|notin|subset|cup|cap|log|ln|sin|cos|tan|lim|max|min)\b|[a-zA-Z0-9]+\^?\{[^}]*\})/g;
+
+  const hasInlineMath = mathPattern.test(text);
+  if (!hasInlineMath) return text;
+
+  mathPattern.lastIndex = 0;
+  const parts = [];
+  let lastIdx = 0;
+  let match;
+  while ((match = mathPattern.exec(text)) !== null) {
+    if (match.index > lastIdx) {
+      parts.push(text.slice(lastIdx, match.index));
+    }
+    let expr = match[0].replace(/^\$\$?|\$\$?$/g, '');
+    try {
+      parts.push(
+        <span key={match.index} dangerouslySetInnerHTML={{
+          __html: katex.renderToString(expr, { displayMode: false, throwOnError: false, trust: true })
+        }} />
+      );
+    } catch {
+      parts.push(match[0]);
+    }
+    lastIdx = mathPattern.lastIndex;
+  }
+  if (lastIdx < text.length) parts.push(text.slice(lastIdx));
+  return parts.length > 0 ? <>{parts}</> : text;
+}
 
 // Simple semantic similarity check using keyword matching
 const checkSemanticSimilarity = (userAnswer, modelAnswer, keyTerms = []) => {
@@ -52,73 +98,16 @@ const checkSemanticSimilarity = (userAnswer, modelAnswer, keyTerms = []) => {
   return { score, feedback, isCorrect: score >= 0.5 };
 };
 
-// Socratic explanations for each question type
-const getSocraticExplanation = (questionId, questionText, selectedAnswer, correctAnswer, equation) => {
-  const explanations = {
-    'q1': [
-      "Let's think about this together. You have 2x + 5 = 15.",
-      "What operation is being done to x? It's being multiplied by 2, then 5 is added.",
-      "To isolate x, we need to undo these operations. Which should we undo first — the multiplication or the addition?",
-      "Right! We undo the last operation first. So we subtract 5 from both sides. What do we get?",
-      "2x = 10. Now, what's left to do to find x?",
-      "Divide both sides by 2. So x = 5. Does that make sense when you plug it back in?"
-    ],
-    'q2': [
-      "Think about what a derivative represents — it's the rate of change.",
-      "For x², imagine a square growing. If the side length increases, how fast does the area grow?",
-      "The power rule says: bring the exponent down and reduce it by 1.",
-      "So for x², we bring down the 2, making it 2x^(2-1) = 2x¹ = 2x.",
-      "Why do you think your answer was different? What step might have been missed?"
-    ],
-    'q3': [
-      "The area of a circle uses the formula A = πr². What does r represent?",
-      "Right, the radius. Here r = 3. So what's r²?",
-      "3² = 9. And then we multiply by π.",
-      "So A = 9π. A common mistake is confusing this with the circumference formula (2πr). Which formula uses r² versus just r?"
-    ],
-    'q4': [
-      "Percentages can be tricky. '15% of 200' means 15/100 × 200.",
-      "Another way to think about it: 10% of 200 is easy — it's 20. What's 5% of 200?",
-      "5% is half of 10%, so it's 10. Add them: 20 + 10 = 30.",
-      "This 'chunking' method makes percentages much easier. Does this approach make sense?"
-    ],
-    'q5': [
-      "When we have y = 3x - 2 and x = 4, we substitute.",
-      "Replace x with 4: y = 3(4) - 2.",
-      "What's 3 times 4? And then what happens when you subtract 2?",
-      "12 - 2 = 10. The key is doing operations in the right order. Multiply first, then subtract."
-    ],
-    'q6': [
-      "Look at the shape carefully. How many sides does it have?",
-      "Are all sides equal? Are the angles all the same?",
-      "What's the defining characteristic that makes a square different from a rectangle?"
-    ],
-    'q7': [
-      "Market equilibrium is where supply equals demand. D(P) = S(P).",
-      "We have 90 - √P = 2√P. Notice √P appears on both sides.",
-      "If we add √P to both sides, what do we get on the right?",
-      "90 = 3√P. Now, to find √P, we divide by 3. What's 90 ÷ 3?",
-      "√P = 30. To find P, we need to square both sides. What's 30²?",
-      "P = 900. The trick was treating √P as a single variable to solve for."
-    ]
-  };
-
-  return explanations[questionId] || [
-    `Let's review this question together.`,
-    `You selected "${selectedAnswer}", but the correct answer was "${correctAnswer}".`,
-    `What do you think might have led to this confusion?`,
-    `Try working through the problem step by step. What's the first thing you notice?`
-  ];
-};
-
 import { API_URL } from '../../config';
+import { fetchWithRetry } from '../../utils/fetchWithRetry';
+import PedroMessage from '../PedroMessage';
+import mascotImg from '../../assets/sessioncompletebird.svg';
 
-const QuestionPage = ({ onClose, paper }) => {
+const QuestionPage = ({ onClose, paper, skipIntro = false }) => {
   const { token } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
-  // State - ALL HOOKS MUST BE AT THE TOP, BEFORE ANY RETURNS
-  const [showIntro, setShowIntro] = useState(true);
+  const [showIntro, setShowIntro] = useState(!skipIntro);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState({}); 
   const [selectedOptionId, setSelectedOptionId] = useState(null);
@@ -134,6 +123,13 @@ const QuestionPage = ({ onClose, paper }) => {
   const [isEvaluating, setIsEvaluating] = useState(false);
   const sessionReportedRef = useRef(false);
   const [backendSessionId, setBackendSessionId] = useState(null);
+
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatConvoId, setChatConvoId] = useState(null);
+  const chatEndRef = useRef(null);
+  const chatConvoIdRef = useRef(null);
   
   const questions = paper?.questions || [];
   const totalQuestions = questions?.length || 0;
@@ -221,6 +217,90 @@ const QuestionPage = ({ onClose, paper }) => {
     }
   }, [currentQuestionIndex, currentQuestion?.id, userAnswers]);
 
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages, chatLoading]);
+
+  const sendPedroMessage = async (msg, isAuto = false) => {
+    if (!token) return;
+    if (!isAuto) {
+      setChatMessages(prev => [...prev, { role: 'user', text: msg }]);
+    }
+    setChatLoading(true);
+    setChatMessages(prev => [...prev, { role: 'pedro', text: '' }]);
+
+    try {
+      const body = {
+        message: msg,
+        conversation_id: chatConvoIdRef.current,
+        context_type: 'global',
+      };
+      const res = await fetchWithRetry(`${API_URL}/api/chat/stream`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error('Failed');
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = '';
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const evt = JSON.parse(line.slice(6));
+            if (evt.token) {
+              fullText += evt.token;
+              setChatMessages(prev => {
+                const u = [...prev];
+                u[u.length - 1] = { role: 'pedro', text: fullText };
+                return u;
+              });
+            }
+            if (evt.done && evt.conversation_id && !chatConvoIdRef.current) {
+              chatConvoIdRef.current = evt.conversation_id;
+              setChatConvoId(evt.conversation_id);
+            }
+          } catch {}
+        }
+      }
+    } catch {
+      setChatMessages(prev => {
+        const u = [...prev];
+        u[u.length - 1] = { role: 'pedro', text: 'Sorry, I had a brief technical issue. Try asking me again!' };
+        return u;
+      });
+    }
+    setChatLoading(false);
+  };
+
+  const triggerWrongAnswerExplanation = (question, selectedOpt, correctOpt) => {
+    const eqPart = question.equation ? `\nEquation: ${question.equation}` : '';
+    const prompt = `The student just answered a past paper question incorrectly. Explain clearly and concisely why the correct answer is right and why their choice was wrong. Be direct and educational.
+
+Question: ${question.text}${eqPart}
+Student's answer: ${selectedOpt?.text || 'unknown'}
+Correct answer: ${correctOpt?.text || 'unknown'}
+
+Give a clear, concise explanation (3-5 sentences) of the correct approach and where the student likely went wrong.`;
+
+    setChatMessages(prev => [...prev, {
+      role: 'system-context',
+      text: `Question ${question.number}: ${question.text}`,
+    }]);
+    setHasNewNotification(true);
+    setTimeout(() => setShowChat(true), 1200);
+    sendPedroMessage(prompt, true);
+  };
+
   // Show intro screen first
   if (showIntro) {
     return (
@@ -263,9 +343,22 @@ const QuestionPage = ({ onClose, paper }) => {
         selectedAnswer: openEndedAnswer,
         correctAnswer: currentQuestion.modelAnswer,
         equation: currentQuestion.equation,
-        isOpenEnded: true
+        isOpenEnded: true,
+      }]);
+      const eqPart = currentQuestion.equation ? `\nEquation: ${currentQuestion.equation}` : '';
+      const prompt = `The student just answered an open-ended question incorrectly. Explain clearly.
+
+Question: ${currentQuestion.text}${eqPart}
+Student's answer: ${openEndedAnswer}
+Model answer: ${currentQuestion.modelAnswer || 'N/A'}
+
+Explain (3-5 sentences) the correct approach and what the student missed.`;
+      setChatMessages(prev => [...prev, {
+        role: 'system-context',
+        text: `Question ${currentQuestion.number}: ${currentQuestion.text}`,
       }]);
       setHasNewNotification(true);
+      sendPedroMessage(prompt, true);
     }
 
     if (Object.keys(newUserAnswers).length === totalQuestions) {
@@ -349,7 +442,6 @@ const QuestionPage = ({ onClose, paper }) => {
       };
       setUserAnswers(newUserAnswers);
 
-      // If wrong, add to wrongAnswers for chat
       if (!isCorrect) {
         const selectedOption = currentQuestion.options.find(o => o.id === selectedOptionId);
         const correctOption = currentQuestion.options.find(o => o.id === currentQuestion.correctAnswerId);
@@ -359,9 +451,9 @@ const QuestionPage = ({ onClose, paper }) => {
           questionText: currentQuestion.text,
           selectedAnswer: selectedOption?.text,
           correctAnswer: correctOption?.text,
-          equation: currentQuestion.equation
+          equation: currentQuestion.equation,
         }]);
-        setHasNewNotification(true);
+        triggerWrongAnswerExplanation(currentQuestion, selectedOption, correctOption);
       }
 
       // Check if session is complete (all questions answered)
@@ -525,12 +617,25 @@ const QuestionPage = ({ onClose, paper }) => {
           <span className="question-number">Question {currentQuestion.number}</span>
           <h2 className="question-title">Question {currentQuestion.number}</h2>
           <p className="question-text">
-            {currentQuestion.text}
+            {renderMathText(currentQuestion.text)}
           </p>
           {currentQuestion.equation && (
-            <div className="equation-block">
-              {currentQuestion.equation}
-            </div>
+            <div
+              className="equation-block"
+              dangerouslySetInnerHTML={{
+                __html: (() => {
+                  try {
+                    return katex.renderToString(currentQuestion.equation, {
+                      displayMode: true,
+                      throwOnError: false,
+                      trust: true,
+                    });
+                  } catch {
+                    return currentQuestion.equation;
+                  }
+                })(),
+              }}
+            />
           )}
         </div>
 
@@ -636,7 +741,7 @@ const QuestionPage = ({ onClose, paper }) => {
                       {showIncorrectShake && <XCircle size={14} color="#fff" />}
                       {showCorrectHighlight && <Check size={14} color="#fff" />}
                     </div>
-                    <span className="option-text">{opt.text}</span>
+                    <span className="option-text">{renderMathText(opt.text)}</span>
                   </div>
                 );
               })}
@@ -665,58 +770,76 @@ const QuestionPage = ({ onClose, paper }) => {
         </div>
       </div>
 
-      {/* Chat Bubble */}
-      {wrongAnswers.length > 0 && (
-        <button 
+      {/* Pedro Chat Bubble */}
+      {chatMessages.length > 0 && (
+        <button
           className={`chat-bubble ${hasNewNotification ? 'has-notification' : ''}`}
-          onClick={() => {
-            setShowChat(true);
-            setHasNewNotification(false);
-          }}
+          onClick={() => { setShowChat(true); setHasNewNotification(false); }}
         >
-          <MessageCircle size={24} />
+          <img src={mascotImg} alt="Pedro" className="chat-bubble-avatar" />
           {hasNewNotification && <span className="notification-dot"></span>}
         </button>
       )}
 
-      {/* Chat Panel */}
+      {/* Pedro Chat Panel */}
       {showChat && (
-        <div className="chat-panel">
+        <div className="chat-panel pedro-chat-panel">
           <div className="chat-header">
-            <h3>Let's Review Together</h3>
+            <div className="chat-header-left">
+              <img src={mascotImg} alt="Pedro" className="chat-header-avatar" />
+              <h3>Pedro</h3>
+            </div>
             <button className="chat-close" onClick={() => setShowChat(false)}>
               <X size={20} />
             </button>
           </div>
-          <div className="chat-messages">
-            {wrongAnswers.map((wrong, idx) => (
-              <div key={wrong.questionId} className="chat-question-block">
-                <div className="chat-question-header">
-                  <span className="chat-q-number">Question {wrong.questionNumber}</span>
-                  <span className="chat-q-text">{wrong.questionText}</span>
+          <div className="chat-messages pedro-chat-messages">
+            {chatMessages.map((msg, idx) => {
+              if (msg.role === 'system-context') {
+                return (
+                  <div key={idx} className="pedro-chat-context">
+                    {msg.text}
+                  </div>
+                );
+              }
+              if (msg.role === 'pedro') {
+                return (
+                  <div key={idx} className="pedro-chat-msg pedro-msg">
+                    <PedroMessage content={msg.text} />
+                  </div>
+                );
+              }
+              return (
+                <div key={idx} className="pedro-chat-msg user-msg">
+                  <p>{msg.text}</p>
                 </div>
-                <div className="chat-your-answer">
-                  You answered: <span className="wrong">{wrong.selectedAnswer}</span>
-                </div>
-                <div className="chat-correct-answer">
-                  Correct answer: <span className="correct">{wrong.correctAnswer}</span>
-                </div>
-                <div className="socratic-messages">
-                  {getSocraticExplanation(
-                    wrong.questionId, 
-                    wrong.questionText, 
-                    wrong.selectedAnswer, 
-                    wrong.correctAnswer,
-                    wrong.equation
-                  ).map((msg, msgIdx) => (
-                    <div key={msgIdx} className="tutor-message">
-                      {msg}
-                    </div>
-                  ))}
-                </div>
+              );
+            })}
+            {chatLoading && !chatMessages.length && (
+              <div className="pedro-chat-msg pedro-msg">
+                <Loader size={16} className="spinning" />
               </div>
-            ))}
+            )}
+            <div ref={chatEndRef} />
           </div>
+          <form className="pedro-chat-input-bar" onSubmit={(e) => {
+            e.preventDefault();
+            if (!chatInput.trim() || chatLoading) return;
+            sendPedroMessage(chatInput.trim());
+            setChatInput('');
+          }}>
+            <input
+              type="text"
+              className="pedro-chat-input"
+              placeholder="Ask Pedro about this question..."
+              value={chatInput}
+              onChange={e => setChatInput(e.target.value)}
+              disabled={chatLoading}
+            />
+            <button type="submit" className="pedro-chat-send" disabled={!chatInput.trim() || chatLoading}>
+              <Send size={16} />
+            </button>
+          </form>
         </div>
       )}
     </div>

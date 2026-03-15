@@ -197,6 +197,10 @@
   background: #fff5ee;
   color: #e67e22;
 }
+.fv-source-icon-pptx {
+  background: #fef2f2;
+  color: #dc2626;
+}
 
 .fv-source-delete {
   background: none;
@@ -642,6 +646,10 @@
 .dark .fv-source-icon-doc {
   background: #2a2015;
   color: #f0a050;
+}
+.dark .fv-source-icon-pptx {
+  background: #2a1515;
+  color: #f87171;
 }
 .dark .fv-source-delete {
   color: #555;

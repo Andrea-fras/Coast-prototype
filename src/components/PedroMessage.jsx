@@ -3,6 +3,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import remarkGfm from 'remark-gfm';
 import 'katex/dist/katex.min.css';
+import { API_URL } from '../config';
 
 function repairIncompleteSvg(text) {
   const hasSvgOpen = /<svg[\s>]/i.test(text);
@@ -101,6 +102,38 @@ function MarkdownBlock({ text }) {
             padding: '0.4em 0.6em',
           }}>{children}</td>
         ),
+        img: ({ src, alt, ...props }) => {
+          let resolvedSrc = src || '';
+          if (resolvedSrc.startsWith('/api/')) {
+            resolvedSrc = `${API_URL}${resolvedSrc}`;
+          } else if (/\/api\/source-images\/\d+/.test(resolvedSrc)) {
+            const match = resolvedSrc.match(/(\/api\/source-images\/\d+)/);
+            if (match) resolvedSrc = `${API_URL}${match[1]}`;
+          }
+          return (
+            <img
+              src={resolvedSrc}
+              alt={alt || ''}
+              {...props}
+              style={{
+                maxWidth: '100%',
+                borderRadius: '8px',
+                margin: '0.6em 0',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+              }}
+              loading="lazy"
+              onError={(e) => {
+                console.warn('[PedroMessage] Image failed to load:', resolvedSrc);
+                e.target.onerror = null;
+                e.target.style.display = 'none';
+                const fallback = document.createElement('div');
+                fallback.textContent = alt ? `[Diagram: ${alt}]` : '[Diagram unavailable]';
+                fallback.style.cssText = 'padding:0.5em 0.8em;background:rgba(0,0,0,0.04);border-radius:6px;font-size:0.85em;color:#888;font-style:italic;margin:0.4em 0;';
+                e.target.parentNode.insertBefore(fallback, e.target.nextSibling);
+              }}
+            />
+          );
+        },
       }}
     >
       {text}

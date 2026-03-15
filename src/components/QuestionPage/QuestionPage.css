@@ -431,100 +431,115 @@
   color: #333;
 }
 
-.chat-messages {
+/* Pedro Chat */
+.chat-bubble-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.chat-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.chat-header-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
+.pedro-chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.chat-question-block {
-  background: rgba(255, 255, 255, 0.65);
-  border-radius: 16px;
-  padding: 1.25rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.chat-question-header {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid #eee;
-}
-
-.chat-q-number {
-  font-family: 'Nunito Sans', sans-serif;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #888;
-  text-transform: uppercase;
-}
-
-.chat-q-text {
-  font-family: 'Nunito', sans-serif;
-  font-size: 1rem;
-  font-weight: 700;
-  color: #333;
-}
-
-.chat-your-answer,
-.chat-correct-answer {
-  font-family: 'Nunito', sans-serif;
-  font-size: 0.9rem;
-  color: #666;
-  margin-bottom: 0.5rem;
-}
-
-.chat-your-answer .wrong {
-  color: #E74C3C;
-  font-weight: 700;
-}
-
-.chat-correct-answer .correct {
-  color: #2ECC71;
-  font-weight: 700;
-}
-
-.socratic-messages {
-  margin-top: 1rem;
+  padding: 1rem 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  min-height: 0;
 }
 
-.tutor-message {
-  background: linear-gradient(to right, rgba(255, 181, 3, 0.1), rgba(255, 123, 2, 0.1));
-  border-left: 3px solid #FF7B02;
-  padding: 0.75rem 1rem;
-  border-radius: 0 12px 12px 0;
+.pedro-chat-context {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #888;
+  text-align: center;
+  padding: 0.4rem 0.75rem;
+  background: rgba(0,0,0,0.04);
+  border-radius: 8px;
+  margin: 0.25rem 0;
+}
+
+.pedro-chat-msg.pedro-msg {
+  align-self: flex-start;
+  max-width: 90%;
   font-family: 'Nunito', sans-serif;
-  font-size: 0.95rem;
-  color: #444;
-  line-height: 1.5;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #333;
 }
 
-/* Scrollbar for chat */
-.chat-messages::-webkit-scrollbar {
-  width: 6px;
+.pedro-chat-msg.pedro-msg p { margin: 0 0 0.4rem; }
+
+.pedro-chat-msg.user-msg {
+  align-self: flex-end;
+  background: linear-gradient(135deg, #FFB503, #FF7B02);
+  color: #fff;
+  padding: 0.6rem 1rem;
+  border-radius: 16px 16px 4px 16px;
+  max-width: 80%;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.92rem;
+}
+.pedro-chat-msg.user-msg p { margin: 0; }
+
+.pedro-chat-input-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #e0e0e0;
 }
 
-.chat-messages::-webkit-scrollbar-track {
-  background: #e0e0e0;
-  border-radius: 3px;
+.pedro-chat-input {
+  flex: 1;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  padding: 0.55rem 1rem;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.pedro-chat-input:focus {
+  border-color: #FFB503;
 }
 
-.chat-messages::-webkit-scrollbar-thumb {
-  background: #bbb;
-  border-radius: 3px;
+.pedro-chat-send {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #FFB503, #FF7B02);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: opacity 0.2s;
+}
+.pedro-chat-send:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
-.chat-messages::-webkit-scrollbar-thumb:hover {
-  background: #999;
-}
+.pedro-chat-messages::-webkit-scrollbar { width: 5px; }
+.pedro-chat-messages::-webkit-scrollbar-track { background: transparent; }
+.pedro-chat-messages::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+.pedro-chat-messages::-webkit-scrollbar-thumb:hover { background: #aaa; }
 
 /* ============================================
    OPEN-ENDED QUESTIONS
@@ -905,9 +920,9 @@
 .question-page.dark .model-answer-label { color: rgba(255, 255, 255, 0.45); }
 .question-page.dark .model-answer-text { color: rgba(255, 255, 255, 0.6); }
 
-/* Dark chat panel */
+/* Dark Pedro chat */
 .question-page.dark .chat-panel {
-  background: rgba(12, 12, 30, 0.88);
+  background: rgba(12, 12, 30, 0.92);
   border-color: rgba(255, 255, 255, 0.08);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
@@ -917,26 +932,17 @@
 .question-page.dark .chat-header h3 { color: rgba(255, 255, 255, 0.9); }
 .question-page.dark .chat-close { color: rgba(255, 255, 255, 0.4); }
 .question-page.dark .chat-close:hover { color: rgba(255, 255, 255, 0.8); }
-
-.question-page.dark .chat-question-block {
-  background: rgba(255, 255, 255, 0.05);
+.question-page.dark .pedro-chat-context {
+  color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.06);
 }
-.question-page.dark .chat-question-header {
-  border-bottom-color: rgba(255, 255, 255, 0.06);
+.question-page.dark .pedro-chat-msg.pedro-msg { color: rgba(255, 255, 255, 0.8); }
+.question-page.dark .pedro-chat-input-bar { border-top-color: rgba(255, 255, 255, 0.08); }
+.question-page.dark .pedro-chat-input {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.85);
 }
-.question-page.dark .chat-q-number { color: rgba(255, 255, 255, 0.4); }
-.question-page.dark .chat-q-text { color: rgba(255, 255, 255, 0.85); }
-.question-page.dark .chat-your-answer,
-.question-page.dark .chat-correct-answer { color: rgba(255, 255, 255, 0.5); }
-
-.question-page.dark .tutor-message {
-  background: linear-gradient(to right, rgba(255, 181, 3, 0.08), rgba(255, 123, 2, 0.06));
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.question-page.dark .chat-messages::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.04);
-}
-.question-page.dark .chat-messages::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
-}
+.question-page.dark .pedro-chat-input::placeholder { color: rgba(255, 255, 255, 0.3); }
+.question-page.dark .pedro-chat-input:focus { border-color: #FFB503; }
+.question-page.dark .pedro-chat-messages::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); }

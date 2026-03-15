@@ -1406,6 +1406,37 @@
   border-radius: 6px;
 }
 
+.nb-card-curated-badge {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #5a67f6;
+  background: rgba(90, 103, 246, 0.12);
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+}
+
+.nb-card-description {
+  font-size: 0.78rem;
+  color: #666;
+  line-height: 1.4;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.dark .nb-card-description {
+  color: #aaa;
+}
+
+.nb-card-curated {
+  border: 1px solid rgba(90, 103, 246, 0.2);
+}
+.nb-card-curated:hover {
+  border-color: rgba(90, 103, 246, 0.4);
+}
+
 .nb-card-title {
   font-family: 'Nunito Sans', sans-serif;
   font-size: 1.05rem;

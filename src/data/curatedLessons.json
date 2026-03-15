@@ -1,0 +1,22 @@
+[
+  {
+    "id": "qm1",
+    "folderName": "Quantitative Methods 1",
+    "title": "Quantitative Methods 1",
+    "course": "QM1",
+    "icon": "📐",
+    "color": "#4FA3D1",
+    "description": "Master the fundamentals of quantitative methods — from linear equations to calculus, statistics, and computer skills. All lectures, exercises, and past papers included.",
+    "tags": ["maths", "calculus", "algebra", "statistics"]
+  },
+  {
+    "id": "dsa",
+    "folderName": "Data Structures & Algorithms",
+    "title": "Data Structures & Algorithms",
+    "course": "DSA",
+    "icon": "🧮",
+    "color": "#6C5CE7",
+    "description": "Learn data structures and algorithms through a building-blocks approach — each concept is broken into small, digestible code snippets that you assemble into full solutions.",
+    "tags": ["arrays", "trees", "sorting", "recursion", "graphs"]
+  }
+]

@@ -2,6 +2,7 @@
   "id": "econ_101",
   "title": "Economics 101",
   "description": "Introduction to Microeconomics",
+  "course": "Economics",
   "questions": [
     {
       "id": "e1",
@@ -15,7 +16,8 @@
         { "id": "c", "text": "Demand stays the same" },
         { "id": "d", "text": "Supply increases" }
       ],
-      "correctAnswerId": "b"
+      "correctAnswerId": "b",
+      "tags": ["supply and demand", "substitutes"]
     },
     {
       "id": "e2",
@@ -29,7 +31,8 @@
         { "id": "c", "text": "-2.0" },
         { "id": "d", "text": "-1.5" }
       ],
-      "correctAnswerId": "a"
+      "correctAnswerId": "a",
+      "tags": ["elasticity", "percentages"]
     },
     {
       "id": "e3",
@@ -43,7 +46,8 @@
         { "id": "c", "text": "MR = Price" },
         { "id": "d", "text": "MR = 0" }
       ],
-      "correctAnswerId": "c"
+      "correctAnswerId": "c",
+      "tags": ["market structure", "marginal revenue"]
     },
     {
       "id": "e4",
@@ -52,30 +56,33 @@
       "text": "Explain what happens to consumer surplus when the government imposes a price ceiling below the equilibrium price.",
       "equation": null,
       "modelAnswer": "When a price ceiling is set below equilibrium, there is a shortage as quantity demanded exceeds quantity supplied. Consumer surplus changes in two ways: some consumers benefit from lower prices, but overall consumer surplus may decrease because fewer units are available. Some consumers who would have bought at the higher price can no longer purchase the good due to shortages.",
-      "keyTerms": ["shortage", "quantity demanded", "quantity supplied", "lower price", "fewer units", "cannot purchase"]
+      "keyTerms": ["shortage", "quantity demanded", "quantity supplied", "lower price", "fewer units", "cannot purchase"],
+      "tags": ["consumer surplus", "price controls", "supply and demand"]
     },
     {
       "id": "e5",
       "number": 5,
       "type": "multiple-choice",
-      "text": "If the cross-price elasticity between goods A and B is positive, the goods are:",
+      "text": "When marginal cost equals marginal revenue, a firm should:",
       "equation": null,
       "options": [
-        { "id": "a", "text": "Complements" },
-        { "id": "b", "text": "Substitutes" },
-        { "id": "c", "text": "Unrelated" },
-        { "id": "d", "text": "Inferior goods" }
+        { "id": "a", "text": "Increase production" },
+        { "id": "b", "text": "Decrease production" },
+        { "id": "c", "text": "Maintain current output" },
+        { "id": "d", "text": "Shut down" }
       ],
-      "correctAnswerId": "b"
+      "correctAnswerId": "c",
+      "tags": ["profit maximization", "marginal analysis"]
     },
     {
       "id": "e6",
       "number": 6,
       "type": "open-ended",
-      "text": "Describe the concept of opportunity cost and provide an example.",
+      "text": "Explain the law of diminishing marginal returns. Give an example.",
       "equation": null,
-      "modelAnswer": "Opportunity cost is the value of the next best alternative that must be given up when making a choice. It represents the benefits you could have received by taking an alternative action. For example, if you choose to spend $1000 on a vacation instead of investing it, the opportunity cost is the potential returns you would have earned from that investment.",
-      "keyTerms": ["next best alternative", "given up", "choice", "benefits", "alternative action", "foregone"]
+      "modelAnswer": "The law of diminishing marginal returns states that as you add more of one input while holding other inputs constant, the additional output from each extra unit of input will eventually decrease. For example, if a farmer keeps adding fertilizer to a fixed plot of land, initially crop yield increases significantly, but after a point, each additional unit of fertilizer produces less and less additional crop. Eventually, adding more could even decrease total output.",
+      "keyTerms": ["additional output", "eventually decrease", "holding other inputs constant", "extra unit", "fixed input"],
+      "tags": ["diminishing returns", "production"]
     }
   ]
 }

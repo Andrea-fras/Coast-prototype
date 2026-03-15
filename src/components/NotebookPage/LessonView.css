@@ -690,6 +690,77 @@
   color: #fca5a5;
 }
 
+/* ═══════════════════ Exam Section ═══════════════════ */
+
+.lv-exam-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  padding: 12px;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.lv-exam-prompt {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 8px 16px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #eef2ff, #f0f0ff);
+  border: 1px solid #c7d2fe;
+  border-radius: 12px;
+  color: #4338ca;
+}
+.dark .lv-exam-prompt {
+  background: linear-gradient(135deg, #1e1b4b, #312e81);
+  border-color: #4338ca;
+  color: #c7d2fe;
+}
+
+.lv-exam-prompt-text {
+  flex: 1;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+.lv-exam-prompt-text strong {
+  display: block;
+  font-size: 0.92rem;
+  margin-bottom: 2px;
+}
+
+.lv-exam-start-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+.lv-exam-start-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.lv-exam-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: var(--bg-primary, #fff);
+}
+.dark .lv-exam-overlay {
+  background: #0f172a;
+}
+
 /* ═══════════════════ Responsive ═══════════════════ */
 
 @media (max-width: 768px) {
