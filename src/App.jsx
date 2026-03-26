@@ -11,6 +11,9 @@ import AdminDashboard from './components/AdminDashboard/AdminDashboard'
 import LoginPage from './components/LoginPage/LoginPage'
 import ReviewSession from './components/ReviewSession/ReviewSession'
 import OnboardingModal from './components/OnboardingModal/OnboardingModal'
+import Calculator from './components/Calculator/Calculator'
+import './components/Calculator/Calculator.css'
+import FeedbackWidget from './components/FeedbackWidget/FeedbackWidget'
 import { useAuth } from './context/AuthContext'
 
 // Import all papers
@@ -35,6 +38,7 @@ function App() {
   const [showReview, setShowReview] = useState(false);
   const [activePaper, setActivePaper] = useState(null);
   const [selectedPaperIndex, setSelectedPaperIndex] = useState(1);
+  const [showCalculator, setShowCalculator] = useState(false);
 
   // Show loading spinner while checking auth
   if (loading) {
@@ -119,6 +123,28 @@ function App() {
           <Footer />
         </div>
       )}
+
+      <button
+        className={`calc-fab ${showCalculator ? 'active' : ''}`}
+        onClick={() => setShowCalculator(prev => !prev)}
+        title="Scientific Calculator"
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="4" y="2" width="16" height="20" rx="2" />
+          <line x1="8" y1="6" x2="16" y2="6" />
+          <line x1="8" y1="10" x2="8" y2="10.01" />
+          <line x1="12" y1="10" x2="12" y2="10.01" />
+          <line x1="16" y1="10" x2="16" y2="10.01" />
+          <line x1="8" y1="14" x2="8" y2="14.01" />
+          <line x1="12" y1="14" x2="12" y2="14.01" />
+          <line x1="16" y1="14" x2="16" y2="14.01" />
+          <line x1="8" y1="18" x2="8" y2="18.01" />
+          <line x1="12" y1="18" x2="12" y2="18.01" />
+          <line x1="16" y1="18" x2="16" y2="18.01" />
+        </svg>
+      </button>
+      {showCalculator && <Calculator onClose={() => setShowCalculator(false)} />}
+      <FeedbackWidget />
     </>
   )
 }

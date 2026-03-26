@@ -1,0 +1,126 @@
+.calc-floating {
+  position: fixed;
+  z-index: 9999;
+  width: 400px;
+  height: 520px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  user-select: none;
+}
+
+.calc-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: #f8f8f8;
+  border-bottom: 1px solid #e8e8e8;
+  cursor: grab;
+  touch-action: none;
+}
+.calc-titlebar:active {
+  cursor: grabbing;
+}
+
+.calc-grip {
+  color: #bbb;
+  flex-shrink: 0;
+}
+
+.calc-title {
+  flex: 1;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #555;
+  letter-spacing: 0.02em;
+}
+
+.calc-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #999;
+  padding: 0.25rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  transition: all 0.15s;
+}
+.calc-close:hover {
+  background: #eee;
+  color: #666;
+}
+
+.calc-iframe {
+  flex: 1;
+  width: 100%;
+  border: none;
+}
+
+/* Toggle button (rendered in App.jsx) */
+.calc-fab {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 9998;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #4a6cf7, #6366f1);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.calc-fab:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+}
+.calc-fab.active {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+}
+
+/* Dark mode */
+.dark .calc-floating {
+  background: #1a1a1a;
+  border-color: #333;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+.dark .calc-titlebar {
+  background: #222;
+  border-bottom-color: #333;
+}
+.dark .calc-grip {
+  color: #555;
+}
+.dark .calc-title {
+  color: #ccc;
+}
+.dark .calc-close:hover {
+  background: #333;
+  color: #ccc;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .calc-floating {
+    width: 320px;
+    height: 440px;
+  }
+
+  .calc-fab {
+    bottom: 16px;
+    left: 16px;
+    width: 42px;
+    height: 42px;
+  }
+}

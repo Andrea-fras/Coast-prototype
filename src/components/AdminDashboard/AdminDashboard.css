@@ -46,7 +46,7 @@
 }
 
 .admin-container {
-  max-width: 960px;
+  max-width: 1020px;
   margin: 0 auto;
   padding: 2.5rem 2rem 4rem;
 }
@@ -64,13 +64,61 @@
   margin: 0.25rem 0 0;
 }
 
-/* Summary Cards */
+/* ── Tab Bar ── */
+
+.admin-tab-bar {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 1.5rem;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 0;
+}
+
+.admin-tab {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.55rem 1rem;
+  border: none;
+  background: none;
+  color: #999;
+  cursor: pointer;
+  border-bottom: 2.5px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: color 0.15s, border-color 0.15s;
+  margin-bottom: -2px;
+}
+
+.admin-tab:hover { color: #555; }
+
+.admin-tab.active {
+  color: #FFB503;
+  border-bottom-color: #FFB503;
+}
+
+.admin-tab-badge {
+  font-size: 0.7rem;
+  font-weight: 800;
+  background: #FF7B02;
+  color: #fff;
+  border-radius: 10px;
+  padding: 1px 7px;
+  margin-left: 2px;
+}
+
+/* ── Summary Cards ── */
 
 .admin-summary-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
   margin-top: 1.5rem;
+}
+
+.admin-summary-grid-6 {
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .admin-summary-card {
@@ -106,10 +154,171 @@
   margin-top: 2px;
 }
 
-/* Users Section */
+/* ── Engagement Row ── */
+
+.admin-engagement-row {
+  display: flex;
+  gap: 0.8rem;
+  margin-top: 1.2rem;
+  flex-wrap: wrap;
+}
+
+.admin-eng-stat {
+  background: white;
+  border-radius: 12px;
+  padding: 0.9rem 1.2rem;
+  border: 1px solid #eee;
+  flex: 1;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.admin-eng-value {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #333;
+}
+
+.admin-eng-label {
+  font-size: 0.72rem;
+  color: #aaa;
+  text-align: center;
+  margin-top: 2px;
+}
+
+/* ── Growth Charts ── */
+
+.admin-growth-section {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.admin-growth-card {
+  background: white;
+  border-radius: 14px;
+  padding: 1.3rem 1.5rem;
+  border: 1px solid #eee;
+}
+
+.admin-growth-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #444;
+  margin: 0 0 1rem;
+}
+
+.admin-growth-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 140px;
+}
+
+.admin-growth-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.admin-growth-bar-wrap {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.admin-growth-bar {
+  width: 70%;
+  max-width: 18px;
+  border-radius: 4px 4px 0 0;
+  min-height: 2px;
+  transition: height 0.4s ease;
+}
+
+.admin-growth-date {
+  font-size: 0.6rem;
+  color: #bbb;
+  margin-top: 4px;
+  white-space: nowrap;
+}
+
+/* ── Feedback Section ── */
+
+.admin-feedback-section {
+  margin-top: 1.5rem;
+}
+
+.admin-feedback-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.admin-feedback-card {
+  background: white;
+  border-radius: 14px;
+  border: 1px solid #eee;
+  padding: 1rem 1.2rem;
+}
+
+.admin-fb-top {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.admin-fb-cat {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.03em;
+}
+
+.admin-fb-cat--bug { background: #FDECEA; color: #E74C3C; }
+.admin-fb-cat--suggestion { background: #EAF6FD; color: #2980B9; }
+.admin-fb-cat--other { background: #F0F0F0; color: #666; }
+
+.admin-fb-user {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.admin-fb-date {
+  font-size: 0.75rem;
+  color: #bbb;
+  margin-left: auto;
+}
+
+.admin-fb-msg {
+  font-size: 0.9rem;
+  color: #333;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.admin-fb-page {
+  font-size: 0.72rem;
+  color: #bbb;
+  margin-top: 0.4rem;
+  display: inline-block;
+}
+
+/* ── Users Section ── */
 
 .admin-users-section {
-  margin-top: 2rem;
+  margin-top: 1.5rem;
 }
 
 .admin-users-section h2 {
@@ -133,13 +342,8 @@
   transition: box-shadow 0.2s;
 }
 
-.admin-user-card:hover {
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-}
-
-.admin-user-card.expanded {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-}
+.admin-user-card:hover { box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06); }
+.admin-user-card.expanded { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); }
 
 .admin-user-row {
   display: flex;
@@ -174,16 +378,8 @@
   flex-direction: column;
 }
 
-.admin-user-name {
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: #222;
-}
-
-.admin-user-email {
-  font-size: 0.78rem;
-  color: #aaa;
-}
+.admin-user-name { font-weight: 700; font-size: 0.95rem; color: #222; }
+.admin-user-email { font-size: 0.78rem; color: #aaa; }
 
 .admin-user-quick-stats {
   display: flex;
@@ -200,10 +396,7 @@
   font-weight: 600;
 }
 
-.admin-accuracy-pill {
-  font-weight: 700;
-  font-size: 0.85rem;
-}
+.admin-accuracy-pill { font-weight: 700; font-size: 0.85rem; }
 
 /* Expanded Section */
 
@@ -218,9 +411,7 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-.admin-detail-section {
-  margin-top: 1.2rem;
-}
+.admin-detail-section { margin-top: 1.2rem; }
 
 .admin-detail-section h4 {
   font-size: 0.85rem;
@@ -264,17 +455,9 @@
 
 /* Skill Bars */
 
-.admin-skill-bars {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
+.admin-skill-bars { display: flex; flex-direction: column; gap: 0.5rem; }
 
-.admin-skill-row {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
+.admin-skill-row { display: flex; align-items: center; gap: 0.6rem; }
 
 .admin-skill-topic {
   width: 140px;
@@ -341,10 +524,11 @@
   margin: 0;
 }
 
-/* Responsive */
+/* ── Responsive ── */
 
 @media (max-width: 768px) {
-  .admin-summary-grid {
+  .admin-summary-grid,
+  .admin-summary-grid-6 {
     grid-template-columns: repeat(2, 1fr);
   }
 
@@ -352,7 +536,13 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .admin-skill-topic {
-    width: 100px;
+  .admin-skill-topic { width: 100px; }
+
+  .admin-engagement-row {
+    flex-direction: column;
+  }
+
+  .admin-tab-bar {
+    overflow-x: auto;
   }
 }
