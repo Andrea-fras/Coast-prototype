@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './App.css'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
@@ -15,6 +15,7 @@ import Calculator from './components/Calculator/Calculator'
 import './components/Calculator/Calculator.css'
 import FeedbackWidget from './components/FeedbackWidget/FeedbackWidget'
 import { useAuth } from './context/AuthContext'
+import { API_URL } from './config'
 
 // Import all papers
 import paper1 from './data/samplePaper.json'
@@ -29,7 +30,7 @@ const papers = [
 ];
 
 function App() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout, token } = useAuth();
   const [showQuestionPage, setShowQuestionPage] = useState(false);
   const [showNotebook, setShowNotebook] = useState(false);
   const [showPedroChat, setShowPedroChat] = useState(false);
@@ -39,6 +40,77 @@ function App() {
   const [activePaper, setActivePaper] = useState(null);
   const [selectedPaperIndex, setSelectedPaperIndex] = useState(1);
   const [showCalculator, setShowCalculator] = useState(false);
+
+  useEffect(() => {
+    if (!token) return;
+    const ping = () => {
+      fetch(`${API_URL}/api/heartbeat`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => {});
+    };
+    ping();
+    const id = setInterval(ping, 30000);
+    return () => clearInterval(id);
+  }, [token]);
+
+  // ── Activity tracking ──
+  const currentFeature = showQuestionPage ? 'quiz'
+    : showNotebook ? 'notebook'
+    : showPedroChat ? 'pedro_chat'
+    : showAdmin ? 'admin'
+    : showPomodoro ? 'pomodoro'
+    : showReview ? 'review'
+    : 'dashboard';
+
+  const featureRef = useRef(currentFeature);
+  const startRef = useRef(Date.now());
+
+  const flushActivity = useCallback((feature, startTime) => {
+    if (!token || !feature) return;
+    const dur = Date.now() - startTime;
+    if (dur < 1000) return;
+    fetch(`${API_URL}/api/activity`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ feature, duration_ms: dur }),
+    }).catch(() => {});
+  }, [token]);
+
+  useEffect(() => {
+    if (currentFeature !== featureRef.current) {
+      flushActivity(featureRef.current, startRef.current);
+      featureRef.current = currentFeature;
+      startRef.current = Date.now();
+    }
+  }, [currentFeature, flushActivity]);
+
+  useEffect(() => {
+    if (!token) return;
+    const interval = setInterval(() => {
+      flushActivity(featureRef.current, startRef.current);
+      startRef.current = Date.now();
+    }, 60000);
+
+    const handleUnload = () => {
+      if (!featureRef.current) return;
+      const dur = Date.now() - startRef.current;
+      if (dur < 1000) return;
+      fetch(`${API_URL}/api/activity`, {
+        method: 'POST',
+        keepalive: true,
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ feature: featureRef.current, duration_ms: dur }),
+      }).catch(() => {});
+    };
+    window.addEventListener('beforeunload', handleUnload);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('beforeunload', handleUnload);
+      flushActivity(featureRef.current, startRef.current);
+    };
+  }, [token, flushActivity]);
 
   // Show loading spinner while checking auth
   if (loading) {

@@ -4,16 +4,26 @@ import './AdminDashboard.css';
 import { useAuth } from '../../context/AuthContext';
 import { API_URL } from '../../config';
 
-const TABS = ['overview', 'growth', 'feedback', 'users'];
+const TABS = ['overview', 'metrics', 'growth', 'feedback', 'users'];
 
 const AdminDashboard = ({ onClose }) => {
   const { token } = useAuth();
   const [overviewData, setOverviewData] = useState(null);
   const [analytics, setAnalytics] = useState(null);
   const [feedbackData, setFeedbackData] = useState(null);
+  const [liveUsers, setLiveUsers] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expandedUser, setExpandedUser] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
+
+  const fetchLiveUsers = () => {
+    fetch(`${API_URL}/api/admin/live-users`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setLiveUsers(d); })
+      .catch(() => {});
+  };
 
   useEffect(() => {
     const headers = { Authorization: `Bearer ${token}` };
@@ -29,6 +39,10 @@ const AdminDashboard = ({ onClose }) => {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+
+    fetchLiveUsers();
+    const liveInterval = setInterval(fetchLiveUsers, 15000);
+    return () => clearInterval(liveInterval);
   }, [token]);
 
   const toggleUser = (id) => setExpandedUser(prev => prev === id ? null : id);
@@ -70,6 +84,15 @@ const AdminDashboard = ({ onClose }) => {
   const maxSignups = Math.max(...(growth.signups_per_day || []).map(d => d.count), 1);
   const maxMsgs = Math.max(...(growth.messages_per_day || []).map(d => d.count), 1);
 
+  const timeData = analytics?.time || {};
+  const activeData = analytics?.active_users || {};
+  const retentionData = analytics?.retention || {};
+  const perFeature = timeData.per_feature || {};
+  const featureEntries = Object.entries(perFeature).sort(([, a], [, b]) => b - a);
+  const maxFeatureHrs = Math.max(...featureEntries.map(([, v]) => v), 0.01);
+  const dauTrend = activeData.dau_trend || [];
+  const maxDau = Math.max(...dauTrend.map(d => d.count), 1);
+
   return (
     <div className="admin-page">
       <button className="admin-close" onClick={onClose}><X size={28} /></button>
@@ -89,6 +112,7 @@ const AdminDashboard = ({ onClose }) => {
               onClick={() => setActiveTab(t)}
             >
               {t === 'overview' && <BarChart3 size={15} />}
+              {t === 'metrics' && <Clock size={15} />}
               {t === 'growth' && <Layers size={15} />}
               {t === 'feedback' && <MessageSquare size={15} />}
               {t === 'users' && <Users size={15} />}
@@ -103,6 +127,24 @@ const AdminDashboard = ({ onClose }) => {
         {/* ────── OVERVIEW TAB ────── */}
         {activeTab === 'overview' && (
           <>
+            {/* Live Users Banner */}
+            {liveUsers && (
+              <div className="admin-live-banner">
+                <div className="admin-live-dot" />
+                <span className="admin-live-count">{liveUsers.count} user{liveUsers.count !== 1 ? 's' : ''} online now</span>
+                {liveUsers.users.length > 0 && (
+                  <div className="admin-live-names">
+                    {liveUsers.users.map(u => (
+                      <span key={u.user_id} className="admin-live-chip">
+                        {u.name}
+                        <span className="admin-live-ago">{u.seconds_ago}s ago</span>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="admin-summary-grid admin-summary-grid-6">
               <SummaryCard icon={<Users size={22} />} value={h.total_users ?? 0} label="Users" />
               <SummaryCard icon={<MessageCircle size={22} />} value={h.total_messages ?? 0} label="Messages" />
@@ -120,6 +162,75 @@ const AdminDashboard = ({ onClose }) => {
               <EngagementStat label="Avg Sections / Lesson" value={eng.avg_sections_per_lesson ?? 0} />
             </div>
           </>
+        )}
+
+        {/* ────── METRICS TAB ────── */}
+        {activeTab === 'metrics' && (
+          <div className="admin-metrics-section">
+            {/* DAU / WAU / MAU */}
+            <div className="admin-metrics-row">
+              <div className="admin-metric-big">
+                <span className="admin-metric-big-value">{activeData.dau ?? 0}</span>
+                <span className="admin-metric-big-label">DAU (today)</span>
+              </div>
+              <div className="admin-metric-big">
+                <span className="admin-metric-big-value">{activeData.wau ?? 0}</span>
+                <span className="admin-metric-big-label">WAU (7 days)</span>
+              </div>
+              <div className="admin-metric-big">
+                <span className="admin-metric-big-value">{activeData.mau ?? 0}</span>
+                <span className="admin-metric-big-label">MAU (30 days)</span>
+              </div>
+            </div>
+
+            {/* DAU Trend */}
+            {dauTrend.length > 0 && (
+              <GrowthChart title="Daily Active Users (Last 30 Days)" data={dauTrend} maxVal={maxDau} color="#9B59B6" />
+            )}
+
+            {/* Time on Platform */}
+            <div className="admin-metrics-row" style={{ marginTop: '1.2rem' }}>
+              <div className="admin-metric-big">
+                <span className="admin-metric-big-value">{timeData.total_hours ?? 0}h</span>
+                <span className="admin-metric-big-label">Total Platform Time</span>
+              </div>
+              <div className="admin-metric-big">
+                <span className="admin-metric-big-value">{timeData.avg_hours_per_user ?? 0}h</span>
+                <span className="admin-metric-big-label">Avg per User</span>
+              </div>
+            </div>
+
+            {/* Time per Feature */}
+            {featureEntries.length > 0 && (
+              <div className="admin-feature-time-card">
+                <h3 className="admin-growth-title">Time per Feature (hours)</h3>
+                <div className="admin-feature-bars">
+                  {featureEntries.map(([feat, hrs]) => (
+                    <div key={feat} className="admin-feature-row">
+                      <span className="admin-feature-name">{feat.replace('_', ' ')}</span>
+                      <div className="admin-feature-bar-bg">
+                        <div
+                          className="admin-feature-bar-fill"
+                          style={{ width: `${Math.max((hrs / maxFeatureHrs) * 100, 2)}%` }}
+                        />
+                      </div>
+                      <span className="admin-feature-hrs">{hrs}h</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Retention */}
+            <div className="admin-retention-card">
+              <h3 className="admin-growth-title">Retention</h3>
+              <div className="admin-retention-grid">
+                <RetentionCell label="Day 1" value={retentionData.day_1 ?? 0} />
+                <RetentionCell label="Day 7" value={retentionData.day_7 ?? 0} />
+                <RetentionCell label="Day 30" value={retentionData.day_30 ?? 0} />
+              </div>
+            </div>
+          </div>
         )}
 
         {/* ────── GROWTH TAB ────── */}
@@ -297,5 +408,15 @@ const GrowthChart = ({ title, data, maxVal, color }) => (
     )}
   </div>
 );
+
+const RetentionCell = ({ label, value }) => {
+  const color = value >= 50 ? '#2ECC71' : value >= 20 ? '#F39C12' : '#E74C3C';
+  return (
+    <div className="admin-retention-cell">
+      <span className="admin-retention-value" style={{ color }}>{value}%</span>
+      <span className="admin-retention-label">{label}</span>
+    </div>
+  );
+};
 
 export default AdminDashboard;
