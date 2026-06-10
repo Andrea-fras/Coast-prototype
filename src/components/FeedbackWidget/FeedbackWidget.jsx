@@ -10,7 +10,7 @@ const CATEGORIES = [
   { value: 'other', label: 'Other' },
 ];
 
-const FeedbackWidget = () => {
+const FeedbackWidget = ({ position = 'bottom-right' }) => {
   const { token } = useAuth();
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState('suggestion');
@@ -48,13 +48,12 @@ const FeedbackWidget = () => {
   return (
     <>
       <button
-        className="fb-fab"
+        className={`fb-fab ${position === 'bottom-left' ? 'fb-fab-left' : ''}`}
         onClick={() => setOpen(true)}
-        title="Send Feedback"
+        title="Help & feedback"
+        aria-label="Help and feedback"
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-        </svg>
+        ?
       </button>
 
       {open && createPortal(

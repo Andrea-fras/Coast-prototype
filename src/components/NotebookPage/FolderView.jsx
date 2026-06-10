@@ -1,27 +1,43 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, BookOpen, Loader, FileText, Upload, Clock, Sparkles, Play, CheckCircle, RotateCcw, File, Trash2, Presentation } from 'lucide-react';
+import {
+  ArrowLeft, Loader, FileText, Upload, Clock, Sparkles, Play,
+  CheckCircle, RotateCcw, File, Trash2, Presentation,
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { API_URL } from '../../config';
+import { fetchWithRetry } from '../../utils/fetchWithRetry';
+import CupBadge from './CupBadge';
 import './FolderView.css';
+import './FolderView.v2.css';
 
-const FolderView = ({ folderName, isCurated, onClose, onOpenNotebook, onSourcesChanged, onStartLesson, onOpenDocument }) => {
+const FolderView = ({
+  folderName,
+  isCurated,
+  curatedMeta,
+  cupCount = 0,
+  onClose,
+  onSourcesChanged,
+  onStartLesson,
+  onOpenDocument,
+}) => {
   const { token } = useAuth();
   const fileInputRef = useRef(null);
 
   const [sources, setSources] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [lessonState, setLessonState] = useState(null);
   const [lessonLoading, setLessonLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
-
+  const [generatingPhase, setGeneratingPhase] = useState(null);
+  const [generateError, setGenerateError] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState('');
+  const prepareStartedRef = useRef(false);
 
   useEffect(() => {
-    fetchSources();
+    if (!isCurated) fetchSources();
     fetchLessonState();
-  }, [folderName, token]);
+  }, [folderName, token, isCurated]);
 
   const headers = () => ({ Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' });
 
@@ -33,7 +49,7 @@ const FolderView = ({ folderName, isCurated, onClose, onOpenNotebook, onSourcesC
         const data = await res.json();
         setSources(data.sources || []);
       }
-    } catch {}
+    } catch { /* ignore */ }
     setLoading(false);
   };
 
@@ -41,30 +57,75 @@ const FolderView = ({ folderName, isCurated, onClose, onOpenNotebook, onSourcesC
     setLessonLoading(true);
     try {
       const res = await fetch(`${API_URL}/api/folders/${encodeURIComponent(folderName)}/lesson`, { headers: headers() });
-      if (res.ok) {
-        const data = await res.json();
-        setLessonState(data);
-      }
-    } catch {}
+      if (res.ok) setLessonState(await res.json());
+    } catch { /* ignore */ }
     setLessonLoading(false);
+  };
+
+  const handlePrepareCurated = async () => {
+    setGenerating(true);
+    setGenerateError(null);
+    try {
+      const res = await fetch(
+        `${API_URL}/api/folders/${encodeURIComponent(folderName)}/prepare-curated`,
+        { method: 'POST', headers: headers() },
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) {
+        prepareStartedRef.current = false;
+        setGenerateError(data.error || data.detail || 'Could not enroll in premade lesson.');
+        return;
+      }
+      await fetchLessonState();
+    } catch {
+      prepareStartedRef.current = false;
+      setGenerateError('Could not enroll in premade lesson.');
+    } finally {
+      setGenerating(false);
+      setGeneratingPhase(null);
+    }
   };
 
   const handleGenerateOutline = async () => {
     setGenerating(true);
+    setGenerateError(null);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12 * 60 * 1000);
     try {
-      await fetch(`${API_URL}/api/folders/${encodeURIComponent(folderName)}/embed`, {
+      setGeneratingPhase('embed');
+      await fetchWithRetry(`${API_URL}/api/folders/${encodeURIComponent(folderName)}/embed`, {
         method: 'POST',
         headers: headers(),
+        signal: controller.signal,
       });
-      const res = await fetch(`${API_URL}/api/folders/${encodeURIComponent(folderName)}/outline`, {
-        method: 'POST',
-        headers: headers(),
-      });
+      setGeneratingPhase('oma');
+      const res = await fetchWithRetry(
+        `${API_URL}/api/folders/${encodeURIComponent(folderName)}/outline`,
+        { method: 'POST', headers: headers(), signal: controller.signal },
+        { retries: 1 },
+      );
       if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        if (data.error) {
+          setGenerateError(data.error);
+          return;
+        }
         await fetchLessonState();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setGenerateError(data.error || 'Failed to generate lesson plan.');
       }
-    } catch {}
-    setGenerating(false);
+    } catch (err) {
+      if (err?.name === 'AbortError') {
+        setGenerateError('Timed out waiting for Content OMA. Try again in a few minutes.');
+      } else {
+        setGenerateError('Failed to generate lesson plan.');
+      }
+    } finally {
+      clearTimeout(timeoutId);
+      setGenerating(false);
+      setGeneratingPhase(null);
+    }
   };
 
   const handleResetLesson = async () => {
@@ -74,7 +135,7 @@ const FolderView = ({ folderName, isCurated, onClose, onOpenNotebook, onSourcesC
         headers: headers(),
       });
       await fetchLessonState();
-    } catch {}
+    } catch { /* ignore */ }
   };
 
   const handleUploadToFolder = async (e) => {
@@ -82,11 +143,10 @@ const FolderView = ({ folderName, isCurated, onClose, onOpenNotebook, onSourcesC
     if (!files.length || !token) return;
     setUploading(true);
     setUploadProgress(`Uploading ${files.length} file${files.length > 1 ? 's' : ''}...`);
-
     let succeeded = 0;
     let failed = 0;
 
-    const uploadOne = async (file) => {
+    await Promise.all(files.map(async (file) => {
       const formData = new FormData();
       formData.append('file', file);
       try {
@@ -95,24 +155,17 @@ const FolderView = ({ folderName, isCurated, onClose, onOpenNotebook, onSourcesC
           headers: { Authorization: `Bearer ${token}` },
           body: formData,
         });
-        if (res.ok) {
-          succeeded++;
-        } else {
-          failed++;
-        }
+        if (res.ok) succeeded++;
+        else failed++;
       } catch {
         failed++;
       }
       setUploadProgress(`Uploaded ${succeeded + failed}/${files.length}...`);
-    };
+    }));
 
-    await Promise.all(files.map(uploadOne));
-
-    if (failed > 0) {
-      alert(`${succeeded} uploaded, ${failed} failed.`);
-    }
+    if (failed > 0) alert(`${succeeded} uploaded, ${failed} failed.`);
     await fetchSources();
-    if (onSourcesChanged) onSourcesChanged();
+    onSourcesChanged?.();
     setUploading(false);
     setUploadProgress('');
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -127,41 +180,42 @@ const FolderView = ({ folderName, isCurated, onClose, onOpenNotebook, onSourcesC
         { method: 'DELETE', headers: headers() },
       );
       await fetchSources();
-      if (onSourcesChanged) onSourcesChanged();
-    } catch {}
-  };
-
-  const handleOpenSource = async (src) => {
-    if (src.type !== 'notebook') return;
-    try {
-      const res = await fetch(`${API_URL}/api/folders/${encodeURIComponent(folderName)}/notebooks`, { headers: headers() });
-      if (res.ok) {
-        const notebooks = await res.json();
-        const full = notebooks.find(nb => nb.id === src.notebook_id);
-        if (full) {
-          onOpenNotebook(full);
-          return;
-        }
-      }
-    } catch {}
-    onOpenNotebook({ id: src.notebook_id, _saved_id: src.saved_id, title: src.title });
+      onSourcesChanged?.();
+    } catch { /* ignore */ }
   };
 
   const docSources = sources.filter(s => s.type === 'document');
-  const nbSources = sources.filter(s => s.type === 'notebook');
-
-  const totalMinutes = lessonState?.estimated_minutes || 0;
   const hasOutline = lessonState?.has_outline;
+  const contentReady = lessonState?.content_ready !== false;
+  const sharedReady = lessonState?.shared_content_ready !== false;
   const isComplete = lessonState?.is_complete;
   const currentSection = lessonState?.current_section || 0;
   const totalSections = lessonState?.total_sections || 0;
   const sections = lessonState?.sections || [];
-  const progressPercent = lessonState?.progress_percent || 0;
+  const sectionProgress = lessonState?.section_progress || [];
   const hasStarted = !!sessionStorage.getItem(`coast_lesson_chat_${folderName}`);
   const isInProgress = hasOutline && !isComplete && (currentSection > 0 || hasStarted);
 
+  useEffect(() => {
+    if (!isCurated || lessonLoading) return undefined;
+    if (sharedReady && hasOutline) return undefined;
+
+    if (sharedReady && !hasOutline && !prepareStartedRef.current) {
+      prepareStartedRef.current = true;
+      handlePrepareCurated();
+      return undefined;
+    }
+
+    if (!sharedReady) {
+      const poll = window.setInterval(() => fetchLessonState(), 4000);
+      return () => window.clearInterval(poll);
+    }
+
+    return undefined;
+  }, [isCurated, lessonLoading, sharedReady, hasOutline]);
+
   return (
-    <div className="fv-container">
+    <div className="fv-container fv-container--v2">
       <input
         type="file"
         ref={fileInputRef}
@@ -171,238 +225,206 @@ const FolderView = ({ folderName, isCurated, onClose, onOpenNotebook, onSourcesC
         onChange={handleUploadToFolder}
       />
 
-      <div className="fv-header">
-        <button className="fv-back-btn" onClick={onClose}>
-          <ArrowLeft size={18} />
-          <span>Back to Library</span>
+      <header className="fv-v2-topbar">
+        <button type="button" className="fv-v2-back" onClick={onClose}>
+          <ArrowLeft size={20} className="fv-v2-back-arrow" />
+          <span>Back to library</span>
         </button>
-        <div className="fv-header-info">
-          <h1 className="fv-title">{folderName}</h1>
-          <span className="fv-subtitle">
-            {sources.length} source{sources.length !== 1 ? 's' : ''}
-            {totalMinutes > 0 && ` · ~${totalMinutes} min`}
-          </span>
-        </div>
-      </div>
+        <CupBadge count={cupCount} />
+      </header>
 
-      <div className="fv-body">
-        {/* Left: Curated Content */}
-        <div className="fv-left">
-          <div className="fv-sources-section">
-            <div className="fv-section-header">
-              <h2 className="fv-section-title">Curated content for this deep dive</h2>
-            </div>
-
-            <div className="fv-content-group">
-              <h3 className="fv-content-group-title">
-                <FileText size={15} />
-                Documents
-              </h3>
-              {loading ? (
-                <div className="fv-loading"><Loader size={18} className="spinning" /> Loading...</div>
-              ) : (docSources.length === 0 && nbSources.length === 0) ? (
-                <div className="fv-empty">
-                  <p>No sources yet. Upload your first lecture to get started.</p>
-                </div>
-              ) : (
-                <div className="fv-source-list">
-                  {docSources.map(src => (
-                    <div
-                      key={src.source_id || src.notebook_id}
-                      className="fv-source-card fv-source-doc"
-                      onClick={() => onOpenDocument && onOpenDocument(src)}
-                    >
-                      <div className={`fv-source-icon ${src.source_type === 'pptx' ? 'fv-source-icon-pptx' : 'fv-source-icon-doc'}`}>
-                        {src.source_type === 'pptx' ? <Presentation size={16} /> : <File size={16} />}
-                      </div>
-                      <div className="fv-source-info">
-                        <span className="fv-source-title">{src.title}</span>
-                        <span className="fv-source-meta">
-                          {src.source_type?.toUpperCase()} · {src.page_count} page{src.page_count !== 1 ? 's' : ''}
-                        </span>
-                      </div>
-                      {!isCurated && (
-                        <button
-                          className="fv-source-delete"
-                          onClick={(e) => handleDeleteSource(src, e)}
-                          title="Remove source"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      )}
-                    </div>
+      <div className="fv-v2-body">
+        {isCurated && curatedMeta ? (
+          <section className="fv-v2-panel fv-v2-about">
+            <h2 className="fv-v2-heading">About this course</h2>
+            <div className="fv-v2-about-card">
+              <p className="fv-v2-about-tag">{curatedMeta.course}</p>
+              <p className="fv-v2-about-desc">{curatedMeta.description}</p>
+              {curatedMeta.studyNote && (
+                <p className="fv-v2-about-study">{curatedMeta.studyNote}</p>
+              )}
+              {curatedMeta.highlights?.length > 0 && (
+                <ul className="fv-v2-about-highlights">
+                  {curatedMeta.highlights.map((item) => (
+                    <li key={item.label}>
+                      <span className="fv-v2-about-highlight-label">{item.label}</span>
+                      <span className="fv-v2-about-highlight-desc">{item.desc}</span>
+                    </li>
                   ))}
-                  {nbSources.map(src => (
-                    <div
-                      key={src.notebook_id}
-                      className="fv-source-card fv-source-nb"
-                      onClick={() => handleOpenSource(src)}
-                    >
-                      <div className="fv-source-icon">
-                        <BookOpen size={16} />
-                      </div>
-                      <div className="fv-source-info">
-                        <span className="fv-source-title">{src.title}</span>
-                        <span className="fv-source-meta">
-                          Study Guide · {src.section_count} section{src.section_count !== 1 ? 's' : ''}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                </ul>
               )}
             </div>
-
-            <div className="fv-content-group fv-content-group-disabled">
-              <h3 className="fv-content-group-title">
-                <Play size={15} />
-                Videos
-              </h3>
-              <div className="fv-coming-soon">Coming soon</div>
+          </section>
+        ) : (
+          <section className="fv-v2-panel fv-v2-sources">
+            <h2 className="fv-v2-heading">Sources</h2>
+            <div className="fv-v2-sources-list">
+              {loading ? (
+                <div className="fv-v2-loading"><Loader size={18} className="spinning" /> Loading…</div>
+              ) : docSources.length === 0 ? (
+                <div className="fv-v2-source-slot fv-v2-source-empty">
+                  <p>No sources yet</p>
+                </div>
+              ) : (
+                docSources.map(src => (
+                  <div
+                    key={src.source_id || src.notebook_id}
+                    className="fv-v2-source-slot"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => onOpenDocument?.(src)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') onOpenDocument?.(src); }}
+                  >
+                    <div className="fv-v2-source-icon">
+                      {src.source_type === 'pptx' ? <Presentation size={18} /> : <File size={18} />}
+                    </div>
+                    <div className="fv-v2-source-info">
+                      <span className="fv-v2-source-title">{src.title}</span>
+                      <span className="fv-v2-source-meta">
+                        {src.source_type?.toUpperCase()} · {src.page_count} pg
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      className="fv-v2-source-delete"
+                      onClick={(e) => handleDeleteSource(src, e)}
+                      title="Remove"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
+            <button
+              type="button"
+              className="fv-v2-upload-btn"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+            >
+              {uploading ? <Loader size={16} className="spinning" /> : <Upload size={16} />}
+              <span>{uploading ? (uploadProgress || 'Uploading…') : 'Upload sources'}</span>
+            </button>
+          </section>
+        )}
 
-            {!isCurated && (
-              <button
-                className="fv-upload-btn"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-              >
-                {uploading ? <Loader size={16} className="spinning" /> : <Upload size={16} />}
-                <span>{uploading ? (uploadProgress || 'Uploading...') : 'Upload Sources'}</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Right: Deep Dive Lesson Card */}
-        <div className="fv-right">
-          <div className="fv-lesson-card">
-            <div className="fv-lesson-header">
-              <Sparkles size={20} />
-              <h2 className="fv-lesson-title">Deep Dive Lesson</h2>
-            </div>
+        {/* RoadMap */}
+        <section className="fv-v2-panel fv-v2-roadmap">
+          <h2 className="fv-v2-heading">RoadMap</h2>
+          <div className="fv-v2-roadmap-card">
+            <p className="fv-v2-roadmap-course">{isCurated && curatedMeta?.title ? curatedMeta.title : folderName}</p>
 
             {lessonLoading ? (
-              <div className="fv-lesson-loading">
-                <Loader size={22} className="spinning" />
-                <span>Loading lesson...</span>
+              <div className="fv-v2-loading"><Loader size={20} className="spinning" /> Loading roadmap…</div>
+            ) : isCurated && !sharedReady ? (
+              <div className="fv-v2-roadmap-empty">
+                <Loader size={32} className="spinning" />
+                <p>Course material is being prepared on the server — this only happens once. Checking again…</p>
               </div>
+            ) : isCurated && !hasOutline ? (
+              <div className="fv-v2-loading"><Loader size={20} className="spinning" /> Setting up your roadmap…</div>
             ) : !hasOutline ? (
-              <div className="fv-lesson-empty">
-                <div className="fv-lesson-empty-icon">
-                  <Sparkles size={36} />
-                </div>
-                <h3>Your personalized lesson awaits</h3>
-                <p>
-                  Pedro will analyze all your sources and create a structured lesson
-                  tailored to help you master this material. He'll guide you section
-                  by section, asking questions along the way.
-                </p>
+              <div className="fv-v2-roadmap-empty">
+                <Sparkles size={32} />
+                <p>Pedro will build a section-by-section roadmap from your sources.</p>
                 <button
-                  className="fv-lesson-generate-btn"
+                  type="button"
+                  className="fv-v2-generate-btn"
                   onClick={handleGenerateOutline}
                   disabled={generating || sources.length === 0}
                 >
                   {generating ? (
                     <>
-                      <Loader size={18} className="spinning" />
-                      <span>Generating lesson plan...</span>
+                      <Loader size={16} className="spinning" />
+                      {generatingPhase === 'oma' ? 'Building Content OMA…' : 'Preparing sources…'}
                     </>
                   ) : (
                     <>
-                      <Sparkles size={18} />
-                      <span>Generate Lesson</span>
+                      <Sparkles size={16} />
+                      Generate roadmap
                     </>
                   )}
                 </button>
+                {generateError && <p className="fv-v2-error">{generateError}</p>}
                 {sources.length === 0 && (
-                  <p className="fv-lesson-hint">Add at least one source to generate a lesson.</p>
+                  <p className="fv-v2-hint">Upload at least one source first.</p>
                 )}
-              </div>
-            ) : isComplete ? (
-              <div className="fv-lesson-complete">
-                <div className="fv-lesson-complete-icon">
-                  <CheckCircle size={40} />
-                </div>
-                <h3>Lesson Complete!</h3>
-                <p>You've completed all {totalSections} sections. Great work!</p>
-                <div className="fv-lesson-complete-actions">
-                  <button className="fv-lesson-restart-btn" onClick={handleResetLesson}>
-                    <RotateCcw size={16} />
-                    <span>Start Over</span>
-                  </button>
-                  <button
-                    className="fv-lesson-generate-btn"
-                    onClick={handleGenerateOutline}
-                    disabled={generating}
-                  >
-                    <Sparkles size={16} />
-                    <span>Regenerate</span>
-                  </button>
-                </div>
               </div>
             ) : (
-              <div className="fv-lesson-outline">
-                {isInProgress && (
-                  <div className="fv-lesson-progress">
-                    <div className="fv-lesson-progress-info">
-                      <span>Section {currentSection} of {totalSections}</span>
-                      <span>{progressPercent}%</span>
-                    </div>
-                    <div className="fv-lesson-progress-bar">
-                      <div
-                        className="fv-lesson-progress-fill"
-                        style={{ width: `${progressPercent}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <div className="fv-lesson-sections">
+              <>
+                <ul className="fv-v2-section-list">
                   {sections.map((sec, i) => {
                     const done = i < currentSection;
-                    const current = i === currentSection;
+                    const current = i === currentSection && !isComplete;
+                    const prog = sectionProgress[i] || {};
+                    const mastery = prog.mastery_pct;
+                    const needsReview = mastery != null && mastery < 100;
+                    const clickable = needsReview && (prog.attempted || done || current);
+
                     return (
-                      <div key={i} className={`fv-lesson-section-item ${done ? 'done' : current ? 'current' : 'upcoming'}`}>
-                        <div className="fv-lesson-section-marker">
-                          {done ? <CheckCircle size={16} /> : <span className="fv-lesson-section-num">{i + 1}</span>}
-                        </div>
-                        <div className="fv-lesson-section-info">
-                          <span className="fv-lesson-section-name">{sec.title}</span>
-                          <span className="fv-lesson-section-meta">
-                            <Clock size={12} />
-                            ~{sec.estimated_minutes || 20} min
-                            {sec.learning_objectives?.length > 0 && ` · ${sec.learning_objectives.length} objectives`}
+                      <li
+                        key={i}
+                        className={`fv-v2-section-item${done ? ' done' : ''}${current ? ' current' : ''}${clickable ? ' clickable' : ''}`}
+                        onClick={clickable ? () => onStartLesson?.(folderName, i, { review: true }) : undefined}
+                        role={clickable ? 'button' : undefined}
+                        tabIndex={clickable ? 0 : undefined}
+                      >
+                        <span className="fv-v2-section-label">
+                          Section {i + 1} : {sec.title}
+                        </span>
+                        {mastery != null && (
+                          <span className={`fv-v2-section-mastery${mastery >= 100 ? ' mastered' : ''}`}>
+                            {mastery}%
                           </span>
-                        </div>
-                      </div>
+                        )}
+                        {current && !isComplete && <span className="fv-v2-section-now">Current</span>}
+                        {done && !needsReview && <CheckCircle size={14} className="fv-v2-section-check" />}
+                      </li>
                     );
                   })}
-                </div>
+                </ul>
 
-                <div className="fv-lesson-actions">
-                  <button
-                    className="fv-lesson-start-btn"
-                    onClick={() => onStartLesson && onStartLesson(folderName)}
-                  >
-                    <Play size={18} />
-                    <span>{isInProgress ? 'Continue Lesson' : 'Start Lesson'}</span>
-                  </button>
-                  <div className="fv-lesson-meta-row">
-                    <span className="fv-lesson-total-time">
-                      <Clock size={13} />
-                      ~{totalMinutes} min total
-                    </span>
-                    <button className="fv-lesson-regen-btn" onClick={handleGenerateOutline} disabled={generating}>
-                      {generating ? <Loader size={13} className="spinning" /> : <RotateCcw size={13} />}
-                      Regenerate
+                <div className="fv-v2-roadmap-actions">
+                  {!isComplete && (
+                    <button
+                      type="button"
+                      className="fv-v2-start-btn"
+                      onClick={() => onStartLesson?.(folderName)}
+                      disabled={!contentReady}
+                    >
+                      <Play size={18} />
+                      {isInProgress ? 'Continue lesson' : 'Start lesson'}
                     </button>
+                  )}
+                  {hasOutline && !contentReady && (
+                    <p className="fv-v2-hint">Content OMA is still indexing — wait a moment or tap Prepare lesson again.</p>
+                  )}
+                  {isComplete && (
+                    <div className="fv-v2-complete-msg">
+                      <CheckCircle size={20} />
+                      <span>Lesson complete — review sections below 100% on the map.</span>
+                    </div>
+                  )}
+                  <div className="fv-v2-roadmap-meta">
+                    <span><Clock size={13} /> ~{lessonState?.estimated_minutes || 0} min</span>
+                    {!isCurated && (
+                      <>
+                        <button type="button" className="fv-v2-link-btn" onClick={handleGenerateOutline} disabled={generating}>
+                          Regenerate
+                        </button>
+                        {isComplete && (
+                          <button type="button" className="fv-v2-link-btn" onClick={handleResetLesson}>
+                            <RotateCcw size={13} /> Reset
+                          </button>
+                        )}
+                      </>
+                    )}
                   </div>
                 </div>
-              </div>
+              </>
             )}
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );

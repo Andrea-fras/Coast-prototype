@@ -295,6 +295,99 @@
 .rp-weak-bar-fill.moderate { background: #FFA726; }
 .rp-weak-bar-fill.ok { background: #66BB6A; }
 
+.rp-learning h3 {
+  margin-bottom: 0.35rem;
+}
+
+.rp-learning-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.rp-learning-head h3 {
+  margin: 0;
+}
+
+.rp-mindmap-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid #c7d2fe;
+  background: #eef2ff;
+  color: #4338ca;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.rp-mindmap-btn:hover {
+  background: #e0e7ff;
+}
+
+.rp-learning-sub {
+  font-size: 0.82rem;
+  color: #888;
+  margin: 0 0 0.75rem;
+}
+
+.rp-learning-courses {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rp-learning-course {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #e8e8ff;
+  border-radius: 10px;
+  background: #f8f7ff;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.rp-learning-course:hover {
+  background: #eef2ff;
+}
+
+.rp-learning-folder {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #4338ca;
+  text-transform: capitalize;
+}
+
+.rp-learning-meta {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.rp-learning-focus {
+  font-size: 0.72rem;
+  color: #888;
+  font-style: italic;
+}
+
+.rp-learning-trait {
+  margin: 0.75rem 0 0;
+  font-size: 0.78rem;
+  color: #666;
+  padding-top: 0.65rem;
+  border-top: 1px solid #f0f0f0;
+}
+
 /* ═══════════════════════════════════════════════
    QUICK STATS – 2x2 grid
    ═══════════════════════════════════════════════ */
@@ -506,6 +599,29 @@
   font-size: 1.05rem;
   color: #666;
   display: block;
+}
+.rp-map {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.85rem;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+  padding: 1.15rem 1.5rem;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #e2e8f0;
+}
+.rp-map:hover {
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.35);
+}
+.rp-map-icon {
+  color: #38bdf8;
+  flex-shrink: 0;
+}
+.rp-map .rp-pedro-name {
+  color: #f1f5f9;
+}
+.rp-map .rp-pedro-text p {
+  color: #94a3b8;
 }
 .rp-pedro-text p {
   font-size: 0.8rem;

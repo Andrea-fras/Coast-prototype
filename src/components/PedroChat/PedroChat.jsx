@@ -7,6 +7,7 @@ import PedroMessage from '../PedroMessage';
 
 import { API_URL } from '../../config';
 import { fetchWithRetry } from '../../utils/fetchWithRetry';
+import { logContentRetrieval } from '../../utils/logContentRetrieval';
 
 const PedroChat = ({ onClose }) => {
   const { token } = useAuth();
@@ -33,9 +34,9 @@ const PedroChat = ({ onClose }) => {
     if (!token) return;
     const headers = { Authorization: `Bearer ${token}` };
 
-    fetch(`${API_URL}/api/chat/conversations`, { headers })
+    fetch(`${API_URL}/api/chat/conversations?context_type=global`, { headers })
       .then(res => res.ok ? res.json() : [])
-      .then(data => setConversations(data))
+      .then(data => setConversations(Array.isArray(data) ? data.filter(c => c.context_type === 'global') : []))
       .catch(() => {});
 
     fetch(`${API_URL}/api/notebooks`, { headers })
@@ -206,6 +207,7 @@ const PedroChat = ({ onClose }) => {
             if (evt.done && evt.conversation_id && !activeConvo) {
               newConversationId = evt.conversation_id;
             }
+            if (evt.done) logContentRetrieval(evt);
             if (evt.usage) setChatRemaining(evt.usage.chat_messages_remaining);
           } catch {}
         }
@@ -271,8 +273,6 @@ const PedroChat = ({ onClose }) => {
   };
 
   const getConvoLabel = (convo) => {
-    if (convo.context_type === 'notebook') return `Notebook Chat`;
-    if (convo.context_type === 'session') return `Session Review`;
     return convo.last_message?.substring(0, 40) || 'New conversation';
   };
 
@@ -311,7 +311,6 @@ const PedroChat = ({ onClose }) => {
                 <MessageCircle size={16} />
                 <div className="pedro-convo-preview">
                   <span className="pedro-convo-label">{getConvoLabel(convo)}</span>
-                  <span className="pedro-convo-type">{convo.context_type}</span>
                 </div>
               </div>
             ))}

@@ -1,22 +1,56 @@
 [
   {
-    "id": "qm1",
-    "folderName": "Quantitative Methods 1",
-    "title": "Quantitative Methods 1",
-    "course": "QM1",
-    "icon": "📐",
-    "color": "#4FA3D1",
-    "description": "Master the fundamentals of quantitative methods — from linear equations to calculus, statistics, and computer skills. All lectures, exercises, and past papers included.",
-    "tags": ["maths", "calculus", "algebra", "statistics"]
+    "id": "prismatic-system",
+    "folderName": "Prismatic System",
+    "title": "The Prismatic System",
+    "course": "Logic & Reasoning",
+    "cupCost": 0,
+    "description": "The Prismatic System is a compact formal symbolic language built from four layers — elements, binding, folding, and chains. Each layer introduces new rules that depend on everything before it, making it an excellent test of logical reasoning and step-by-step problem solving.",
+    "studyNote": "This course was used in the original Coast learning study. Work through the four layers in order; each section maps directly to one lecture.",
+    "highlights": [
+      {
+        "label": "Layer 1 · Elements",
+        "desc": "Three element types and the value rules that govern them"
+      },
+      {
+        "label": "Layer 2 · Binding",
+        "desc": "The binding operation (⊕) and its six type-and-order rules"
+      },
+      {
+        "label": "Layer 3 · Folding",
+        "desc": "The folding operation (∆) and conditional transformation rules"
+      },
+      {
+        "label": "Layer 4 · Chains",
+        "desc": "Multi-step sequences that combine every rule you've learned"
+      }
+    ]
   },
   {
-    "id": "dsa",
-    "folderName": "Data Structures & Algorithms",
-    "title": "Data Structures & Algorithms",
-    "course": "DSA",
-    "icon": "🧮",
-    "color": "#6C5CE7",
-    "description": "Learn data structures and algorithms through a building-blocks approach — each concept is broken into small, digestible code snippets that you assemble into full solutions.",
-    "tags": ["arrays", "trees", "sorting", "recursion", "graphs"]
+    "id": "science-of-cooking",
+    "folderName": "Science of Cooking",
+    "title": "The Science of Cooking",
+    "course": "Chemistry & Physics",
+    "cupCost": 0,
+    "description": "A four-lecture deep dive into the chemistry and physics behind everyday cooking — from the Maillard reaction and emulsification to gluten networks and the thermodynamics of bread rising. Inspired by Harvard's Science and Cooking curriculum.",
+    "studyNote": "Work through the four lectures in order. Each section covers one lecture and its interactive kitchen diagnostics.",
+    "highlights": [
+      {
+        "label": "Lecture 1 · Maillard Reaction",
+        "desc": "Non-enzymatic browning, flavor synthesis, and thermal kinetics"
+      },
+      {
+        "label": "Lecture 2 · Emulsification",
+        "desc": "Surfactants, interfacial tension, and stable emulsions"
+      },
+      {
+        "label": "Lecture 3 · Gluten Network",
+        "desc": "Gliadin, glutenin, and the viscoelastic dough matrix"
+      },
+      {
+        "label": "Lecture 4 · Leavening",
+        "desc": "Fermentation, gas laws, and why bread rises"
+      }
+    ]
   }
 ]

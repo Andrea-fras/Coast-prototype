@@ -107,6 +107,14 @@
   white-space: nowrap;
 }
 
+.lv-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.lv-notes-toggle,
+.lv-map-toggle,
 .lv-sidebar-toggle {
   background: none;
   border: none;
@@ -116,9 +124,16 @@
   border-radius: 8px;
   transition: all 0.15s;
 }
+.lv-notes-toggle:hover,
+.lv-map-toggle:hover,
 .lv-sidebar-toggle:hover {
   background: #f0f0f0;
   color: #333;
+}
+.lv-notes-toggle.active,
+.lv-map-toggle.active {
+  background: #fff3d6;
+  color: #FFB503;
 }
 
 /* Body */
@@ -359,7 +374,144 @@
 .lv-next-section-bar {
   padding: 0.75rem 1.5rem;
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.lv-progress-reward {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
   justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.lv-progress-reward-xp {
+  color: #7dd3fc;
+}
+
+.lv-progress-reward-map {
+  color: #a5b4fc;
+}
+
+.lv-progress-reward-lesson {
+  color: #fbbf24;
+}
+
+/* Section complete reward overlay */
+.lv-reward-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(4, 6, 18, 0.55);
+  backdrop-filter: blur(6px);
+  animation: lv-reward-fade-in 0.35s ease-out;
+  pointer-events: auto;
+}
+
+.lv-reward-card {
+  position: relative;
+  text-align: center;
+  padding: 2rem 2.5rem;
+  border-radius: 20px;
+  background: linear-gradient(160deg, rgba(20, 24, 48, 0.95), rgba(12, 14, 32, 0.98));
+  border: 1px solid rgba(125, 211, 252, 0.35);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(56, 189, 248, 0.15);
+  animation: lv-reward-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  min-width: min(90vw, 320px);
+}
+
+.lv-reward-glow {
+  position: absolute;
+  inset: -30%;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.2) 0%, transparent 70%);
+  pointer-events: none;
+  animation: lv-reward-pulse 2s ease-in-out infinite;
+}
+
+.lv-reward-kicker {
+  position: relative;
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #a5b4fc;
+}
+
+.lv-reward-xp {
+  position: relative;
+  margin: 0;
+  font-size: 2.75rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #7dd3fc;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 24px rgba(56, 189, 248, 0.45);
+  animation: lv-reward-xp-in 0.6s ease-out 0.15s both;
+}
+
+.lv-reward-map {
+  position: relative;
+  margin: 0.75rem 0 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #c4b5fd;
+  animation: lv-reward-xp-in 0.6s ease-out 0.35s both;
+}
+
+.lv-reward-explored {
+  position: relative;
+  margin: 0.35rem 0 0;
+  font-size: 0.9rem;
+  color: #94a3b8;
+  animation: lv-reward-xp-in 0.6s ease-out 0.45s both;
+}
+
+.lv-reward-bonus {
+  position: relative;
+  margin: 0.65rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fbbf24;
+  animation: lv-reward-xp-in 0.6s ease-out 0.55s both;
+}
+
+@keyframes lv-reward-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes lv-reward-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.85) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes lv-reward-xp-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes lv-reward-pulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
 }
 
 .lv-next-section-btn {
@@ -404,7 +556,7 @@
 /* Input */
 .lv-input-row {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem 1rem;
   max-width: 800px;
@@ -422,6 +574,11 @@
   transition: border-color 0.15s;
   font-family: inherit;
   background: #fff;
+  resize: none;
+  overflow-y: auto;
+  line-height: 1.5;
+  min-height: 38px;
+  max-height: 120px;
 }
 .lv-input:focus {
   border-color: #FFB503;
@@ -487,12 +644,18 @@
 .dark .lv-header-progress-label {
   color: #777;
 }
+.dark .lv-notes-toggle,
 .dark .lv-sidebar-toggle {
   color: #aaa;
 }
+.dark .lv-notes-toggle:hover,
 .dark .lv-sidebar-toggle:hover {
   background: #2a2a2a;
   color: #ddd;
+}
+.dark .lv-notes-toggle.active {
+  background: rgba(255, 181, 3, 0.15);
+  color: #FFB503;
 }
 
 .dark .lv-sidebar {
@@ -761,6 +924,296 @@
   background: #0f172a;
 }
 
+/* ═══════════════════ Viewing Past Section ═══════════════════ */
+
+.lv-viewing-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1.2rem;
+  background: #f0f4ff;
+  border-bottom: 1px solid #c7d2fe;
+}
+.dark .lv-viewing-banner {
+  background: #1e1b4b;
+  border-bottom-color: #4338ca;
+}
+
+.lv-review-banner {
+  background: #fff7ed;
+  border-bottom-color: #fed7aa;
+}
+.dark .lv-review-banner {
+  background: #2a1a0a;
+  border-bottom-color: #c2410c;
+}
+
+.lv-sidebar-item.reviewing {
+  background: #fff7ed;
+  border-left: 3px solid #f97316;
+}
+
+.lv-back-current-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: none;
+  border: none;
+  color: #5b7ff5;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+.lv-back-current-btn:hover {
+  background: rgba(91, 127, 245, 0.1);
+}
+
+.lv-viewing-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #6366f1;
+}
+.dark .lv-viewing-label {
+  color: #a5b4fc;
+}
+
+.lv-sidebar-item.viewing {
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+}
+.dark .lv-sidebar-item.viewing {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: #4338ca;
+}
+
+.lv-empty-history {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: #999;
+  font-size: 0.88rem;
+}
+
+/* ═══════════════════ Section Feedback Card ═══════════════════ */
+
+.lv-feedback-card {
+  margin: 0.75rem 1.5rem;
+  padding: 1rem 1.25rem;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 14px;
+  max-width: 800px;
+  align-self: center;
+  width: calc(100% - 3rem);
+}
+.dark .lv-feedback-card {
+  background: #1e1e1e;
+  border-color: #333;
+}
+
+.lv-feedback-heading {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 0.75rem 0;
+}
+.dark .lv-feedback-heading {
+  color: #eee;
+}
+
+.lv-feedback-group {
+  margin-bottom: 0.6rem;
+}
+.lv-feedback-group:last-child {
+  margin-bottom: 0;
+}
+
+.lv-feedback-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.3rem;
+}
+
+.lv-feedback-strengths .lv-feedback-group-header {
+  color: #16a34a;
+}
+.lv-feedback-weaknesses .lv-feedback-group-header {
+  color: #dc2626;
+}
+.lv-feedback-tips .lv-feedback-group-header {
+  color: #d97706;
+}
+.dark .lv-feedback-strengths .lv-feedback-group-header {
+  color: #4ade80;
+}
+.dark .lv-feedback-weaknesses .lv-feedback-group-header {
+  color: #f87171;
+}
+.dark .lv-feedback-tips .lv-feedback-group-header {
+  color: #fbbf24;
+}
+
+.lv-feedback-group ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.lv-feedback-group li {
+  font-size: 0.83rem;
+  color: #555;
+  padding: 0.2rem 0 0.2rem 1rem;
+  position: relative;
+  line-height: 1.5;
+}
+.dark .lv-feedback-group li {
+  color: #bbb;
+}
+.lv-feedback-group li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #ccc;
+}
+
+/* ═══════════════════ Review Button ═══════════════════ */
+
+.lv-review-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.lv-review-btn:hover {
+  background: #f0f4ff;
+  border-color: #5b7ff5;
+  color: #5b7ff5;
+}
+.dark .lv-review-btn {
+  background: #1e1e1e;
+  border-color: #444;
+  color: #aaa;
+}
+.dark .lv-review-btn:hover {
+  background: #252545;
+  border-color: #6366f1;
+  color: #8a9fff;
+}
+
+/* ═══════════════════ Notes Panel ═══════════════════ */
+
+.lv-notes-panel {
+  width: 340px;
+  background: #fff;
+  border-left: 1px solid #e8e8e8;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.dark .lv-notes-panel {
+  background: #1a1a1a;
+  border-left-color: #333;
+}
+
+.lv-notes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+.dark .lv-notes-header {
+  border-bottom-color: #333;
+}
+
+.lv-notes-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+}
+.dark .lv-notes-title {
+  color: #eee;
+}
+
+.lv-notes-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.lv-notes-saving {
+  font-size: 0.7rem;
+  color: #999;
+  font-weight: 500;
+}
+
+.lv-notes-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #999;
+  padding: 0.3rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  transition: all 0.15s;
+}
+.lv-notes-close:hover {
+  background: #f0f0f0;
+  color: #666;
+}
+.dark .lv-notes-close:hover {
+  background: #333;
+  color: #ccc;
+}
+
+.lv-notes-editor {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  font-size: 0.88rem;
+  line-height: 1.7;
+  color: #333;
+  outline: none;
+  min-height: 100px;
+  word-wrap: break-word;
+}
+.dark .lv-notes-editor {
+  color: #ddd;
+}
+.lv-notes-editor:empty::before {
+  content: attr(data-placeholder);
+  color: #bbb;
+  font-style: italic;
+  pointer-events: none;
+}
+.dark .lv-notes-editor:empty::before {
+  color: #555;
+}
+.lv-notes-editor img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 0.5rem 0;
+}
+
 /* ═══════════════════ Responsive ═══════════════════ */
 
 @media (max-width: 768px) {
@@ -772,6 +1225,16 @@
     z-index: 20;
     width: 260px;
     box-shadow: 4px 0 16px rgba(0,0,0,0.1);
+  }
+
+  .lv-notes-panel {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 20;
+    width: 300px;
+    box-shadow: -4px 0 16px rgba(0,0,0,0.1);
   }
 
   .lv-chat-area {

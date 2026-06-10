@@ -1050,11 +1050,18 @@
   border-radius: 6px;
 }
 
-/* ── Folder sidebar section ─────────────────── */
+/* ── Your Lessons (folder) sidebar section ─────────────────── */
 .nb-sidebar-folders {
   margin-top: 1rem;
   border-top: 1px solid #eee;
   padding-top: 0.75rem;
+}
+.nb-sidebar-folders.nb-sidebar-folders-prominent {
+  margin-top: 0.75rem;
+  padding: 0.75rem 0.5rem;
+  background: linear-gradient(135deg, #fff8eb, #fff3d6);
+  border: 1px solid #ffe0a0;
+  border-radius: 12px;
 }
 .nb-sidebar-folders-header {
   display: flex;
@@ -1064,11 +1071,11 @@
   padding: 0 0.3rem;
 }
 .nb-sidebar-folders-label {
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-size: 0.72rem;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #999;
+  color: #c47f00;
 }
 .nb-sidebar-folder-add-btn {
   width: 22px;
@@ -1086,6 +1093,15 @@
 .nb-sidebar-folder-add-btn:hover {
   background: #f0f0f0;
   color: #555;
+}
+.nb-sidebar-folders-prominent .nb-sidebar-folder-add-btn {
+  background: #FFB503;
+  color: #fff;
+  border-radius: 50%;
+}
+.nb-sidebar-folders-prominent .nb-sidebar-folder-add-btn:hover {
+  background: #e6a200;
+  color: #fff;
 }
 
 .nb-sidebar-folder-input-row {
@@ -1148,12 +1164,72 @@
   margin-left: auto;
 }
 
+.nb-sidebar-folder-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.nb-sidebar-folder-row .nb-sidebar-folder-btn {
+  flex: 1;
+  min-width: 0;
+}
+
+.nb-sidebar-folder-row .nb-sidebar-folder-btn span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nb-sidebar-folder-rename-btn {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #bbb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.nb-sidebar-folder-row:hover .nb-sidebar-folder-rename-btn {
+  opacity: 1;
+}
+
+.nb-sidebar-folder-rename-btn:hover {
+  color: #FFB503;
+  background: rgba(255, 181, 3, 0.1);
+}
+
+.nb-sidebar-folder-rename-row {
+  display: flex;
+  gap: 4px;
+  width: 100%;
+  padding: 2px 0;
+}
+
+.nb-sidebar-folder-rename-row .nb-sidebar-folder-input {
+  flex: 1;
+}
+
 /* Dark mode folders */
 .dark .nb-sidebar-folders {
   border-top-color: #333;
 }
+.dark .nb-sidebar-folders.nb-sidebar-folders-prominent {
+  background: linear-gradient(135deg, rgba(255, 181, 3, 0.08), rgba(255, 149, 0, 0.06));
+  border-color: rgba(255, 181, 3, 0.2);
+}
 .dark .nb-sidebar-folders-label {
   color: #666;
+}
+.dark .nb-sidebar-folders-prominent .nb-sidebar-folders-label {
+  color: #FFB503;
 }
 .dark .nb-sidebar-folder-add-btn:hover {
   background: #2a2a2a;
@@ -1174,6 +1250,13 @@
 .dark .nb-sidebar-folder-btn.active {
   background: #2a2010;
   color: #FFB503;
+}
+.dark .nb-sidebar-folder-rename-btn {
+  color: #666;
+}
+.dark .nb-sidebar-folder-rename-btn:hover {
+  color: #FFB503;
+  background: rgba(255, 181, 3, 0.15);
 }
 
 /* ── Pedro Tip (inside notebook page) ──────── */
@@ -1350,6 +1433,171 @@
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.25rem;
   padding-bottom: 2rem;
+}
+
+/* Your lessons — sections & folder cards */
+.nb-lessons-section {
+  margin-bottom: 2rem;
+}
+
+.nb-lessons-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #333;
+}
+
+.nb-lessons-section-title svg {
+  color: #FFB503;
+}
+
+.nb-lessons-section-count {
+  margin-left: 0.25rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.06);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #888;
+}
+
+.nb-lessons-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.nb-new-folder-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 1.25rem;
+  padding: 0.85rem 1rem;
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 14px;
+}
+
+.nb-new-folder-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #333;
+  outline: none;
+}
+
+.nb-new-folder-create,
+.nb-new-folder-cancel {
+  border: none;
+  border-radius: 10px;
+  padding: 0.45rem 0.9rem;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.nb-new-folder-create {
+  background: linear-gradient(to right, #FFB503, #FF7B02);
+  color: #fff;
+}
+
+.nb-new-folder-cancel {
+  background: rgba(0, 0, 0, 0.06);
+  color: #666;
+}
+
+.nb-card-lesson-folder.nb-card-mastered {
+  border-color: rgba(255, 181, 3, 0.45);
+  box-shadow: 0 6px 24px rgba(255, 181, 3, 0.12);
+}
+
+.nb-master-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 181, 3, 0.15);
+  color: #c68400;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.nb-card-new-lesson {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 180px;
+  border-style: dashed;
+  border-color: rgba(255, 181, 3, 0.45);
+  background: rgba(255, 181, 3, 0.06);
+}
+
+.nb-card-new-lesson:hover {
+  border-color: #FFB503;
+  background: rgba(255, 181, 3, 0.1);
+}
+
+.nb-card-new-lesson-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(255, 181, 3, 0.15);
+  color: #FF7B02;
+  margin-bottom: 0.25rem;
+}
+
+.nb-lesson-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.35rem;
+}
+
+.nb-lesson-progress-bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.nb-lesson-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(to right, #FFB503, #FF7B02);
+}
+
+.nb-lesson-progress-pct {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #888;
+  min-width: 2.25rem;
+  text-align: right;
+}
+
+.nb-empty-state-inline {
+  margin-top: -0.5rem;
+  padding-bottom: 1rem;
 }
 
 .nb-card {
@@ -2659,6 +2907,44 @@
   color: #333;
 }
 
+.nb-calc-toggle {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #555;
+  z-index: 10;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.nb-calc-toggle:hover,
+.nb-calc-toggle[aria-pressed="true"] {
+  background: rgba(255, 181, 3, 0.25);
+  color: #FF7B02;
+  border-color: rgba(255, 181, 3, 0.45);
+}
+
+.docview-body-full .docview-pdf-area {
+  flex: 1;
+  min-height: 0;
+}
+
+.docview-body-full {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 80px);
+}
+
 /* ================ DARK MODE ================ */
 
 .notebook-page.dark {
@@ -2900,6 +3186,33 @@
 .notebook-page.dark .nb-card-course { color: rgba(255, 255, 255, 0.4); }
 .notebook-page.dark .nb-card-footer { border-top-color: rgba(255, 255, 255, 0.06); }
 .notebook-page.dark .nb-card-stat { color: rgba(255, 255, 255, 0.3); }
+.notebook-page.dark .nb-lessons-section-title { color: rgba(255, 255, 255, 0.9); }
+.notebook-page.dark .nb-lessons-section-count {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.45);
+}
+.notebook-page.dark .nb-new-folder-bar {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.notebook-page.dark .nb-new-folder-input { color: rgba(255, 255, 255, 0.9); }
+.notebook-page.dark .nb-new-folder-cancel {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.55);
+}
+.notebook-page.dark .nb-card-lesson-folder.nb-card-mastered {
+  border-color: rgba(255, 181, 3, 0.35);
+}
+.notebook-page.dark .nb-master-badge {
+  background: rgba(255, 181, 3, 0.2);
+  color: #ffd54f;
+}
+.notebook-page.dark .nb-card-new-lesson {
+  background: rgba(255, 181, 3, 0.06);
+  border-color: rgba(255, 181, 3, 0.3);
+}
+.notebook-page.dark .nb-lesson-progress-bar { background: rgba(255, 255, 255, 0.08); }
+.notebook-page.dark .nb-lesson-progress-pct { color: rgba(255, 255, 255, 0.45); }
 .notebook-page.dark .nb-card-delete-btn { color: rgba(255, 255, 255, 0.2); }
 .notebook-page.dark .nb-card-delete-btn:hover {
   color: #e74c3c;

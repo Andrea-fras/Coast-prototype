@@ -1,0 +1,508 @@
+
+/* ═══════════════════════════════════════════════════════
+   FolderView v2 — Sources + RoadMap
+   ═══════════════════════════════════════════════════════ */
+
+.fv-container--v2 {
+  height: 100vh;
+  padding: 4.5rem 2.5rem 2rem;
+  box-sizing: border-box;
+  background: #161616;
+  color: #fff;
+  overflow: hidden;
+}
+
+.fv-v2-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  flex-shrink: 0;
+}
+
+.fv-v2-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.75);
+  padding: 0.35rem 0;
+  transition: color 0.15s, transform 0.15s;
+}
+
+.fv-v2-back-arrow {
+  flex-shrink: 0;
+  opacity: 0.85;
+  transition: transform 0.15s ease;
+}
+
+.fv-v2-back:hover {
+  color: #fff;
+}
+
+.fv-v2-back:hover .fv-v2-back-arrow {
+  transform: translateX(-3px);
+}
+
+.fv-v2-body {
+  display: flex;
+  gap: 2rem;
+  flex: 1;
+  min-height: 0;
+  max-width: 960px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.fv-v2-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.fv-v2-sources {
+  flex: 0 0 38%;
+  max-width: 340px;
+}
+
+.fv-v2-about {
+  flex: 0 0 38%;
+  max-width: 360px;
+}
+
+.fv-v2-about-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem 1.35rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow-y: auto;
+  flex: 1;
+}
+
+.fv-v2-about-tag {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 181, 3, 0.85);
+}
+
+.fv-v2-about-desc {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.fv-v2-about-study {
+  margin: 0;
+  padding: 0.75rem 0.85rem;
+  border-radius: 10px;
+  background: rgba(255, 181, 3, 0.08);
+  border: 1px solid rgba(255, 181, 3, 0.15);
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.fv-v2-about-highlights {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.fv-v2-about-highlights li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.fv-v2-about-highlight-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.fv-v2-about-highlight-desc {
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.fv-v2-roadmap {
+  flex: 1;
+  min-width: 0;
+}
+
+.fv-v2-heading {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.88);
+  margin: 0 0 1rem 0;
+}
+
+.fv-v2-sources-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+
+.fv-v2-source-slot {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 1rem 1.1rem;
+  border: none;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.fv-v2-source-slot:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.fv-v2-source-empty {
+  cursor: default;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.88rem;
+}
+
+.fv-v2-source-empty p {
+  margin: 0;
+}
+
+.fv-v2-source-icon {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.fv-v2-source-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.fv-v2-source-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fv-v2-source-meta {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.fv-v2-source-delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.3);
+  padding: 0.25rem;
+  border-radius: 6px;
+}
+
+.fv-v2-source-delete:hover {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.fv-v2-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 0.65rem 1rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.fv-v2-upload-btn:hover:not(:disabled) {
+  border-color: rgba(255, 181, 3, 0.4);
+  color: #FFB503;
+}
+
+.fv-v2-upload-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fv-v2-roadmap-card {
+  flex: 1;
+  background: #0e0e0e;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  padding: 1.5rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 320px;
+  overflow: hidden;
+}
+
+.fv-v2-roadmap-course {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0 0 1.25rem 0;
+}
+
+.fv-v2-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.88rem;
+  padding: 1rem 0;
+}
+
+.fv-v2-roadmap-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 1rem;
+}
+
+.fv-v2-roadmap-empty p {
+  margin: 0;
+  max-width: 280px;
+  line-height: 1.5;
+  font-size: 0.9rem;
+}
+
+.fv-v2-generate-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.7rem 1.25rem;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(to right, #FFB503, #FF7B02);
+  color: #fff;
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.fv-v2-generate-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fv-v2-error {
+  color: #f87171;
+  font-size: 0.82rem;
+  margin: 0.25rem 0 0;
+}
+
+.fv-v2-hint {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.35);
+  margin: 0;
+}
+
+.fv-v2-section-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.fv-v2-section-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.fv-v2-section-item:last-child {
+  border-bottom: none;
+}
+
+.fv-v2-section-item.current {
+  color: #fff;
+  font-weight: 600;
+}
+
+.fv-v2-section-item.clickable {
+  cursor: pointer;
+}
+
+.fv-v2-section-item.clickable:hover {
+  color: #FFB503;
+}
+
+.fv-v2-section-label {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fv-v2-section-mastery {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.fv-v2-section-mastery.mastered {
+  color: #4ade80;
+}
+
+.fv-v2-section-now {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #FFB503;
+  background: rgba(255, 181, 3, 0.12);
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+}
+
+.fv-v2-section-check {
+  color: #4ade80;
+  flex-shrink: 0;
+}
+
+.fv-v2-roadmap-actions {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.fv-v2-start-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.85rem;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(to right, #FFB503, #FF7B02);
+  color: #fff;
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.fv-v2-start-btn:hover {
+  transform: scale(1.01);
+}
+
+.fv-v2-complete-msg {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4ade80;
+  font-size: 0.88rem;
+}
+
+.fv-v2-roadmap-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.fv-v2-roadmap-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.fv-v2-link-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.45);
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.78rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0;
+}
+
+.fv-v2-link-btn:hover:not(:disabled) {
+  color: #FFB503;
+}
+
+.fv-v2-link-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .fv-container--v2 {
+    padding: 4rem 1rem 1.5rem;
+    overflow-y: auto;
+  }
+
+  .fv-v2-body {
+    flex-direction: column;
+  }
+
+  .fv-v2-sources,
+  .fv-v2-about {
+    flex: none;
+    max-width: none;
+  }
+
+  .fv-v2-roadmap-card {
+    min-height: 280px;
+  }
+}

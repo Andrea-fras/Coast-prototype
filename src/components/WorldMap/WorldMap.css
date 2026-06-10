@@ -1,0 +1,1111 @@
+.wm-overlay {
+  --wm-gutter: 1.25rem;
+  --wm-logo-h: 2.75rem;
+  --wm-header-h: 3.25rem;
+  --wm-header-gap: 1.15rem;
+  --wm-content-top: calc(var(--wm-gutter) + var(--wm-logo-h) + var(--wm-header-gap));
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: #33373e;
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.wm-home {
+  z-index: 1;
+}
+
+body.wm-open {
+  overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
+.wm-fullscreen {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.wm-viewport-full {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #33373e;
+  cursor: grab;
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
+.wm-viewport-full:active {
+  cursor: grabbing;
+}
+
+.wm-canvas-full {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  touch-action: none;
+}
+
+.wm-canvas-full.dragging {
+  cursor: grabbing;
+}
+
+.wm-loading-full {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+/* UI layer — uses Dashboard rp-card dark styles */
+.wm-ui {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.wm-ui[data-theme="dark"] .rp-card,
+.wm-ui[data-theme="dark"] .card {
+  background: linear-gradient(
+    165deg,
+    rgba(36, 40, 50, 0.62) 0%,
+    rgba(20, 23, 31, 0.58) 100%
+  );
+  backdrop-filter: blur(28px) saturate(1.5);
+  -webkit-backdrop-filter: blur(28px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.04),
+    0 16px 48px rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.wm-ui > * {
+  pointer-events: auto;
+}
+
+/* Top bar — logo left, nav toggle anchored at horizontal center */
+.wm-topbar {
+  position: absolute;
+  top: var(--wm-gutter);
+  left: var(--wm-gutter);
+  right: var(--wm-gutter);
+  min-height: var(--wm-header-h);
+  height: var(--wm-logo-h);
+  overflow: visible;
+  z-index: 30;
+  pointer-events: none;
+}
+
+.wm-logo {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: var(--wm-logo-h);
+  display: flex;
+  align-items: center;
+  pointer-events: auto;
+}
+
+.wm-logo-img {
+  height: var(--wm-logo-h) !important;
+  width: auto !important;
+  max-height: none !important;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.38)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.22));
+}
+
+/* Left stack — profile + zoom controls */
+.wm-left-stack {
+  position: absolute;
+  left: var(--wm-gutter);
+  top: var(--wm-content-top);
+  bottom: var(--wm-gutter);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  z-index: 25;
+  pointer-events: none;
+  max-height: calc(100dvh - var(--wm-content-top) - var(--wm-gutter));
+  overflow: visible;
+}
+
+.wm-left-stack > * {
+  pointer-events: auto;
+}
+
+.wm-left-stack .wm-profile-wrap {
+  flex-shrink: 0;
+  overflow: visible;
+  z-index: 35;
+}
+
+/* Profile / streak card */
+.wm-profile-wrap {
+  position: relative;
+  align-self: flex-start;
+}
+
+.wm-profile-card {
+  min-width: 360px;
+  max-width: 400px;
+  max-height: min(40vh, 280px);
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: 1.35rem 1.75rem 1.5rem !important;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: border-color 0.15s, background 0.15s, transform 0.15s;
+}
+
+.wm-profile-card::-webkit-scrollbar {
+  display: none;
+}
+
+.wm-profile-card:hover {
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  transform: translateY(-1px);
+}
+
+.wm-profile-card:active {
+  transform: translateY(0);
+}
+
+.wm-profile-menu {
+  position: absolute;
+  top: 0;
+  left: calc(100% + 0.5rem);
+  right: auto;
+  width: max-content;
+  min-width: 168px;
+  background: rgba(24, 27, 35, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  padding: 0.65rem;
+  z-index: 50;
+  animation: wmMenuFadeIn 0.15s ease-out;
+}
+
+@keyframes wmMenuFadeIn {
+  from { opacity: 0; transform: translateX(-6px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.wm-profile-menu-name {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #eee;
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 0.35rem;
+}
+
+.wm-profile-menu-logout {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #8888aa;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.wm-profile-menu-logout:hover {
+  background: rgba(231, 76, 60, 0.12);
+  color: #e74c3c;
+}
+
+.wm-profile-card h3 {
+  margin-top: 1rem !important;
+  margin-bottom: 0.5rem !important;
+  font-size: 1.75rem !important;
+}
+
+.wm-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.wm-profile-header .rp-briefing-avatar {
+  width: 52px;
+  height: 52px;
+}
+
+.wm-profile-header .rp-briefing-name {
+  font-size: 1.25rem;
+}
+
+.wm-profile-header .rp-briefing-sub {
+  font-size: 0.82rem;
+}
+
+.wm-profile-card h3 {
+  margin-top: 0.85rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.wm-streak-heading {
+  display: flex !important;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.wm-streak-heading.hot {
+  color: #ffb503 !important;
+}
+
+.wm-streak-heading.cold {
+  color: #666680 !important;
+}
+
+.wm-streak-flame {
+  color: #ff7b02;
+  filter: drop-shadow(0 0 6px rgba(255, 181, 3, 0.55));
+  animation: wmStreakFlame 1.4s ease-in-out infinite;
+}
+
+@keyframes wmStreakFlame {
+  0%, 100% { transform: scale(1) translateY(0); opacity: 1; }
+  35% { transform: scale(1.08) translateY(-1px); opacity: 0.92; }
+  70% { transform: scale(0.96) translateY(1px); opacity: 1; }
+}
+
+.wm-profile-card .streak-stat {
+  margin-bottom: 0;
+  transition: opacity 0.25s ease;
+}
+
+.wm-profile-card .streak-num {
+  font-size: 3.25rem;
+  line-height: 1;
+}
+
+.wm-profile-card .streak-active .streak-num {
+  background: linear-gradient(to right, #ffb503, #ff7b02);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: #ff7b02;
+  filter: drop-shadow(0 0 12px rgba(255, 181, 3, 0.35));
+  animation: wmStreakGlow 2.2s ease-in-out infinite;
+}
+
+@keyframes wmStreakGlow {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(255, 181, 3, 0.25)); }
+  50% { filter: drop-shadow(0 0 16px rgba(255, 123, 2, 0.45)); }
+}
+
+.wm-profile-card .streak-active .streak-label {
+  color: #c9a04a;
+}
+
+.wm-profile-card .streak-zero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.55rem;
+  opacity: 1;
+}
+
+.wm-streak-flame-dormant {
+  color: #5a5a70;
+  opacity: 0.55;
+  flex-shrink: 0;
+}
+
+.wm-profile-card .streak-zero .streak-goal-text {
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.4;
+  max-width: 14rem;
+  font-style: normal;
+}
+
+.wm-profile-card .streak-label {
+  font-size: 0.95rem;
+}
+
+.wm-xp-bar {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.wm-xp-fill {
+  height: 100%;
+  background: linear-gradient(to right, #FFB503, #FF7B02);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+/* Floating nav island — centered on full nav width */
+.wm-nav-island {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--wm-logo-h) / 2);
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.55rem 0.4rem 0.4rem !important;
+  width: auto;
+  height: auto;
+  pointer-events: auto;
+  transition: padding 0.28s ease;
+}
+
+.wm-nav-island.open {
+  padding: 0.4rem 0.75rem 0.4rem 0.4rem !important;
+}
+
+.wm-nav-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.wm-nav-island.collapsed .wm-nav-chevron {
+  transform: rotate(0deg);
+}
+
+.wm-nav-island.open .wm-nav-chevron {
+  transform: rotate(180deg);
+}
+
+.wm-nav-chevron {
+  transition: transform 0.28s ease;
+}
+
+.wm-nav-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.wm-nav-items {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.wm-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.3rem 0.45rem;
+  border: none;
+  border-radius: 14px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s;
+  width: auto;
+}
+
+.wm-nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.wm-nav-item:hover .wm-nav-icon {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.wm-nav-item.active .wm-nav-icon {
+  background: rgba(255, 255, 255, 0.12);
+  color: #eee;
+}
+
+.wm-nav-item.active {
+  color: #eee;
+}
+
+.wm-nav-label {
+  flex: 1;
+  text-align: left;
+}
+
+/* Right stack — slightly compact */
+.wm-right-stack {
+  position: absolute;
+  top: var(--wm-content-top);
+  right: var(--wm-gutter);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 340px;
+  max-height: calc(100dvh - var(--wm-content-top) - var(--wm-gutter));
+  overflow-y: auto;
+  scrollbar-width: none;
+  z-index: 25;
+  pointer-events: none;
+  /* If content ever overflows, fade it out instead of hard-clipping */
+  padding-bottom: 28px;
+  mask-image: linear-gradient(to bottom, black calc(100% - 26px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 26px), transparent 100%);
+}
+
+.wm-right-stack > * {
+  pointer-events: auto;
+}
+
+.wm-right-stack::-webkit-scrollbar {
+  display: none;
+}
+
+/* Region card */
+.wm-region-card {
+  padding: 1.1rem 1.3rem 1.2rem !important;
+}
+
+.wm-region-heading {
+  display: flex !important;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.15rem !important;
+  margin-bottom: 0.3rem !important;
+}
+
+.wm-region-icon {
+  color: #38bdf8;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.wm-region-name {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #eee;
+  font-family: 'Nunito Sans', sans-serif;
+  margin-bottom: 0.75rem;
+}
+
+.wm-chart-progress {
+  margin-bottom: 0.85rem;
+}
+
+.wm-chart-progress-head {
+  margin-bottom: 0.45rem;
+}
+
+.wm-chart-progress-label {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.wm-chart-progress-track {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.wm-chart-progress-fill {
+  height: 100%;
+  background: linear-gradient(to right, #38bdf8, #0ea5e9);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+  min-width: 2px;
+}
+
+.wm-region-stats {
+  margin-bottom: 0.35rem;
+}
+
+.wm-region-stats .rp-review-stat-val {
+  font-size: 1.35rem;
+}
+
+.wm-region-stats .rp-review-stat-lbl {
+  font-size: 0.72rem;
+}
+
+.wm-objectives {
+  padding-top: 0.55rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: 0.55rem;
+}
+
+/* Study timer launch button */
+.wm-timer-launch {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1.1rem 1.25rem !important;
+  border: 1px solid rgba(255, 181, 3, 0.18) !important;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.wm-timer-launch:hover {
+  border-color: rgba(255, 181, 3, 0.4) !important;
+  transform: translateY(-1px);
+}
+
+.wm-timer-launch-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: rgba(255, 181, 3, 0.12);
+  color: #FFB503;
+  flex-shrink: 0;
+}
+
+.wm-timer-launch-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.wm-timer-launch-title {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #eee;
+  line-height: 1.15;
+}
+
+.wm-timer-launch-sub {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #8888aa;
+}
+
+.wm-timer-launch-play {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FFB503, #FF7B02);
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(255, 181, 3, 0.3);
+  transition: transform 0.15s;
+}
+
+.wm-timer-launch:hover .wm-timer-launch-play {
+  transform: scale(1.08);
+}
+
+.wm-objectives-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #8888aa;
+  margin-bottom: 0.65rem;
+  font-family: 'Nunito Sans', sans-serif;
+}
+
+.wm-quest-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.wm-quest {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.55rem 0.65rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  transition: border-color 0.15s, opacity 0.15s;
+}
+
+.wm-quest--done {
+  opacity: 0.55;
+  border-color: rgba(46, 204, 113, 0.15);
+}
+
+.wm-quest-check {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 0.1rem;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.wm-quest-check--done {
+  border-color: #2ecc71;
+  background: rgba(46, 204, 113, 0.2);
+  position: relative;
+}
+
+.wm-quest-check--done::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 5px;
+  height: 9px;
+  border: solid #2ecc71;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.wm-quest-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.wm-quest-label {
+  font-size: 0.84rem;
+  color: #ddd;
+  font-weight: 600;
+  font-family: 'Nunito', sans-serif;
+  line-height: 1.3;
+}
+
+.wm-quest--done .wm-quest-label {
+  text-decoration: line-through;
+  color: #888;
+}
+
+.wm-quest-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.wm-quest-progress-track {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.wm-quest-progress-fill {
+  height: 100%;
+  background: linear-gradient(to right, #FFB503, #FF7B02);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.wm-quest-progress-text {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.4);
+  font-family: 'Nunito Sans', sans-serif;
+}
+
+.wm-quest-rewards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.wm-quest-reward {
+  font-size: 0.72rem;
+  font-weight: 800;
+  font-family: 'Nunito Sans', sans-serif;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  background: rgba(255, 181, 3, 0.12);
+  color: #FFB503;
+}
+
+.wm-quest-reward--bonus {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+}
+
+/* Bottom tooltip — one-time hint, fades out */
+.wm-tip {
+  position: absolute;
+  bottom: var(--wm-gutter);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.9rem 1.5rem !important;
+  font-size: 0.92rem;
+  font-weight: 600;
+  font-family: 'Nunito', sans-serif;
+  color: #8888aa;
+  transition: opacity 0.8s ease, visibility 0.8s;
+  max-width: min(90vw, 540px);
+  text-align: center;
+  pointer-events: none;
+}
+
+.wm-tip--hide {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* Tile inspect — pinned to viewport at click time (imperative DOM layer) */
+#wm-tile-inspect-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  pointer-events: none;
+}
+
+.wm-tile-highlight {
+  position: fixed;
+  pointer-events: none;
+  border: 2px solid rgba(255, 181, 3, 0.85);
+  box-shadow: 0 0 12px rgba(255, 181, 3, 0.35), inset 0 0 8px rgba(255, 181, 3, 0.12);
+  border-radius: 3px;
+  z-index: 20000;
+  animation: wmTilePulse 1.6s ease-in-out infinite;
+  transform: none !important;
+}
+
+@keyframes wmTilePulse {
+  0%, 100% { border-color: rgba(255, 181, 3, 0.75); }
+  50% { border-color: rgba(255, 123, 2, 0.95); }
+}
+
+.wm-tile-popup {
+  position: fixed;
+  z-index: 20001;
+  width: min(268px, calc(100vw - 24px));
+  padding: 0.85rem 1rem 0.9rem;
+  background: rgba(24, 27, 35, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 181, 3, 0.22);
+  border-radius: 14px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+  pointer-events: auto;
+  animation: wmTilePopupIn 0.18s ease-out;
+  transform: none !important;
+}
+
+@keyframes wmTilePopupIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.wm-tile-popup-close {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #8888aa;
+  cursor: pointer;
+}
+
+.wm-tile-popup-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #eee;
+}
+
+.wm-tile-popup-lesson {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffb503;
+  margin-bottom: 0.35rem;
+  padding-right: 1.25rem;
+}
+
+.wm-tile-popup-section {
+  display: block;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #eee;
+  line-height: 1.35;
+  margin-bottom: 0.35rem;
+  padding-right: 0.5rem;
+}
+
+.wm-tile-popup-note {
+  display: block;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.78rem;
+  color: #8888aa;
+  line-height: 1.4;
+}
+
+.wm-tip svg {
+  flex-shrink: 0;
+  opacity: 0.65;
+}
+
+/* Map controls — centered at middle of screen height on the left edge */
+.wm-map-controls,
+.wm-zoom-cluster {
+  position: fixed;
+  top: 50%;
+  left: var(--wm-gutter);
+  bottom: auto;
+  right: auto;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 0.5rem !important;
+  z-index: 40;
+  flex-shrink: 0;
+  margin-top: 0;
+}
+
+.wm-focus-mode .wm-topbar {
+  pointer-events: auto;
+}
+
+.wm-focus-mode .wm-left-stack {
+  pointer-events: auto;
+}
+
+.wm-focus-mode .wm-profile-wrap {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.wm-focus-btn.active {
+  background: rgba(255, 181, 3, 0.18);
+  color: #ffb503;
+}
+
+.wm-focus-mode {
+  pointer-events: none;
+}
+
+.wm-focus-mode .wm-map-controls {
+  pointer-events: auto;
+}
+
+.wm-zoom-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.wm-zoom-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #eee;
+}
+
+.wm-close-float {
+  position: absolute;
+  top: var(--wm-gutter);
+  right: var(--wm-gutter);
+  background: rgba(24, 27, 35, 0.75);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  color: #8888aa;
+  cursor: pointer;
+  padding: 0.4rem;
+  z-index: 30;
+  transition: background 0.15s;
+}
+
+.wm-close-float:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #eee;
+}
+
+.wm-progress-toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 100;
+  padding: 1.25rem 1.75rem;
+  border-radius: 16px;
+  background: rgba(24, 27, 35, 0.92);
+  border: 1px solid rgba(120, 200, 255, 0.35);
+  backdrop-filter: blur(20px);
+  text-align: center;
+  pointer-events: none;
+  animation: wm-toast-in 0.35s ease-out;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+.wm-progress-toast-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #e8e8ff;
+  margin-bottom: 0.35rem;
+}
+
+.wm-progress-toast-xp {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #7dd3fc;
+  font-variant-numeric: tabular-nums;
+}
+
+.wm-progress-toast-map,
+.wm-progress-toast-bonus {
+  margin-top: 0.35rem;
+  font-size: 0.9rem;
+  color: #a5b4fc;
+}
+
+@keyframes wm-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@media (max-width: 900px) {
+  .wm-overlay {
+    --wm-gutter: 0.85rem;
+    --wm-logo-h: 2.25rem;
+    --wm-header-h: 2.75rem;
+    --wm-header-gap: 0.95rem;
+  }
+
+  .wm-nav-island {
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: auto;
+    max-width: calc(100vw - var(--wm-gutter) * 2 - 8rem);
+  }
+
+  .wm-left-stack {
+    left: var(--wm-gutter);
+    right: var(--wm-gutter);
+    top: var(--wm-content-top);
+    bottom: auto;
+    max-height: none;
+  }
+
+  .wm-left-stack .wm-profile-wrap {
+    overflow: visible;
+  }
+
+  .wm-profile-card {
+    max-height: min(34vh, 240px);
+    min-width: 0;
+    max-width: none;
+    padding: 1.15rem 1.35rem 1.25rem !important;
+  }
+
+  .wm-profile-card .streak-num {
+    font-size: 2.75rem;
+  }
+
+  .wm-right-stack {
+    width: auto;
+    left: var(--wm-gutter);
+    right: var(--wm-gutter);
+    top: auto;
+    bottom: 5.5rem;
+    max-height: min(40vh, calc(100dvh - var(--wm-content-top) - 6rem));
+  }
+
+  .wm-tip {
+    font-size: 0.82rem;
+    padding: 0.7rem 1.1rem !important;
+    bottom: 0.75rem;
+  }
+}

@@ -5,6 +5,24 @@ import remarkGfm from 'remark-gfm';
 import 'katex/dist/katex.min.css';
 import { API_URL } from '../config';
 
+/** KaTeX options — strict:false silences Unicode unit warnings (µ, etc.). */
+const KATEX_OPTIONS = {
+  strict: false,
+  throwOnError: false,
+  trust: true,
+};
+
+/** Normalize Unicode units/symbols Pedro often uses before remark-math sees them. */
+function sanitizePedroMarkdown(text) {
+  if (!text) return text;
+  return text
+    // 10 µm → KaTeX-friendly inline math
+    .replace(/(\d+(?:\.\d+)?)\s*µm\b/g, '$1 $\\mu\\text{m}$')
+    .replace(/(\d+(?:\.\d+)?)\s*µ(?![a-zA-Z])/g, '$1 $\\mu$')
+    // Micro sign inside $...$ math delimiters
+    .replace(/\$([^$]*?)µ([^$]*?)\$/g, (_, a, b) => `$${a}\\mu${b}$`);
+}
+
 function repairIncompleteSvg(text) {
   const hasSvgOpen = /<svg[\s>]/i.test(text);
   if (!hasSvgOpen) return text;
@@ -40,10 +58,11 @@ function splitSvgBlocks(text) {
 
 function MarkdownBlock({ text }) {
   if (!text.trim()) return null;
+  const safeText = sanitizePedroMarkdown(text);
   return (
     <ReactMarkdown
       remarkPlugins={[remarkMath, remarkGfm]}
-      rehypePlugins={[rehypeKatex]}
+      rehypePlugins={[[rehypeKatex, KATEX_OPTIONS]]}
       components={{
         p: ({ children }) => <p style={{ margin: '0.4em 0' }}>{children}</p>,
         ul: ({ children }) => <ul style={{ margin: '0.3em 0', paddingLeft: '1.3em' }}>{children}</ul>,
@@ -104,11 +123,18 @@ function MarkdownBlock({ text }) {
         ),
         img: ({ src, alt, ...props }) => {
           let resolvedSrc = src || '';
-          if (resolvedSrc.startsWith('/api/')) {
+          const idMatch = resolvedSrc.match(/source[_-]images?\D*?(\d+)\s*$/i)
+            || resolvedSrc.match(/\/api\/source-images\/(\d+)/)
+            || resolvedSrc.match(/\/api\/oma\/images\/([a-zA-Z0-9_]+)/)
+            || resolvedSrc.match(/^(\d+)$/);
+          if (idMatch) {
+            if (resolvedSrc.includes('/api/oma/images/') || /^ima_/.test(idMatch[1])) {
+              resolvedSrc = `${API_URL}/api/oma/images/${idMatch[1]}`;
+            } else {
+              resolvedSrc = `${API_URL}/api/source-images/${idMatch[1]}`;
+            }
+          } else if (resolvedSrc.startsWith('/api/')) {
             resolvedSrc = `${API_URL}${resolvedSrc}`;
-          } else if (/\/api\/source-images\/\d+/.test(resolvedSrc)) {
-            const match = resolvedSrc.match(/(\/api\/source-images\/\d+)/);
-            if (match) resolvedSrc = `${API_URL}${match[1]}`;
           }
           return (
             <img
@@ -136,7 +162,7 @@ function MarkdownBlock({ text }) {
         },
       }}
     >
-      {text}
+      {safeText}
     </ReactMarkdown>
   );
 }

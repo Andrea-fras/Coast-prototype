@@ -1,0 +1,549 @@
+
+/* ═══════════════════════════════════════════════════════
+   NotebookPage v2 — Dark library redesign
+   ═══════════════════════════════════════════════════════ */
+
+.notebook-page.notebook-page--v2 {
+  background: #161616;
+  background-color: #161616;
+  padding: 0;
+  overflow: hidden;
+}
+
+.notebook-page.notebook-page--v2::before {
+  display: none !important;
+  background: none !important;
+  background-image: none !important;
+  opacity: 0 !important;
+  content: none !important;
+}
+
+.notebook-page.notebook-page--v2 .nb-close-btn {
+  top: 1.25rem;
+  left: 1.25rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.notebook-page.notebook-page--v2 .nb-close-btn:hover {
+  color: #fff;
+}
+
+.notebook-page.notebook-page--v2 .nb-calc-toggle {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.notebook-page.notebook-page--v2 .nb-calc-toggle:hover,
+.notebook-page.notebook-page--v2 .nb-calc-toggle[aria-pressed="true"] {
+  background: rgba(255, 181, 3, 0.15);
+  color: #FFB503;
+  border-color: rgba(255, 181, 3, 0.35);
+}
+
+.nb-v2-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 4.5rem 2rem 2rem;
+  box-sizing: border-box;
+  overflow: hidden;
+  background: #161616;
+}
+
+.nb-v2-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 2.5rem;
+  flex-shrink: 0;
+}
+
+.nb-v2-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+}
+
+.nb-v2-tab {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Nunito Sans', 'Nunito', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.35);
+  padding: 0.25rem 0;
+  transition: color 0.25s ease, transform 0.25s ease;
+}
+
+.nb-v2-tab:hover {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.nb-v2-tab.active {
+  color: #fff;
+  font-weight: 700;
+  transform: scale(1.02);
+}
+
+.nb-v2-cups {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.nb-cup-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #FFB503;
+}
+
+.nb-cup-badge-icon {
+  width: 26px;
+  height: 24px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 0 6px rgba(255, 181, 3, 0.35));
+}
+
+.nb-cup-badge-count {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+}
+
+.nb-v2-panel {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 2rem;
+  animation: nbTabBounce 0.48s cubic-bezier(0.34, 1.45, 0.64, 1);
+}
+
+@keyframes nbTabBounce {
+  0% { opacity: 0; transform: translateY(18px) scale(0.97); }
+  55% { opacity: 1; transform: translateY(-5px) scale(1.008); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.nb-v2-section {
+  margin-bottom: 2.25rem;
+}
+
+.nb-v2-section-title {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.88);
+  margin: 0 0 1rem 0;
+}
+
+.nb-v2-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+/* Continue hero strip */
+.nb-continue-hero {
+  margin-bottom: 2rem;
+  padding: 1.15rem 1.25rem;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(255, 181, 3, 0.1) 0%, rgba(255, 123, 2, 0.06) 100%);
+  border: 1px solid rgba(255, 181, 3, 0.22);
+}
+
+.nb-continue-hero-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.nb-continue-hero-label {
+  display: block;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255, 181, 3, 0.75);
+  margin-bottom: 0.25rem;
+}
+
+.nb-continue-hero-title {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 0.2rem;
+  line-height: 1.2;
+}
+
+.nb-continue-hero-meta {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.nb-continue-hero-btn {
+  flex-shrink: 0;
+  padding: 0.55rem 1.15rem;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #FFB503, #FF7B02);
+  color: #fff;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.15s;
+}
+
+.nb-continue-hero-btn:hover {
+  transform: scale(1.03);
+  opacity: 0.95;
+}
+
+.nb-continue-hero-bar {
+  height: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.nb-continue-hero-fill {
+  height: 100%;
+  background: linear-gradient(to right, #FFB503, #FF7B02);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+  min-width: 3px;
+}
+
+/* Course cards */
+.nb-course-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: 118px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 18px;
+  --nb-card-bg: #0e0e0e;
+  background: var(--nb-card-bg);
+  cursor: pointer;
+  overflow: hidden;
+  text-align: center;
+  padding: 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.nb-course-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+/* Not started — muted */
+.nb-course-card--not-started {
+  --nb-card-bg: #121212;
+  background: var(--nb-card-bg);
+  border-color: rgba(255, 255, 255, 0.04);
+}
+
+.nb-course-card--not-started .nb-course-card-title {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.nb-course-card--not-started .nb-course-card-meta {
+  color: rgba(255, 255, 255, 0.28);
+}
+
+/* In progress — progress bar + Continue on hover */
+.nb-course-card--in-progress {
+  --nb-card-bg: #0e0e0e;
+  background: var(--nb-card-bg);
+  border-color: rgba(255, 181, 3, 0.15);
+}
+
+.nb-course-card--in-progress:hover {
+  border-color: rgba(255, 181, 3, 0.35);
+}
+
+.nb-course-card-progress-track {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+}
+
+.nb-course-card-progress-fill {
+  height: 100%;
+  background: linear-gradient(to right, #FFB503, #FF7B02);
+  border-radius: 0 0 0 0;
+  transition: width 0.5s ease;
+}
+
+.nb-course-card-continue {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.72);
+  color: #FFB503;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+  border-radius: 18px;
+}
+
+.nb-course-card--in-progress:hover .nb-course-card-continue {
+  opacity: 1;
+}
+
+.nb-course-card--in-progress .nb-course-card-meta {
+  color: rgba(255, 181, 3, 0.65);
+}
+
+/* Mastered — gold + trophy */
+.nb-course-card--mastered {
+  background: #e8941a;
+  border: 2.5px solid #ffdd3d;
+  box-shadow:
+    0 0 0 1px rgba(255, 235, 120, 0.35),
+    0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.nb-course-card--mastered:hover {
+  border-color: #ffe566;
+  box-shadow:
+    0 0 0 1px rgba(255, 240, 140, 0.5),
+    0 12px 28px rgba(0, 0, 0, 0.5);
+}
+
+.nb-course-card-body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  padding: 0.75rem 0.85rem;
+  min-height: 118px;
+  box-sizing: border-box;
+}
+
+.nb-course-card-text {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.nb-course-card-title {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 1.38rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 0.2rem 0;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.nb-course-card--mastered .nb-course-card-title {
+  color: #fff;
+}
+
+.nb-course-card-meta {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.nb-course-card--mastered .nb-course-card-meta {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.nb-course-card-icon-wrap {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+}
+
+.nb-course-card-icon {
+  display: block;
+  object-fit: contain;
+  pointer-events: none;
+  max-height: 56px;
+  width: auto;
+}
+
+.nb-course-card-icon--trophy {
+  width: 52px;
+  height: auto;
+}
+
+/* New lesson dashed card */
+.nb-course-card--new {
+  --nb-card-bg: transparent;
+  background: transparent;
+  border: 2px dashed rgba(255, 255, 255, 0.18);
+  min-height: 118px;
+}
+
+.nb-course-card--new:hover {
+  border-color: rgba(255, 181, 3, 0.45);
+  background: rgba(255, 181, 3, 0.04);
+  box-shadow: none;
+  transform: translateY(-2px);
+}
+
+.nb-course-card-body--new {
+  flex-direction: column;
+  gap: 0.5rem;
+  color: rgba(255, 255, 255, 0.45);
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.nb-course-card--new:hover .nb-course-card-body--new {
+  color: rgba(255, 181, 3, 0.85);
+}
+
+.nb-course-card-cost-icon {
+  width: 18px;
+  height: 17px;
+  object-fit: contain;
+  display: block;
+}
+
+.nb-course-card--curated {
+  --nb-card-bg: #0e0e0e;
+  background: var(--nb-card-bg);
+  border: 1px solid rgba(255, 181, 3, 0.2);
+}
+
+.nb-course-card-cost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #FFB503;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.nb-course-card-free {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.nb-v2-empty-icon-img {
+  width: 48px;
+  height: 45px;
+  object-fit: contain;
+  opacity: 0.85;
+}
+
+.nb-v2-empty {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  color: rgba(255, 255, 255, 0.55);
+  max-width: 420px;
+  margin: 2rem auto;
+}
+
+.nb-v2-empty h2 {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.2rem;
+  margin: 0.75rem 0 0.5rem;
+}
+
+.nb-v2-empty p {
+  margin: 0.5rem 0;
+  line-height: 1.55;
+  font-size: 0.92rem;
+}
+
+.nb-v2-empty-icon {
+  color: #FFB503;
+  opacity: 0.7;
+}
+
+.nb-v2-empty-sub {
+  margin-top: 1rem !important;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.nb-v2-empty-inline {
+  padding: 1rem 0;
+  margin: 0;
+  text-align: left;
+}
+
+.nb-v2-new-folder {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+.nb-v2-new-folder .nb-new-folder-input {
+  color: #fff;
+}
+
+.notebook-page.notebook-page--v2 .nb-lessons-loading {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+@media (max-width: 640px) {
+  .nb-v2-shell {
+    padding: 4rem 1rem 1.5rem;
+  }
+
+  .nb-v2-tabs {
+    gap: 1.25rem;
+  }
+
+  .nb-v2-tab {
+    font-size: 1.05rem;
+  }
+
+  .nb-v2-card-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .nb-continue-hero-main {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nb-continue-hero-btn {
+    width: 100%;
+    text-align: center;
+  }
+}

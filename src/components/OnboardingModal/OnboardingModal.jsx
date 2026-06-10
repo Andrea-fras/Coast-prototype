@@ -2,49 +2,47 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { API_URL } from '../../config';
 import mascot from '../../assets/sessioncompletebird.svg';
-import { Sparkles, ArrowRight, BookOpen, Brain, Eye, Target } from 'lucide-react';
+import { Sparkles, ArrowRight, ArrowLeft, Map, Gem, ShieldCheck, Star } from 'lucide-react';
 import './OnboardingModal.css';
 
-const QUESTIONS = [
+const STEPS = [
   {
-    key: 'learning_style',
-    icon: <BookOpen size={24} />,
-    title: 'How do you prefer to learn new concepts?',
-    options: [
-      { id: 'theory-first', label: 'Explain the theory first, then give examples', emoji: '📖' },
-      { id: 'example-first', label: 'Show me examples and I\'ll figure out the pattern', emoji: '🔍' },
-      { id: 'balanced', label: 'Mix of both depending on the topic', emoji: '⚖️' },
+    icon: Sparkles,
+    title: (name) => `Welcome to Coast, ${name}!`,
+    paragraphs: [
+      "I'm Pedro, your AI study companion. Let me walk you through how Coast works — it'll only take a minute.",
     ],
   },
   {
-    key: 'when_stuck',
-    icon: <Brain size={24} />,
-    title: 'When you\'re stuck on a concept, what helps most?',
-    options: [
-      { id: 'step-by-step', label: 'Break it down step by step', emoji: '🪜' },
-      { id: 'analogies', label: 'Give me an analogy or real-world comparison', emoji: '🌍' },
-      { id: 'visual', label: 'Show me a visual diagram or chart', emoji: '📊' },
+    icon: Map,
+    title: () => 'Your learning map',
+    paragraphs: [
+      'The map is a visual representation of everything you\'ve learned. As you complete lessons, new regions unlock and your knowledge landscape grows.',
+      'Explore the map to find interactive elements — including rare drops hidden across the terrain.',
     ],
   },
   {
-    key: 'detail_level',
-    icon: <Eye size={24} />,
-    title: 'How much detail do you want in explanations?',
-    options: [
-      { id: 'concise', label: 'Give me the big picture, I\'ll dig deeper if needed', emoji: '🎯' },
-      { id: 'detailed', label: 'Thorough and detailed, don\'t leave anything out', emoji: '📝' },
-      { id: 'adaptive', label: 'Depends on the topic', emoji: '🔄' },
+    icon: Gem,
+    title: () => 'Discover more, find more',
+    paragraphs: [
+      'The more lessons you complete, the more of the map you uncover — and the more drops you can find.',
+      'Rare drops aren\'t just collectibles. They connect to active recall, helping you strengthen what you\'ve learned by testing your memory at the right moments.',
     ],
   },
   {
-    key: 'study_goal',
-    icon: <Target size={24} />,
-    title: 'What\'s your main study goal right now?',
-    options: [
-      { id: 'exam-prep', label: 'Preparing for exams', emoji: '📋' },
-      { id: 'deep-understanding', label: 'Understanding concepts deeply', emoji: '💡' },
-      { id: 'catch-up', label: 'Catching up on missed lectures', emoji: '⏩' },
-      { id: 'review', label: 'General review and practice', emoji: '🔁' },
+    icon: ShieldCheck,
+    title: () => 'Master each section with Pedro',
+    paragraphs: [
+      'Every section you study with Pedro stays open until you\'ve truly mastered it. Pedro will verify your understanding before you can move on.',
+      'Once verified, you earn XP and reveal new areas of the map.',
+    ],
+  },
+  {
+    icon: Star,
+    title: () => 'Complete lessons, collect stars',
+    paragraphs: [
+      'Finish all sections in a lesson for a big XP bonus and even more map discovery.',
+      'Master a full lesson to earn a star. Try to collect as many as you can!',
     ],
   },
 ];
@@ -52,28 +50,13 @@ const QUESTIONS = [
 export default function OnboardingModal() {
   const { token, updateUser, user } = useAuth();
   const [step, setStep] = useState(0);
-  const [answers, setAnswers] = useState({});
   const [saving, setSaving] = useState(false);
 
-  const current = QUESTIONS[step];
-  const isLast = step === QUESTIONS.length - 1;
-  const selectedId = answers[current.key] || null;
-
-  const handleSelect = (optionId) => {
-    setAnswers(prev => ({ ...prev, [current.key]: optionId }));
-  };
-
-  const handleNext = async () => {
-    if (isLast) {
-      await handleFinish();
-    } else {
-      setStep(s => s + 1);
-    }
-  };
-
-  const handleSkip = async () => {
-    await handleFinish();
-  };
+  const firstName = user?.name?.split(' ')[0] || 'there';
+  const current = STEPS[step];
+  const isFirst = step === 0;
+  const isLast = step === STEPS.length - 1;
+  const Icon = current.icon;
 
   const handleFinish = async () => {
     setSaving(true);
@@ -84,7 +67,7 @@ export default function OnboardingModal() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ preferences: answers }),
+        body: JSON.stringify({ preferences: {} }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -98,21 +81,31 @@ export default function OnboardingModal() {
     setSaving(false);
   };
 
+  const handleNext = async () => {
+    if (isLast) {
+      await handleFinish();
+    } else {
+      setStep((s) => s + 1);
+    }
+  };
+
+  const handleBack = () => {
+    if (!isFirst) setStep((s) => s - 1);
+  };
+
   return (
     <div className="onboarding-overlay">
       <div className="onboarding-card">
-        {/* Header */}
         <div className="onboarding-header">
           <img src={mascot} alt="Pedro" className="onboarding-mascot" />
           <div className="onboarding-header-text">
-            <h2>Hey {user?.name?.split(' ')[0] || 'there'}! I'm Pedro.</h2>
-            <p>Let me learn how you study best so I can help you more effectively.</p>
+            <span className="onboarding-kicker">Getting started</span>
+            <h2>Pedro&apos;s quick tour</h2>
           </div>
         </div>
 
-        {/* Progress */}
         <div className="onboarding-progress">
-          {QUESTIONS.map((_, i) => (
+          {STEPS.map((_, i) => (
             <div
               key={i}
               className={`onboarding-dot ${i === step ? 'active' : ''} ${i < step ? 'done' : ''}`}
@@ -120,37 +113,36 @@ export default function OnboardingModal() {
           ))}
         </div>
 
-        {/* Question */}
-        <div className="onboarding-question" key={step}>
-          <div className="onboarding-q-icon">{current.icon}</div>
-          <h3 className="onboarding-q-title">{current.title}</h3>
-
-          <div className="onboarding-options">
-            {current.options.map(opt => (
-              <button
-                key={opt.id}
-                className={`onboarding-option ${selectedId === opt.id ? 'selected' : ''}`}
-                onClick={() => handleSelect(opt.id)}
-              >
-                <span className="onboarding-option-emoji">{opt.emoji}</span>
-                <span className="onboarding-option-label">{opt.label}</span>
-              </button>
+        <div className="onboarding-step" key={step}>
+          <div className="onboarding-step-icon">
+            <Icon size={24} />
+          </div>
+          <h3 className="onboarding-step-title">
+            {typeof current.title === 'function' ? current.title(firstName) : current.title}
+          </h3>
+          <div className="onboarding-step-body">
+            {current.paragraphs.map((text, i) => (
+              <p key={i}>{text}</p>
             ))}
           </div>
         </div>
 
-        {/* Actions */}
         <div className="onboarding-actions">
-          <button className="onboarding-skip" onClick={handleSkip} disabled={saving}>
-            Skip for now
-          </button>
-          <button
-            className="onboarding-next"
-            onClick={handleNext}
-            disabled={!selectedId || saving}
-          >
+          <div className="onboarding-actions-left">
+            {!isFirst ? (
+              <button className="onboarding-back" onClick={handleBack} disabled={saving}>
+                <ArrowLeft size={16} />
+                Back
+              </button>
+            ) : (
+              <button className="onboarding-skip" onClick={handleFinish} disabled={saving}>
+                Skip for now
+              </button>
+            )}
+          </div>
+          <button className="onboarding-next" onClick={handleNext} disabled={saving}>
             {saving ? 'Saving...' : isLast ? (
-              <>Finish <Sparkles size={16} /></>
+              <>Start exploring <Sparkles size={16} /></>
             ) : (
               <>Next <ArrowRight size={16} /></>
             )}
