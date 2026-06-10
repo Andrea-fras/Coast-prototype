@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Map, Sparkles, Trophy, Upload } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getWorldMap, getWorldCanvas, HQ } from '../WorldMap/mapTerrain';
+import { drawTileGrid } from '../WorldMap/mapAnimations';
 import coastLogo from '../../assets/Coastlogo-white-full.svg';
 import mascot from '../../assets/sessioncompletebird.svg';
 import medalIcon from '../../assets/lesson-icons/medal.svg';
@@ -38,12 +39,34 @@ function LoginMapPreview() {
       const tilesW = 30;
       const tileAspect = height / width;
       const tilesH = Math.max(8, Math.ceil(tilesW * tileAspect));
-      const sx = (HQ.x - tilesW / 2) * tilePx;
-      const sy = (HQ.y - tilesH / 2) * tilePx;
+      const startX = Math.floor(HQ.x - tilesW / 2);
+      const startY = Math.floor(HQ.y - tilesH / 2);
+      const sx = startX * tilePx;
+      const sy = startY * tilePx;
       const sw = tilesW * tilePx;
       const sh = tilesH * tilePx;
 
       ctx.drawImage(worldCanvas, sx, sy, sw, sh, 0, 0, width, height);
+
+      const cell = width / tilesW;
+      const unlocked = new Set();
+      for (let ty = startY; ty < startY + tilesH; ty += 1) {
+        for (let tx = startX; tx < startX + tilesW; tx += 1) {
+          unlocked.add(`${tx},${ty}`);
+        }
+      }
+
+      ctx.save();
+      ctx.translate(-startX * cell, -startY * cell);
+      drawTileGrid(ctx, {
+        unlocked,
+        cell,
+        vx0: startX,
+        vy0: startY,
+        vx1: startX + tilesW,
+        vy1: startY + tilesH,
+      });
+      ctx.restore();
     };
 
     draw();

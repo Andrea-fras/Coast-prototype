@@ -17,7 +17,7 @@ import {
   getWorldMap,
   visibleTreasureChests,
 } from './mapTerrain';
-import { buildAnimationSpec, drawMapAnimations } from './mapAnimations';
+import { buildAnimationSpec, drawMapAnimations, drawTileGrid } from './mapAnimations';
 import MapTreasureModal from './MapTreasureModal';
 import './MapTreasureModal.css';
 import MapFocusSession from './MapFocusSession';
@@ -426,6 +426,15 @@ export default function WorldMap({
       vx1,
       vy1,
       animSpec: animSpecRef.current,
+    });
+
+    drawTileGrid(ctx, {
+      unlocked: unlockedRef.current,
+      cell,
+      vx0,
+      vy0,
+      vx1,
+      vy1,
     });
 
     // Fog of war — flat per-tile greys in diagonal stripes, feathered near

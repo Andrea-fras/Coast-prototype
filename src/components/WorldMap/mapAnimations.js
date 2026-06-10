@@ -305,3 +305,36 @@ export function drawMapAnimations(ctx, {
     drawBirds(ctx, animSpec, unlocked, time, cell, vx0, vy0, vx1, vy1);
   }
 }
+
+/** Subtle tile outlines on charted (discovered) territory only. */
+export function drawTileGrid(ctx, { unlocked, cell, vx0, vy0, vx1, vy1 }) {
+  if (!cell || !unlocked) return;
+
+  ctx.lineWidth = 1;
+
+  for (let x = vx0; x <= vx1; x += 1) {
+    const px = x * cell + 0.5;
+    const major = x % 4 === 0;
+    for (let y = vy0; y < vy1; y += 1) {
+      if (!unlocked.has(`${x},${y}`)) continue;
+      ctx.strokeStyle = major ? 'rgba(0, 0, 0, 0.12)' : 'rgba(0, 0, 0, 0.06)';
+      ctx.beginPath();
+      ctx.moveTo(px, y * cell);
+      ctx.lineTo(px, (y + 1) * cell);
+      ctx.stroke();
+    }
+  }
+
+  for (let y = vy0; y <= vy1; y += 1) {
+    const py = y * cell + 0.5;
+    const major = y % 4 === 0;
+    for (let x = vx0; x < vx1; x += 1) {
+      if (!unlocked.has(`${x},${y}`)) continue;
+      ctx.strokeStyle = major ? 'rgba(0, 0, 0, 0.12)' : 'rgba(0, 0, 0, 0.06)';
+      ctx.beginPath();
+      ctx.moveTo(x * cell, py);
+      ctx.lineTo((x + 1) * cell, py);
+      ctx.stroke();
+    }
+  }
+}
