@@ -1,118 +1,245 @@
-.login-page {
+.login-page--v2 {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5f5f5;
-  padding: 1.5rem;
+  padding: 1.25rem;
   box-sizing: border-box;
-}
-
-.login-container {
-  display: flex;
-  max-width: 900px;
-  width: 100%;
-  background: white;
-  border-radius: 24px;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
+  background: #161616;
+  position: relative;
   overflow: hidden;
-  min-height: 540px;
 }
 
-/* Left Panel — Branding */
-.login-left {
-  flex: 1;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  padding: 3rem 2.5rem;
+.login-pixel-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 181, 3, 0.06) 0%, transparent 40%),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 31px,
+      rgba(255, 255, 255, 0.025) 31px,
+      rgba(255, 255, 255, 0.025) 32px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 31px,
+      rgba(255, 255, 255, 0.025) 31px,
+      rgba(255, 255, 255, 0.025) 32px
+    );
+  pointer-events: none;
+}
+
+.login-shell {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  max-width: 1080px;
+  width: 100%;
+  min-height: min(640px, calc(100dvh - 2.5rem));
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(22, 22, 22, 0.92);
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+  animation: login-rise 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes login-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Hero */
+.login-hero {
+  padding: 2.25rem 2rem 2rem;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 0%, rgba(255, 181, 3, 0.12), transparent),
+    linear-gradient(160deg, #1a1a1a 0%, #121212 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  color: white;
+  overflow-y: auto;
 }
 
-.login-brand {
-  margin-bottom: 2.5rem;
+.login-hero-logo {
+  width: min(220px, 70%);
+  height: auto;
+  margin-bottom: 1rem;
+  image-rendering: auto;
 }
 
-.login-logo {
-  font-family: 'Nunito Sans', sans-serif;
-  font-size: 2.5rem;
-  font-weight: 900;
-  margin: 0 0 0.5rem 0;
-  background: linear-gradient(to right, #FFB503, #FF7B02);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.login-tagline {
+.login-hero-tagline {
   font-family: 'Nunito', sans-serif;
-  font-size: 1.1rem;
-  color: rgba(255, 255, 255, 0.6);
-  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.62);
+  margin: 0 0 1.25rem;
+  max-width: 36ch;
 }
 
-.login-features {
+.login-hero-visual {
+  margin-bottom: 1.25rem;
+}
+
+.login-map-preview {
+  position: relative;
+  height: 140px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 181, 3, 0.25);
+  background: #1a3a52;
+  overflow: hidden;
+}
+
+.login-map-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.login-map-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(22, 22, 22, 0.35) 0%, transparent 28%, transparent 72%, rgba(22, 22, 22, 0.45) 100%),
+    linear-gradient(90deg, rgba(22, 22, 22, 0.2) 0%, transparent 18%, transparent 82%, rgba(22, 22, 22, 0.2) 100%);
+}
+
+.login-map-mascot {
+  position: absolute;
+  right: 1rem;
+  bottom: 0.5rem;
+  width: 72px;
+  height: auto;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+}
+
+.login-hero-badges {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.login-hero-badges span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffb503;
+  background: rgba(255, 181, 3, 0.1);
+  border: 1px solid rgba(255, 181, 3, 0.25);
+  border-radius: 999px;
+  padding: 0.3rem 0.65rem;
+}
+
+.login-hero-badges img {
+  width: 14px;
+  height: 14px;
+}
+
+.login-feature-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 0.85rem;
 }
 
-.login-feature {
+.login-feature-list li {
   display: flex;
-  align-items: flex-start;
   gap: 0.75rem;
+  align-items: flex-start;
+  color: rgba(255, 255, 255, 0.45);
 }
 
-.login-feature-icon {
-  font-size: 1.4rem;
+.login-feature-list li svg {
   flex-shrink: 0;
   margin-top: 2px;
+  color: #ffb503;
 }
 
-.login-feature strong {
-  font-family: 'Nunito Sans', sans-serif;
-  font-size: 0.95rem;
-  font-weight: 700;
+.login-feature-list strong {
   display: block;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
   margin-bottom: 0.15rem;
 }
 
-.login-feature p {
+.login-feature-list span {
   font-family: 'Nunito', sans-serif;
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.5);
-  margin: 0;
-  line-height: 1.4;
+  font-size: 0.82rem;
+  line-height: 1.45;
 }
 
-/* Right Panel — Form */
-.login-right {
-  flex: 1;
-  padding: 3rem 2.5rem;
+/* Panel */
+.login-panel {
+  padding: 2.25rem 2rem;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
+  background: rgba(18, 18, 18, 0.95);
 }
 
-.login-form-container {
+.login-step {
   width: 100%;
-  max-width: 340px;
+  max-width: 360px;
+  margin: 0 auto;
 }
 
-.login-form-title {
-  font-family: 'Nunito Sans', sans-serif;
-  font-size: 1.6rem;
+.login-step h2 {
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.45rem;
   font-weight: 800;
-  color: #222;
-  margin: 0 0 0.3rem 0;
+  color: #eee;
+  margin: 0 0 0.35rem;
 }
 
-.login-form-subtitle {
+.login-step-lead {
   font-family: 'Nunito', sans-serif;
   font-size: 0.9rem;
-  color: #aaa;
-  margin: 0 0 1.75rem 0;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0 0 1.5rem;
+  line-height: 1.5;
+}
+
+.login-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.45);
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 1rem;
+  transition: color 0.15s;
+}
+
+.login-back:hover {
+  color: #ffb503;
 }
 
 .login-form {
@@ -124,73 +251,195 @@
 .login-field {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.35rem;
 }
 
 .login-field label {
-  font-family: 'Nunito', sans-serif;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #888;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.45);
 }
 
 .login-field input,
 .login-field select {
-  padding: 0.7rem 1rem;
-  border: 1.5px solid #e8e8e8;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
   font-family: 'Nunito', sans-serif;
   font-size: 0.95rem;
-  color: #333;
+  color: #eee;
+  background: rgba(255, 255, 255, 0.04);
   outline: none;
-  transition: border-color 0.2s;
-  background: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .login-field input::placeholder {
-  color: #ccc;
+  color: rgba(255, 255, 255, 0.25);
 }
 
 .login-field input:focus,
 .login-field select:focus {
-  border-color: #FFB503;
+  border-color: rgba(255, 181, 3, 0.55);
+  box-shadow: 0 0 0 3px rgba(255, 181, 3, 0.12);
 }
 
-.login-error {
-  padding: 0.6rem 1rem;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 10px;
-  color: #dc2626;
-  font-family: 'Nunito', sans-serif;
-  font-size: 0.85rem;
+.login-field select {
+  cursor: pointer;
 }
 
-.login-submit {
-  padding: 0.8rem;
-  background: linear-gradient(to right, #FFB503, #FF7B02);
-  color: white;
+.login-field select option {
+  background: #1a1a1a;
+  color: #eee;
+}
+
+.login-primary-btn {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  margin-top: 0.25rem;
   border: none;
   border-radius: 12px;
   font-family: 'Nunito Sans', sans-serif;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 700;
+  color: #161616;
+  background: linear-gradient(135deg, #ffb503 0%, #ff9a03 100%);
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s;
-  box-shadow: 0 4px 12px rgba(255, 123, 2, 0.25);
-  margin-top: 0.5rem;
+  box-shadow: 0 4px 16px rgba(255, 181, 3, 0.25);
 }
 
-.login-submit:hover:not(:disabled) {
+.login-primary-btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(255, 123, 2, 0.35);
+  box-shadow: 0 6px 20px rgba(255, 181, 3, 0.35);
 }
 
-.login-submit:disabled {
-  opacity: 0.7;
+.login-primary-btn:disabled {
+  opacity: 0.55;
   cursor: not-allowed;
+}
+
+.login-secondary-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #eee;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.login-secondary-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 181, 3, 0.35);
+}
+
+.login-link-btn {
+  display: block;
+  width: 100%;
+  margin-top: 1rem;
+  background: none;
+  border: none;
+  color: rgba(255, 181, 3, 0.85);
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  padding: 0.25rem;
+}
+
+.login-link-btn:hover:not(:disabled) {
+  color: #ffb503;
+}
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+  color: rgba(255, 255, 255, 0.3);
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.login-google-wrap {
+  display: flex;
+  justify-content: center;
+  min-height: 44px;
+}
+
+.login-google-btn {
+  display: flex;
+  justify-content: center;
+}
+
+.login-hint {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  margin: 0;
+}
+
+.login-error {
+  margin-top: 1rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 10px;
+  background: rgba(220, 38, 38, 0.12);
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  color: #fca5a5;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.login-info {
+  margin-top: 1rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 10px;
+  background: rgba(255, 181, 3, 0.1);
+  border: 1px solid rgba(255, 181, 3, 0.25);
+  color: #ffd86a;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.login-dev-code {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  border: 1px dashed rgba(255, 181, 3, 0.35);
+}
+
+.login-dev-code strong {
+  color: #ffb503;
+  letter-spacing: 0.15em;
 }
 
 .login-switch {
@@ -201,41 +450,63 @@
 .login-switch p {
   font-family: 'Nunito', sans-serif;
   font-size: 0.85rem;
-  color: #aaa;
+  color: rgba(255, 255, 255, 0.45);
   margin: 0;
 }
 
 .login-switch button {
   background: none;
   border: none;
-  color: #FFB503;
+  color: #ffb503;
   font-weight: 700;
   cursor: pointer;
   font-family: 'Nunito', sans-serif;
   font-size: 0.85rem;
   padding: 0;
-  transition: color 0.2s;
+  transition: color 0.15s;
 }
 
 .login-switch button:hover {
-  color: #FF7B02;
+  color: #ffd86a;
 }
 
 /* Responsive */
-@media (max-width: 700px) {
-  .login-container {
-    flex-direction: column;
+@media (max-width: 860px) {
+  .login-shell {
+    grid-template-columns: 1fr;
+    max-width: 480px;
   }
 
-  .login-left {
-    padding: 2rem 2rem 1.5rem;
+  .login-hero {
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 1.75rem 1.5rem 1.25rem;
   }
 
-  .login-features {
+  .login-feature-list {
     display: none;
   }
 
-  .login-right {
-    padding: 2rem;
+  .login-map-preview {
+    height: 96px;
+  }
+
+  .login-panel {
+    padding: 1.75rem 1.5rem 2rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .login-page--v2 {
+    padding: 0.75rem;
+  }
+
+  .login-shell {
+    border-radius: 16px;
+    min-height: auto;
+  }
+
+  .login-hero-badges {
+    display: none;
   }
 }
