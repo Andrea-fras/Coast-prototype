@@ -125,6 +125,96 @@ function computeCellSize(tileCount, vpW, vpH) {
   return Math.min(24, Math.max(8, Math.ceil(minMapPx / tileCount)));
 }
 
+function getUnlockedTileBounds(unlocked) {
+  if (!unlocked?.size) return null;
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const key of unlocked) {
+    const [xs, ys] = key.split(',');
+    const x = Number(xs);
+    const y = Number(ys);
+    if (Number.isNaN(x) || Number.isNaN(y)) continue;
+    minX = Math.min(minX, x);
+    minY = Math.min(minY, y);
+    maxX = Math.max(maxX, x);
+    maxY = Math.max(maxY, y);
+  }
+  if (!Number.isFinite(minX)) return null;
+  return {
+    minX,
+    minY,
+    maxX,
+    maxY,
+    cx: (minX + maxX) / 2,
+    cy: (minY + maxY) / 2,
+    halfW: Math.max(1, (maxX - minX) / 2),
+    halfH: Math.max(1, (maxY - minY) / 2),
+  };
+}
+
+/** Frame cinematic drift to charted waters — tighter when little is unlocked. */
+function computeCinematicFraming(unlocked, vp, cell, featherPad = 3) {
+  const bounds = getUnlockedTileBounds(unlocked);
+  const fallbackOrigin = { x: 72, y: 79 };
+  if (!bounds || !vp?.clientWidth) {
+    return {
+      origin: fallbackOrigin,
+      roamX: 2.5,
+      roamY: 2.5,
+      minX: fallbackOrigin.x - 5,
+      maxX: fallbackOrigin.x + 5,
+      minY: fallbackOrigin.y - 5,
+      maxY: fallbackOrigin.y + 5,
+      zoomMin: 2.05,
+      zoomMax: 2.45,
+    };
+  }
+
+  const pad = featherPad;
+  const minX = bounds.minX - pad;
+  const maxX = bounds.maxX + pad;
+  const minY = bounds.minY - pad;
+  const maxY = bounds.maxY + pad;
+  const spanX = maxX - minX + 1;
+  const spanY = maxY - minY + 1;
+
+  const fitZoomX = vp.clientWidth / (cell * spanX * 1.08);
+  const fitZoomY = vp.clientHeight / (cell * spanY * 1.08);
+  const zoomMax = Math.min(MAX_ZOOM, Math.max(1.4, Math.min(fitZoomX, fitZoomY)));
+  const zoomMin = Math.min(zoomMax, Math.max(1.25, zoomMax * 0.9));
+
+  return {
+    origin: { x: bounds.cx, y: bounds.cy },
+    roamX: Math.max(1.5, bounds.halfW * 0.3),
+    roamY: Math.max(1.5, bounds.halfH * 0.3),
+    minX,
+    maxX,
+    minY,
+    maxY,
+    zoomMin,
+    zoomMax,
+  };
+}
+
+function clampCameraCenter(cx, cy, z, vp, cell, minX, maxX, minY, maxY) {
+  const halfVpTx = (vp.clientWidth / 2) / (cell * z);
+  const halfVpTy = (vp.clientHeight / 2) / (cell * z);
+  const slack = 0.88;
+  const loX = minX + halfVpTx * slack;
+  const hiX = maxX - halfVpTx * slack;
+  const loY = minY + halfVpTy * slack;
+  const hiY = maxY - halfVpTy * slack;
+  let x = cx;
+  let y = cy;
+  if (loX <= hiX) x = Math.max(loX, Math.min(hiX, x));
+  else x = (minX + maxX) / 2;
+  if (loY <= hiY) y = Math.max(loY, Math.min(hiY, y));
+  else y = (minY + maxY) / 2;
+  return { cx: x, cy: y };
+}
+
 function refreshUnlockCache(mapJson, world, unlockedRef, fogFeatherRef) {
   // Unlock blooms from the world's own harbor origin — the backend grid
   // (size/origin) may differ from the generated world, so only its
@@ -547,8 +637,7 @@ export default function WorldMap({
   }, [move, focusSession]);
 
   // ── Cinematic camera while a focus session is active ──
-  // Slowly drifts and breathes around the home island on a smooth,
-  // never-quite-repeating path (incommensurate sine frequencies).
+  // Drifts within charted waters; framing tightens when little is unlocked.
   useEffect(() => {
     if (!focusSession || loading || !data) return undefined;
     const vp = viewportRef.current;
@@ -557,20 +646,28 @@ export default function WorldMap({
     closeTileInspect();
     const saved = { pan: { ...panRef.current }, zoom: zoomRef.current };
     const cell = cellRef.current;
-    const world = worldRef.current;
-    const camOrigin = world?.origin || { x: 72, y: 79 };
-    const roamX = (world?.size || 144) * 0.18;
-    const roamY = (world?.size || 144) * 0.13;
+    const framing = computeCinematicFraming(unlockedRef.current, vp, cell);
+    const {
+      origin: camOrigin,
+      roamX,
+      roamY,
+      minX,
+      maxX,
+      minY,
+      maxY,
+      zoomMin,
+      zoomMax,
+    } = framing;
     const start = performance.now();
     let frame;
 
     const tick = (now) => {
       const t = (now - start) / 1000;
-      // Ease from the user's current camera into the cinematic path
       const blend = Math.min(1, t / 3.5);
       const e = blend * blend * (3 - 2 * blend);
 
-      const cinZoom = 1.78 + 0.32 * Math.sin(t * 0.045 + 0.8);
+      const breath = 0.5 + 0.5 * Math.sin(t * 0.045 + 0.8);
+      const cinZoom = zoomMin + (zoomMax - zoomMin) * breath;
       const cinX = camOrigin.x + roamX * Math.sin(t * 0.037);
       const cinY = camOrigin.y + roamY * Math.sin(t * 0.029 + 1.9);
 
@@ -578,12 +675,21 @@ export default function WorldMap({
       const savedCy = (saved.pan.y + vp.clientHeight / 2) / saved.zoom / cell;
 
       const z = saved.zoom + (cinZoom - saved.zoom) * e;
-      const cx = savedCx + (cinX - savedCx) * e;
-      const cy = savedCy + (cinY - savedCy) * e;
+      const blended = clampCameraCenter(
+        savedCx + (cinX - savedCx) * e,
+        savedCy + (cinY - savedCy) * e,
+        z,
+        vp,
+        cell,
+        minX,
+        maxX,
+        minY,
+        maxY,
+      );
 
       const p = clampPan(
-        cx * cell * z - vp.clientWidth / 2,
-        cy * cell * z - vp.clientHeight / 2,
+        blended.cx * cell * z - vp.clientWidth / 2,
+        blended.cy * cell * z - vp.clientHeight / 2,
         z,
       );
       zoomRef.current = z;

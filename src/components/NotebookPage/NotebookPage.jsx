@@ -9,6 +9,7 @@ import FolderView from './FolderView';
 import LessonView from './LessonView';
 import DocumentViewer from './DocumentViewer';
 import CupBadge from './CupBadge';
+import PremadeLessonsPanel from './PremadeLessonsPanel';
 import { API_URL } from '../../config';
 import {
   computeFolderProgress,
@@ -226,13 +227,23 @@ const NotebookPage = ({ onClose }) => {
   }, [folderLessonMeta]);
 
   const inLibrary = !selectedFolder && !activeLessonFolder && !activeDocument;
+  const showAmbients = !activeLessonFolder && !activeDocument;
 
   return (
     <div className="notebook-page notebook-page--v2 dark">
+      {showAmbients && (
+        <>
+          <div className="nb-v2-ambient-light nb-v2-ambient-light--a" aria-hidden="true" />
+          <div className="nb-v2-ambient-light nb-v2-ambient-light--b" aria-hidden="true" />
+        </>
+      )}
       {inLibrary && (
-        <button type="button" className="nb-close-btn" onClick={onClose} aria-label="Close lessons">
-          <X size={28} />
-        </button>
+        <>
+          <button type="button" className="nb-close-btn" onClick={onClose} aria-label="Close lessons">
+            <X size={28} />
+          </button>
+          <CupBadge count={cupCount} className="nb-v2-cups" />
+        </>
       )}
 
       {activeLessonFolder ? (
@@ -278,7 +289,7 @@ const NotebookPage = ({ onClose }) => {
           onOpenDocument={(src) => setActiveDocument({ folderName: selectedFolder, source: src })}
         />
       ) : (
-        <div className="nb-v2-shell">
+        <div className={`nb-v2-shell${sidebarTab === 'lessons' ? ' nb-v2-shell--premade' : ''}`}>
           <header className="nb-v2-topbar">
             <nav className="nb-v2-tabs" aria-label="Lesson library">
               <button
@@ -296,52 +307,15 @@ const NotebookPage = ({ onClose }) => {
                 Premade Lessons
               </button>
             </nav>
-            <CupBadge count={cupCount} className="nb-v2-cups" />
           </header>
 
           <div className="nb-v2-panel" key={`${sidebarTab}-${tabAnimKey}`}>
             {sidebarTab === 'lessons' ? (
-              <div className="nb-v2-premade">
-                {visibleCurated.length === 0 ? (
-                  <div className="nb-v2-empty">
-                    <img src={trophyIcon} alt="" className="nb-v2-empty-icon-img" />
-                    <h2>Premade lessons coming soon</h2>
-                    <p>
-                      Curated courses will be available here. Each mastered lesson earns you
-                      {' '}<strong>1 cup</strong> — spend cups to unlock premade deep dives.
-                    </p>
-                    <p className="nb-v2-empty-sub">
-                      You have <strong>{cupCount}</strong> cup{cupCount === 1 ? '' : 's'}.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="nb-v2-card-grid">
-                    {visibleCurated.map(cl => (
-                      <button
-                        key={cl.id}
-                        type="button"
-                        className="nb-course-card nb-course-card--curated"
-                        onClick={() => handleOpenFolder(cl.folderName)}
-                      >
-                        <div className="nb-course-card-body">
-                          <div className="nb-course-card-text">
-                            <h3 className="nb-course-card-title">{cl.title}</h3>
-                            <p className="nb-course-card-meta">{cl.course}</p>
-                          </div>
-                          {(cl.cupCost ?? 0) > 0 ? (
-                            <span className="nb-course-card-cost">
-                              <img src={trophyIcon} alt="" className="nb-course-card-cost-icon" />
-                              {cl.cupCost}
-                            </span>
-                          ) : (
-                            <span className="nb-course-card-free">Free</span>
-                          )}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <PremadeLessonsPanel
+                lessons={visibleCurated}
+                cupCount={cupCount}
+                onOpenFolder={handleOpenFolder}
+              />
             ) : (
               <>
                 {showNewFolderInput && (

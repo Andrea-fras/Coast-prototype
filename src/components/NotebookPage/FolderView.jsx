@@ -225,13 +225,12 @@ const FolderView = ({
         onChange={handleUploadToFolder}
       />
 
-      <header className="fv-v2-topbar">
-        <button type="button" className="fv-v2-back" onClick={onClose}>
-          <ArrowLeft size={20} className="fv-v2-back-arrow" />
-          <span>Back to library</span>
-        </button>
-        <CupBadge count={cupCount} />
-      </header>
+      <button type="button" className="fv-v2-back" onClick={onClose}>
+        <ArrowLeft size={20} className="fv-v2-back-arrow" />
+        <span>Back to library</span>
+      </button>
+
+      <CupBadge count={cupCount} className="nb-v2-cups" />
 
       <div className="fv-v2-body">
         {isCurated && curatedMeta ? (

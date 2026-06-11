@@ -5,7 +5,8 @@
     "title": "The Prismatic System",
     "course": "Logic & Reasoning",
     "cupCost": 0,
-    "description": "The Prismatic System is a compact formal symbolic language built from four layers — elements, binding, folding, and chains. Each layer introduces new rules that depend on everything before it, making it an excellent test of logical reasoning and step-by-step problem solving.",
+    "featured": false,
+    "description": "The Prismatic System is a compact formal symbolic language built from four layers: elements, binding, folding, and chains. Each layer introduces new rules that depend on everything before it, making it an excellent test of logical reasoning and step-by-step problem solving.",
     "studyNote": "This course was used in the original Coast learning study. Work through the four layers in order; each section maps directly to one lecture.",
     "highlights": [
       {
@@ -32,7 +33,8 @@
     "title": "The Science of Cooking",
     "course": "Chemistry & Physics",
     "cupCost": 0,
-    "description": "A four-lecture deep dive into the chemistry and physics behind everyday cooking — from the Maillard reaction and emulsification to gluten networks and the thermodynamics of bread rising. Inspired by Harvard's Science and Cooking curriculum.",
+    "featured": true,
+    "description": "A four-lecture deep dive into the chemistry and physics behind everyday cooking, from the Maillard reaction and emulsification to gluten networks and the thermodynamics of bread rising. Inspired by Harvard's Science and Cooking curriculum.",
     "studyNote": "Work through the four lectures in order. Each section covers one lecture and its interactive kitchen diagnostics.",
     "highlights": [
       {
@@ -50,6 +52,90 @@
       {
         "label": "Lecture 4 · Leavening",
         "desc": "Fermentation, gas laws, and why bread rises"
+      }
+    ]
+  },
+  {
+    "id": "memory-palace",
+    "folderName": "Memory Palace",
+    "title": "The Memory Palace",
+    "course": "Study Skills",
+    "cupCost": 0,
+    "featured": true,
+    "description": "Before paper, before printing, before phones, the people who built our civilisations held entire libraries in their heads. They were not smarter than you. They had a technique, and they treated memory as a craft. This lesson is that craft, rebuilt for one evening of your time.",
+    "studyNote": "Work through the five sections in order. You will build and walk your own palace before the lesson ends.",
+    "highlights": [
+      {
+        "label": "Module 1 · Simonides",
+        "desc": "The 477 BC banquet story that invented the method of loci"
+      },
+      {
+        "label": "Modules 4–5 · Build & Encode",
+        "desc": "Choose your route and learn the absurd, sensory encoding rules"
+      },
+      {
+        "label": "Modules 6–7 · Practice",
+        "desc": "Place ten items and walk your palace until recall is effortless"
+      },
+      {
+        "label": "Module 9 · Real Studying",
+        "desc": "Apply the palace to vocabulary, formulas, speeches, and exams"
+      }
+    ]
+  },
+  {
+    "id": "first-principles-thinking",
+    "folderName": "First-Principles Thinking",
+    "title": "First-Principles Thinking",
+    "course": "Thinking Tools",
+    "cupCost": 0,
+    "featured": true,
+    "description": "Most people reason by analogy: they copy what worked before and hope it works again. The few who break problems apart until only facts remain see what everyone else missed. That habit has a name, and it is older than any startup pitch deck. This lesson teaches you to reach for it on purpose.",
+    "studyNote": "Work through the four sections in order. Each builds a step of the method, ending with problems you bring from your own studies.",
+    "highlights": [
+      {
+        "label": "Section 1 · The Habit",
+        "desc": "Analogy vs first principles, and why defaults hide bad assumptions"
+      },
+      {
+        "label": "Section 2 · Strip to Facts",
+        "desc": "Separate what you know, what you assume, and what you are guessing"
+      },
+      {
+        "label": "Section 3 · Rebuild",
+        "desc": "Construct answers from verified pieces instead of inherited templates"
+      },
+      {
+        "label": "Section 4 · Under Pressure",
+        "desc": "Apply the method to exam questions, essays, and open-ended problems"
+      }
+    ]
+  },
+  {
+    "id": "polya-method",
+    "folderName": "The Polya Method",
+    "title": "The Polya Method",
+    "course": "Problem Solving",
+    "cupCost": 0,
+    "featured": true,
+    "description": "When students at Stanford were stuck on a problem, George Polya did not give them the answer. He gave them four questions to ask in order, until the answer assembled itself. Mathematicians have used his method for eighty years. This lesson is that sequence, rebuilt so you can run it on any problem you face.",
+    "studyNote": "Work through the four phases in order: understand, plan, execute, and look back. Pedro will walk you through each stage with practice problems.",
+    "highlights": [
+      {
+        "label": "Phase 1 · Understand",
+        "desc": "Restate the problem, identify unknowns, and check you really grasp the goal"
+      },
+      {
+        "label": "Phase 2 · Plan",
+        "desc": "Connect the problem to tools you know and choose a strategy before calculating"
+      },
+      {
+        "label": "Phase 3 · Execute",
+        "desc": "Carry out the plan step by step and track whether each step still makes sense"
+      },
+      {
+        "label": "Phase 4 · Look Back",
+        "desc": "Verify the result, reflect on the method, and generalize what you learned"
       }
     ]
   }

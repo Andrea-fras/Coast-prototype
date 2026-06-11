@@ -829,51 +829,56 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
 
           {/* Chat Messages */}
           <div className="lv-chat-area" ref={chatAreaRef}>
-            {viewingLoading ? (
-              <div className="lv-loading" style={{ padding: '2rem' }}>
-                <Loader size={22} className="spinning" />
-                <span>Loading section history...</span>
-              </div>
-            ) : (
-              <>
-                {displayMessages.map((msg, i) => (
-                  <div key={i} className={`lv-chat-msg ${msg.role}`}>
-                    {msg.role === 'pedro' && (
-                      <img src={mascot} alt="" className="lv-msg-avatar" />
-                    )}
-                    <div className="lv-msg-bubble">
-                      {msg.role === 'pedro' ? (
-                        <PedroMessage text={msg.content} />
-                      ) : (
-                        <div className="lv-msg-user-text">{msg.content}</div>
+            <div className="lv-chat-scroll-inner">
+              {viewingLoading ? (
+                <div className="lv-loading" style={{ padding: '2rem' }}>
+                  <Loader size={22} className="spinning" />
+                  <span>Loading section history...</span>
+                </div>
+              ) : (
+                <>
+                  {displayMessages.map((msg, i) => {
+                    if (msg.role === 'pedro' && !msg.content?.trim()) return null;
+                    return (
+                    <div key={i} className={`lv-chat-msg ${msg.role}`}>
+                      {msg.role === 'pedro' && (
+                        <img src={mascot} alt="" className="lv-msg-avatar" />
                       )}
+                      <div className="lv-msg-bubble">
+                        {msg.role === 'pedro' ? (
+                          <PedroMessage text={msg.content} />
+                        ) : (
+                          <div className="lv-msg-user-text">{msg.content}</div>
+                        )}
+                      </div>
+                    </div>
+                    );
+                  })}
+
+                  {/* Viewing past feedback */}
+                  {isViewingPast && viewingFeedback && (
+                    <FeedbackCard feedback={viewingFeedback} />
+                  )}
+
+                  {isViewingPast && viewingChat.length === 0 && !viewingLoading && (
+                    <div className="lv-empty-history">
+                      <span>No chat history saved for this section.</span>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {!isViewingPast && chatLoading && !reviewStreaming && (
+                <div className="lv-chat-msg pedro">
+                  <img src={mascot} alt="" className="lv-msg-avatar" />
+                  <div className="lv-msg-bubble">
+                    <div className="lv-typing">
+                      <span></span><span></span><span></span>
                     </div>
                   </div>
-                ))}
-
-                {/* Viewing past feedback */}
-                {isViewingPast && viewingFeedback && (
-                  <FeedbackCard feedback={viewingFeedback} />
-                )}
-
-                {isViewingPast && viewingChat.length === 0 && !viewingLoading && (
-                  <div className="lv-empty-history">
-                    <span>No chat history saved for this section.</span>
-                  </div>
-                )}
-              </>
-            )}
-
-            {!isViewingPast && chatLoading && !reviewStreaming && (
-              <div className="lv-chat-msg pedro">
-                <img src={mascot} alt="" className="lv-msg-avatar" />
-                <div className="lv-msg-bubble">
-                  <div className="lv-typing">
-                    <span></span><span></span><span></span>
-                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Retry bar */}
@@ -954,29 +959,39 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
 
           {/* Input */}
           {(!isComplete || isReviewMode) && !isViewingPast && (
-            <div className="lv-input-row">
-              <textarea
-                ref={inputRef}
-                className="lv-input"
-                placeholder={reviewStreaming ? 'Generating review...' : 'Type your response...'}
-                value={chatInput}
-                onChange={e => {
-                  setChatInput(e.target.value);
-                  e.target.style.height = 'auto';
-                  e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
-                }}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSend();
-                  }
-                }}
-                disabled={chatLoading || reviewStreaming}
-                rows={1}
-              />
-              <button className="lv-send-btn" onClick={handleSend} disabled={chatLoading || reviewStreaming || !chatInput.trim()}>
-                <Send size={16} />
-              </button>
+            <div className="lv-composer">
+              <div className="lv-input-shell">
+                <textarea
+                  ref={inputRef}
+                  className="lv-input"
+                  placeholder={reviewStreaming ? 'Generating review...' : 'Write a message...'}
+                  value={chatInput}
+                  onChange={e => {
+                    setChatInput(e.target.value);
+                    e.target.style.height = 'auto';
+                    e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                  }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
+                  disabled={chatLoading || reviewStreaming}
+                  rows={1}
+                />
+                <div className="lv-composer-actions">
+                  <button
+                    type="button"
+                    className="lv-send-btn"
+                    onClick={handleSend}
+                    disabled={chatLoading || reviewStreaming || !chatInput.trim()}
+                    aria-label="Send message"
+                  >
+                    <Send size={16} />
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>

@@ -4,6 +4,10 @@
    ═══════════════════════════════════════════════════════ */
 
 .notebook-page.notebook-page--v2 {
+  position: relative;
+  isolation: isolate;
+  height: 100dvh;
+  max-height: 100dvh;
   background: #161616;
   background-color: #161616;
   padding: 0;
@@ -11,16 +15,132 @@
 }
 
 .notebook-page.notebook-page--v2::before {
-  display: none !important;
-  background: none !important;
-  background-image: none !important;
-  opacity: 0 !important;
-  content: none !important;
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 31px,
+      rgba(255, 255, 255, 0.025) 31px,
+      rgba(255, 255, 255, 0.025) 32px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 31px,
+      rgba(255, 255, 255, 0.025) 31px,
+      rgba(255, 255, 255, 0.025) 32px
+    );
+}
+
+.nb-v2-ambient-light {
+  position: absolute;
+  inset: -40%;
+  z-index: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.nb-v2-ambient-light--a {
+  background: radial-gradient(ellipse 32% 30% at 50% 50%, rgba(255, 181, 3, 0.085), transparent 72%);
+  animation: nbAmbientGlowA 46s ease-in-out infinite;
+}
+
+.nb-v2-ambient-light--b {
+  background: radial-gradient(ellipse 30% 28% at 50% 50%, rgba(255, 145, 30, 0.1), transparent 70%);
+  animation: nbAmbientGlowB 58s ease-in-out infinite;
+  animation-delay: -29s;
+}
+
+@keyframes nbAmbientGlowA {
+  0% {
+    transform: translate(-36%, -32%) scale(1);
+  }
+  20% {
+    transform: translate(-34%, 6%) scale(1.05);
+  }
+  40% {
+    transform: translate(-30%, 34%) scale(0.98);
+  }
+  55% {
+    transform: translate(-14%, 12%) scale(1.03);
+  }
+  70% {
+    transform: translate(-32%, -8%) scale(1.02);
+  }
+  85% {
+    transform: translate(-36%, 22%) scale(0.97);
+  }
+  100% {
+    transform: translate(-36%, -32%) scale(1);
+  }
+}
+
+@keyframes nbAmbientGlowB {
+  0% {
+    transform: translate(36%, 32%) scale(1.03);
+  }
+  20% {
+    transform: translate(34%, -6%) scale(0.96);
+  }
+  40% {
+    transform: translate(30%, -34%) scale(1.05);
+  }
+  55% {
+    transform: translate(14%, -12%) scale(1.02);
+  }
+  70% {
+    transform: translate(32%, 8%) scale(0.98);
+  }
+  85% {
+    transform: translate(36%, -22%) scale(1.04);
+  }
+  100% {
+    transform: translate(36%, 32%) scale(1.03);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nb-v2-ambient-light {
+    animation: none;
+    inset: 0;
+  }
+
+  .nb-v2-ambient-light--a {
+    background: radial-gradient(ellipse 80% 55% at 6% 0%, rgba(255, 181, 3, 0.05), transparent);
+  }
+
+  .nb-v2-ambient-light--b {
+    background: radial-gradient(ellipse 55% 40% at 92% 88%, rgba(255, 145, 30, 0.045), transparent);
+  }
+}
+
+.notebook-page.notebook-page--v2 > *:not(.nb-close-btn):not(.nb-v2-cups):not(.nb-v2-ambient-light):not(.lv-container) {
+  position: relative;
+  z-index: 1;
+}
+
+/* LessonView must stay fixed — do not inherit relative positioning from shell children rule */
+.notebook-page.notebook-page--v2 > .lv-container.lv-container--fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 6000;
+}
+
+.notebook-page.notebook-page--v2 > .nb-v2-shell {
+  height: 100%;
+  max-height: 100dvh;
 }
 
 .notebook-page.notebook-page--v2 .nb-close-btn {
+  position: absolute;
   top: 1.25rem;
   left: 1.25rem;
+  z-index: 10;
   color: rgba(255, 255, 255, 0.55);
 }
 
@@ -44,14 +164,15 @@
 .nb-v2-shell {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
   width: 100%;
   max-width: 1100px;
   margin: 0 auto;
-  padding: 4.5rem 2rem 2rem;
+  padding: 4.5rem 2rem 0;
   box-sizing: border-box;
   overflow: hidden;
-  background: #161616;
+  background: transparent;
 }
 
 .nb-v2-topbar {
@@ -91,11 +212,14 @@
   transform: scale(1.02);
 }
 
-.nb-v2-cups {
+.notebook-page.notebook-page--v2 .nb-v2-cups {
   position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 10;
+  padding: 0.5rem;
+  margin: 0;
+  transform: none;
 }
 
 .nb-cup-badge {
@@ -122,10 +246,35 @@
 }
 
 .nb-v2-panel {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
-  padding-bottom: 2rem;
+  padding-bottom: max(2rem, env(safe-area-inset-bottom, 0px));
   animation: nbTabBounce 0.48s cubic-bezier(0.34, 1.45, 0.64, 1);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+.notebook-page.notebook-page--v2 .nb-v2-panel::-webkit-scrollbar {
+  width: 4px;
+}
+
+.notebook-page.notebook-page--v2 .nb-v2-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.notebook-page.notebook-page--v2 .nb-v2-panel::-webkit-scrollbar-thumb {
+  min-height: 28px;
+  background: rgba(255, 255, 255, 0.08);
+  background-clip: padding-box;
+  border: 8px solid transparent;
+  border-radius: 999px;
+}
+
+.notebook-page.notebook-page--v2 .nb-v2-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.14);
+  background-clip: padding-box;
 }
 
 @keyframes nbTabBounce {
@@ -520,6 +669,234 @@
   color: rgba(255, 255, 255, 0.45);
 }
 
+/* ── Premade lessons — recommended + genre ── */
+
+.nb-v2-shell--premade {
+  max-width: 1280px;
+  padding-left: 2.5rem;
+  padding-right: 2.5rem;
+}
+
+.nb-v2-shell--premade .nb-v2-panel {
+  padding-bottom: max(2.5rem, env(safe-area-inset-bottom, 0px));
+}
+
+.nb-v2-premade {
+  display: flex;
+  flex-direction: column;
+  gap: 2.75rem;
+  min-height: min-content;
+  padding-bottom: 0.5rem;
+}
+
+.nb-premade-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.nb-premade-section-title {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.88);
+  margin: 0;
+}
+
+.nb-premade-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.65rem;
+  align-items: start;
+}
+
+.nb-premade-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  text-align: left;
+  width: 100%;
+  padding: 1.2rem 1.2rem 1.3rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  background: rgb(20 20 20 / 85%);
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nb-premade-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 181, 3, 0.28);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
+}
+
+.nb-premade-card-badge {
+  align-self: flex-start;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 0.22rem 0.55rem;
+  margin-bottom: 0.7rem;
+}
+
+.nb-premade-card-badge--paid {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #ffb503;
+  border-color: rgba(255, 181, 3, 0.25);
+  background: rgba(255, 181, 3, 0.08);
+}
+
+.nb-premade-card-badge--paid img {
+  width: 14px;
+  height: 13px;
+}
+
+.nb-premade-card-title {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 0.3rem;
+  line-height: 1.28;
+}
+
+.nb-premade-card-course {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.42);
+  margin: 0 0 1.05rem;
+  line-height: 1.32;
+}
+
+.nb-premade-card-cover {
+  width: 100%;
+  aspect-ratio: 5 / 6;
+  border-radius: 18px;
+  margin-bottom: 1.05rem;
+  overflow: hidden;
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.nb-premade-card-cover-frame {
+  width: 100%;
+  aspect-ratio: 5 / 6;
+  border-radius: 18px;
+  margin-bottom: 1.05rem;
+  overflow: hidden;
+  background: #0a0a0a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.nb-premade-card-cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 18px;
+}
+
+.nb-premade-card-cover--prismatic-system {
+  background:
+    linear-gradient(135deg, rgba(255, 120, 40, 0.9) 0%, transparent 45%),
+    linear-gradient(225deg, rgba(140, 80, 255, 0.85) 0%, transparent 50%),
+    linear-gradient(315deg, rgba(60, 180, 255, 0.75) 0%, transparent 55%),
+    radial-gradient(circle at 50% 55%, rgba(255, 200, 80, 0.35), transparent 55%),
+    #0a0a12;
+}
+
+.nb-premade-card-cover--science-of-cooking {
+  background:
+    radial-gradient(circle at 30% 70%, rgba(255, 140, 40, 0.55), transparent 50%),
+    radial-gradient(circle at 75% 25%, rgba(255, 220, 120, 0.4), transparent 45%),
+    linear-gradient(160deg, #2a1510 0%, #1a1008 100%);
+}
+
+.nb-premade-card-cover--memory-palace {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 40%, rgba(120, 160, 255, 0.35), transparent),
+    radial-gradient(circle at 20% 80%, rgba(255, 181, 3, 0.2), transparent 50%),
+    linear-gradient(180deg, #1a1a2e 0%, #0d0d18 100%);
+}
+
+.nb-premade-card-cover--first-principles-thinking {
+  background:
+    radial-gradient(circle at 25% 30%, rgba(255, 181, 3, 0.45), transparent 55%),
+    radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.08), transparent 50%),
+    linear-gradient(145deg, #1c1408 0%, #0a0a0a 100%);
+}
+
+.nb-premade-card-cover--polya-method {
+  background:
+    radial-gradient(ellipse 70% 55% at 60% 35%, rgba(100, 160, 255, 0.4), transparent),
+    radial-gradient(circle at 15% 75%, rgba(255, 120, 60, 0.25), transparent 45%),
+    linear-gradient(160deg, #101820 0%, #080c10 100%);
+}
+
+.nb-premade-card-about {
+  flex: 1;
+  min-height: 0;
+}
+
+.nb-premade-card-about-label {
+  display: block;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.88);
+  margin-bottom: 0.4rem;
+}
+
+.nb-premade-card-about p {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.78rem;
+  line-height: 1.58;
+  color: rgba(255, 255, 255, 0.48);
+  margin: 0;
+}
+
+.nb-premade-genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-bottom: 0.55rem;
+}
+
+.nb-premade-genre {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 0.45rem 1rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.nb-premade-genre:hover {
+  color: rgba(255, 255, 255, 0.75);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.nb-premade-genre.active {
+  color: #161616;
+  background: rgba(255, 255, 255, 0.92);
+  border-color: transparent;
+}
+
 @media (max-width: 640px) {
   .nb-v2-shell {
     padding: 4rem 1rem 1.5rem;
@@ -545,5 +922,15 @@
   .nb-continue-hero-btn {
     width: 100%;
     text-align: center;
+  }
+
+  .nb-v2-shell--premade {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .nb-premade-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.35rem;
   }
 }

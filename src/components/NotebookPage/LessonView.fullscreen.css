@@ -9,6 +9,16 @@
   z-index: 6000;
   border-radius: 0;
   background: #161616;
+  isolation: isolate;
+}
+
+.lv-container--fullscreen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #161616;
+  z-index: -1;
+  pointer-events: none;
 }
 
 .lv-container--fullscreen .lv-loading {
@@ -83,12 +93,105 @@
   color: #fff;
 }
 
+.lv-container--fullscreen .lv-body {
+  background: #161616;
+  flex: 1;
+  min-height: 0;
+}
+
 .lv-container--fullscreen .lv-main {
   background: #161616;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .lv-container--fullscreen .lv-chat-area {
   background: #161616;
+  flex: 1;
+  min-height: 0;
+  padding-bottom: 0.75rem;
+}
+
+.lv-container--fullscreen .lv-composer {
+  flex-shrink: 0;
+  padding: 0 1.25rem max(1.25rem, env(safe-area-inset-bottom, 0px));
+  max-width: 820px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  background: #161616;
+}
+
+.lv-container--fullscreen .lv-input-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.95rem 1rem 0.85rem;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgb(38 38 38);
+  transition: border-color 0.2s ease;
+}
+
+.lv-container--fullscreen .lv-input-shell:focus-within {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.lv-container--fullscreen .lv-composer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.lv-container--fullscreen .lv-input-row {
+  background: transparent;
+  border-top: none;
+  padding: 0;
+}
+
+.lv-container--fullscreen .lv-input {
+  background: transparent;
+  border: none;
+  color: #fff;
+  padding: 0;
+  min-height: 1.5rem;
+  box-shadow: none;
+  resize: none;
+}
+
+.lv-container--fullscreen .lv-input:focus {
+  border: none;
+  box-shadow: none;
+  outline: none;
+}
+
+.lv-container--fullscreen .lv-input::placeholder {
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.lv-container--fullscreen .lv-send-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.lv-container--fullscreen .lv-send-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.lv-container--fullscreen .lv-send-btn:not(:disabled) {
+  background: rgba(255, 181, 3, 0.18);
+  color: #ffb503;
+}
+
+.lv-container--fullscreen .lv-send-btn:not(:disabled):hover {
+  background: rgba(255, 181, 3, 0.28);
+  color: #ffc933;
 }
 
 .lv-container--fullscreen .lv-msg-user-text {
@@ -99,21 +202,6 @@
   background: #1a1a1a;
   border-color: rgba(255, 255, 255, 0.06);
   color: rgba(255, 255, 255, 0.9);
-}
-
-.lv-container--fullscreen .lv-input-row {
-  background: #111;
-  border-top-color: rgba(255, 255, 255, 0.08);
-}
-
-.lv-container--fullscreen .lv-input {
-  background: #1a1a1a;
-  border-color: rgba(255, 255, 255, 0.1);
-  color: #fff;
-}
-
-.lv-container--fullscreen .lv-input::placeholder {
-  color: rgba(255, 255, 255, 0.3);
 }
 
 .lv-section-banner--compact {
@@ -193,10 +281,8 @@
     width: 100%;
   }
 
-  .lv-container--fullscreen .lv-input-row {
+  .lv-container--fullscreen .lv-composer {
     max-width: 820px;
-    margin: 0 auto;
-    width: 100%;
   }
 
   .lv-container--fullscreen .lv-notes-panel {
