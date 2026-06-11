@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   ArrowLeft, Loader, FileText, Upload, Clock, Sparkles, Play,
   CheckCircle, RotateCcw, File, Trash2, Presentation,
@@ -7,6 +7,8 @@ import { useAuth } from '../../context/AuthContext';
 import { API_URL } from '../../config';
 import { fetchWithRetry } from '../../utils/fetchWithRetry';
 import CupBadge from './CupBadge';
+import ArchipelagoRoadmap from './ArchipelagoRoadmap';
+import TestOutModal from './TestOutModal';
 import './FolderView.css';
 import './FolderView.v2.css';
 
@@ -32,6 +34,7 @@ const FolderView = ({
   const [generateError, setGenerateError] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState('');
+  const [testOutIndex, setTestOutIndex] = useState(null);
   const prepareStartedRef = useRef(false);
 
   useEffect(() => {
@@ -196,6 +199,31 @@ const FolderView = ({
   const hasStarted = !!sessionStorage.getItem(`coast_lesson_chat_${folderName}`);
   const isInProgress = hasOutline && !isComplete && (currentSection > 0 || hasStarted);
 
+  const handleIslandClick = (index, state) => {
+    const prog = sectionProgress[index] || {};
+    const needsReview = prog.mastery_pct != null && prog.mastery_pct < 100;
+
+    if (state === 'locked') {
+      setTestOutIndex(index);
+      return;
+    }
+    if (needsReview && (prog.attempted || state === 'complete' || state === 'current')) {
+      onStartLesson?.(folderName, index, { review: true });
+      return;
+    }
+    if (state === 'complete') {
+      onStartLesson?.(folderName, index, { view: true });
+      return;
+    }
+    if (state === 'current') {
+      onStartLesson?.(folderName);
+    }
+  };
+
+  const handleTestOutPassed = useCallback(async () => {
+    await fetchLessonState();
+  }, [folderName, token]);
+
   useEffect(() => {
     if (!isCurated || lessonLoading) return undefined;
     if (sharedReady && hasOutline) return undefined;
@@ -351,37 +379,13 @@ const FolderView = ({
               </div>
             ) : (
               <>
-                <ul className="fv-v2-section-list">
-                  {sections.map((sec, i) => {
-                    const done = i < currentSection;
-                    const current = i === currentSection && !isComplete;
-                    const prog = sectionProgress[i] || {};
-                    const mastery = prog.mastery_pct;
-                    const needsReview = mastery != null && mastery < 100;
-                    const clickable = needsReview && (prog.attempted || done || current);
-
-                    return (
-                      <li
-                        key={i}
-                        className={`fv-v2-section-item${done ? ' done' : ''}${current ? ' current' : ''}${clickable ? ' clickable' : ''}`}
-                        onClick={clickable ? () => onStartLesson?.(folderName, i, { review: true }) : undefined}
-                        role={clickable ? 'button' : undefined}
-                        tabIndex={clickable ? 0 : undefined}
-                      >
-                        <span className="fv-v2-section-label">
-                          Section {i + 1} : {sec.title}
-                        </span>
-                        {mastery != null && (
-                          <span className={`fv-v2-section-mastery${mastery >= 100 ? ' mastered' : ''}`}>
-                            {mastery}%
-                          </span>
-                        )}
-                        {current && !isComplete && <span className="fv-v2-section-now">Current</span>}
-                        {done && !needsReview && <CheckCircle size={14} className="fv-v2-section-check" />}
-                      </li>
-                    );
-                  })}
-                </ul>
+                <ArchipelagoRoadmap
+                  sections={sections}
+                  currentSection={currentSection}
+                  isComplete={isComplete}
+                  sectionProgress={sectionProgress}
+                  onIslandClick={handleIslandClick}
+                />
 
                 <div className="fv-v2-roadmap-actions">
                   {!isComplete && (
@@ -425,6 +429,17 @@ const FolderView = ({
           </div>
         </section>
       </div>
+
+      {testOutIndex != null && sections[testOutIndex] && (
+        <TestOutModal
+          folderName={folderName}
+          targetIndex={testOutIndex}
+          targetSection={sections[testOutIndex]}
+          skippedSections={sections.slice(currentSection, testOutIndex)}
+          onClose={() => setTestOutIndex(null)}
+          onPassed={handleTestOutPassed}
+        />
+      )}
     </div>
   );
 };
