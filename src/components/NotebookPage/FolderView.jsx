@@ -43,6 +43,15 @@ const FolderView = ({
     fetchLessonState();
   }, [folderName, token, isCurated]);
 
+  // Ensure Content OMA indexes PDFs (no-op if already indexed).
+  useEffect(() => {
+    if (!token || !folderName) return;
+    fetch(
+      `${API_URL}/api/oma/folder/${encodeURIComponent(folderName)}/ingest-all`,
+      { method: 'POST', headers: { Authorization: `Bearer ${token}` } },
+    ).catch(() => {});
+  }, [folderName, token]);
+
   const headers = () => ({ Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' });
 
   const fetchSources = async () => {
