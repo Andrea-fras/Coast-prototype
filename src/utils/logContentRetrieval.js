@@ -20,6 +20,25 @@ export function logContentRetrieval(evt) {
     cr.entries,
   );
 
+  if (cr.oma_enabled === false) {
+    console.warn(
+      `[Coast] Content OMA is OFF on server (RAG_PROVIDER=${cr.rag_provider || 'flat'}). Using flat RAG.`,
+    );
+  } else if (cr.primary === 'RAG') {
+    const pages = cr.oma_pages ?? '?';
+    const hint = pages === 0 || pages === '?'
+      ? 'Content OMA has 0 indexed pages — backfill may still be running. Check again in a few minutes.'
+      : `Content OMA has ${pages} pages but retrieval returned empty for this query.`;
+    console.warn(`[Coast] ${hint}`, cr);
+  }
+
+  if (cr.student_oma_enabled) {
+    console.log(
+      '%c[Coast] Student OMA: enabled (episodes recorded on graded answers)',
+      'color: #2563eb; font-size: 11px',
+    );
+  }
+
   const images = cr.images || [];
   const offered = cr.images_offered ?? images.length;
   if (images.length > 0) {
