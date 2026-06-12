@@ -102,7 +102,7 @@ const FolderView = ({
         headers: headers(),
         signal: controller.signal,
       });
-      setGeneratingPhase('outline');
+      setGeneratingPhase('oma');
       const res = await fetchWithRetry(
         `${API_URL}/api/folders/${encodeURIComponent(folderName)}/outline`,
         { method: 'POST', headers: headers(), signal: controller.signal },
@@ -114,10 +114,11 @@ const FolderView = ({
           setGenerateError(data.error);
           return;
         }
-        const src = data.outline_source === 'rag' ? 'RAG' : 'raw text';
+        const src = data.outline_source === 'oma' ? 'OMA' : 'raw text';
+        const pages = data.oma_pages_indexed ?? '?';
         console.log(
-          `%c[Coast] Course outline built from ${src}`,
-          `color: ${data.outline_source === 'rag' ? '#d97706' : '#6b7280'}; font-weight: bold; font-size: 12px`,
+          `%c[Coast] Course outline built from ${src} (${pages} OMA pages indexed)`,
+          `color: ${data.outline_source === 'oma' ? '#059669' : '#d97706'}; font-weight: bold; font-size: 12px`,
           data,
         );
         await fetchLessonState();
@@ -127,7 +128,7 @@ const FolderView = ({
       }
     } catch (err) {
       if (err?.name === 'AbortError') {
-        setGenerateError('Timed out generating the lesson plan. Try again.');
+        setGenerateError('Timed out waiting for Content OMA. Try again in a few minutes.');
       } else {
         setGenerateError('Failed to generate lesson plan.');
       }
@@ -376,7 +377,7 @@ const FolderView = ({
                   {generating ? (
                     <>
                       <Loader size={16} className="spinning" />
-                      {generatingPhase === 'outline' ? 'Generating lesson plan…' : 'Embedding sources…'}
+                      {generatingPhase === 'oma' ? 'Building Content OMA…' : 'Embedding sources…'}
                     </>
                   ) : (
                     <>
