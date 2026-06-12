@@ -6,6 +6,7 @@ import WorldMap from './components/WorldMap/WorldMap';
 import LoginPage from './components/LoginPage/LoginPage';
 import OnboardingModal from './components/OnboardingModal/OnboardingModal';
 import FeedbackWidget from './components/FeedbackWidget/FeedbackWidget';
+import ControlCenter from './components/ControlCenter/ControlCenter';
 import { useAuth } from './context/AuthContext';
 import { API_URL } from './config';
 
@@ -13,23 +14,28 @@ function App() {
   const { user, loading, token } = useAuth();
   const [showNotebook, setShowNotebook] = useState(false);
   const [showPedroChat, setShowPedroChat] = useState(false);
+  const [showControlCenter, setShowControlCenter] = useState(false);
+
+  const currentFeature = showNotebook ? 'notebook'
+    : showPedroChat ? 'pedro_chat'
+    : 'map';
 
   useEffect(() => {
     if (!token) return;
     const ping = () => {
       fetch(`${API_URL}/api/heartbeat`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ feature: currentFeature }),
       }).catch(() => {});
     };
     ping();
     const id = setInterval(ping, 30000);
     return () => clearInterval(id);
-  }, [token]);
-
-  const currentFeature = showNotebook ? 'notebook'
-    : showPedroChat ? 'pedro_chat'
-    : 'map';
+  }, [token, currentFeature]);
 
   const featureRef = useRef(currentFeature);
   const startRef = useRef(Date.now());
@@ -80,6 +86,18 @@ function App() {
     };
   }, [token, flushActivity]);
 
+  useEffect(() => {
+    if (!user?.is_admin) return;
+    const onKey = (e) => {
+      if (e.shiftKey && (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        setShowControlCenter((v) => !v);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [user?.is_admin]);
+
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5' }}>
@@ -108,7 +126,12 @@ function App() {
         isHome
         onOpenLessons={() => setShowNotebook(true)}
         onOpenChat={() => setShowPedroChat(true)}
+        onOpenControlCenter={user.is_admin ? () => setShowControlCenter(true) : undefined}
       />
+
+      {showControlCenter && user.is_admin && (
+        <ControlCenter onClose={() => setShowControlCenter(false)} />
+      )}
 
       <FeedbackWidget position="bottom-left" />
     </>

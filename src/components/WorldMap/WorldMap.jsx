@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
-  BookOpen, ChevronRight, Compass, Flame, Focus, Loader, LogOut, Map as MapIcon,
+  BookOpen, ChevronRight, Compass, Flame, Focus, LayoutDashboard, Loader, LogOut, Map as MapIcon,
   MessageCircle, Move, Play, Target, Timer, ZoomIn, ZoomOut, X,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -260,6 +260,7 @@ export default function WorldMap({
   onClose,
   onOpenLessons,
   onOpenChat,
+  onOpenControlCenter,
 }) {
   const { token, user, logout } = useAuth();
   const [data, setData] = useState(null);
@@ -1084,6 +1085,20 @@ export default function WorldMap({
             {showProfileMenu && !mapFocus && (
               <div className="wm-profile-menu" role="menu">
                 <div className="wm-profile-menu-name">{displayName}</div>
+                {onOpenControlCenter && (
+                  <button
+                    type="button"
+                    className="wm-profile-menu-logout wm-profile-menu-admin"
+                    role="menuitem"
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      onOpenControlCenter();
+                    }}
+                  >
+                    <LayoutDashboard size={16} />
+                    <span>Control Center</span>
+                  </button>
+                )}
                 <button
                   type="button"
                   className="wm-profile-menu-logout"

@@ -247,6 +247,15 @@ body.wm-open {
   color: #e74c3c;
 }
 
+.wm-profile-menu-admin {
+  color: #3dd6c8;
+}
+
+.wm-profile-menu-admin:hover {
+  background: rgba(61, 214, 200, 0.12);
+  color: #3dd6c8;
+}
+
 .wm-profile-card h3 {
   margin-top: 1rem !important;
   margin-bottom: 0.5rem !important;
