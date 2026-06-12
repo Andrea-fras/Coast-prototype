@@ -9,9 +9,13 @@ function islandVariant(state) {
   return 'current';
 }
 
-function getIslandState(index, { currentSection, isComplete, sectionProgress }) {
-  if (isComplete) return 'complete';
+function getIslandState(index, { currentSection, isComplete, everMastered, sectionProgress }) {
   const prog = sectionProgress[index] || {};
+  if (everMastered && !isComplete) {
+    if (index === currentSection) return 'current';
+    return 'complete';
+  }
+  if (isComplete || everMastered) return 'complete';
   if (index < currentSection || prog.mastery_pct >= 100) return 'complete';
   if (index === currentSection) return 'current';
   return 'locked';
@@ -21,6 +25,7 @@ const ArchipelagoRoadmap = ({
   sections,
   currentSection = 0,
   isComplete = false,
+  everMastered = false,
   sectionProgress = [],
   onIslandClick,
 }) => {
@@ -29,7 +34,7 @@ const ArchipelagoRoadmap = ({
   return (
     <div className="archipelago" role="list" aria-label="Course sections">
       {sections.map((sec, i) => {
-        const state = getIslandState(i, { currentSection, isComplete, sectionProgress });
+        const state = getIslandState(i, { currentSection, isComplete, everMastered, sectionProgress });
         const prog = sectionProgress[i] || {};
         const needsReview = prog.mastery_pct != null && prog.mastery_pct < 100;
         const clickable = state === 'locked' || state === 'complete' || state === 'current'

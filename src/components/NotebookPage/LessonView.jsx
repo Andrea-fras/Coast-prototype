@@ -219,6 +219,33 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
     notesTimerRef.current = setTimeout(() => saveNotes(html), 1500);
   };
 
+  const applyNotesFormat = (command, value = null) => {
+    if (!notesRef.current) return;
+    notesRef.current.focus();
+    document.execCommand(command, false, value);
+    handleNotesInput();
+  };
+
+  const applyNotesHighlight = (color) => {
+    applyNotesFormat('hiliteColor', color);
+  };
+
+  const applyNotesSize = (sizeClass) => {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+    const range = sel.getRangeAt(0);
+    const span = document.createElement('span');
+    span.className = sizeClass;
+    try {
+      range.surroundContents(span);
+    } catch {
+      applyNotesFormat('fontSize', sizeClass === 'lv-note-size-sm' ? '2' : sizeClass === 'lv-note-size-lg' ? '5' : '3');
+      return;
+    }
+    sel.removeAllRanges();
+    handleNotesInput();
+  };
+
   const generateFeedback = async () => {
     setFeedbackLoading(true);
     const sections = lessonState?.sections || [];
@@ -1007,6 +1034,23 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
                   <X size={16} />
                 </button>
               </div>
+            </div>
+            <div className="lv-notes-toolbar" role="toolbar" aria-label="Note formatting">
+              <button type="button" className="lv-notes-tool" onMouseDown={(e) => e.preventDefault()} onClick={() => applyNotesFormat('bold')} title="Bold">
+                <strong>B</strong>
+              </button>
+              <span className="lv-notes-tool-divider" aria-hidden />
+              <button type="button" className="lv-notes-tool lv-notes-tool--size" onMouseDown={(e) => e.preventDefault()} onClick={() => applyNotesSize('lv-note-size-sm')} title="Small text">A</button>
+              <button type="button" className="lv-notes-tool lv-notes-tool--size lv-notes-tool--size-md" onMouseDown={(e) => e.preventDefault()} onClick={() => applyNotesSize('lv-note-size-md')} title="Normal text">A</button>
+              <button type="button" className="lv-notes-tool lv-notes-tool--size lv-notes-tool--size-lg" onMouseDown={(e) => e.preventDefault()} onClick={() => applyNotesSize('lv-note-size-lg')} title="Large text">A</button>
+              <span className="lv-notes-tool-divider" aria-hidden />
+              <button type="button" className="lv-notes-tool lv-notes-swatch lv-notes-swatch--yellow" onMouseDown={(e) => e.preventDefault()} onClick={() => applyNotesHighlight('#fef08a')} title="Yellow highlight" aria-label="Yellow highlight" />
+              <button type="button" className="lv-notes-tool lv-notes-swatch lv-notes-swatch--green" onMouseDown={(e) => e.preventDefault()} onClick={() => applyNotesHighlight('#bbf7d0')} title="Green highlight" aria-label="Green highlight" />
+              <button type="button" className="lv-notes-tool lv-notes-swatch lv-notes-swatch--pink" onMouseDown={(e) => e.preventDefault()} onClick={() => applyNotesHighlight('#fbcfe8')} title="Pink highlight" aria-label="Pink highlight" />
+              <button type="button" className="lv-notes-tool lv-notes-swatch lv-notes-swatch--blue" onMouseDown={(e) => e.preventDefault()} onClick={() => applyNotesHighlight('#bfdbfe')} title="Blue highlight" aria-label="Blue highlight" />
+              <button type="button" className="lv-notes-tool" onMouseDown={(e) => e.preventDefault()} onClick={() => applyNotesFormat('removeFormat')} title="Clear formatting">
+                <RotateCcw size={13} />
+              </button>
             </div>
             <div
               ref={notesRef}

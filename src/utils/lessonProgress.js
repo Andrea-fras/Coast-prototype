@@ -15,6 +15,8 @@ export function computeFolderProgress(meta) {
 
 export function isFolderMastered(meta) {
   if (!meta?.has_outline) return false;
+  if (meta.ever_mastered) return true;
+
   const total = meta.total_sections || meta.section_progress?.length || 0;
   if (total === 0) return false;
 

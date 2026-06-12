@@ -1233,6 +1233,80 @@
   color: #ccc;
 }
 
+.lv-notes-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.45rem 0.65rem;
+  border-bottom: 1px solid #f0f0f0;
+  flex-wrap: wrap;
+}
+.dark .lv-notes-toolbar {
+  border-bottom-color: #333;
+}
+
+.lv-notes-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 0.35rem;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  background: #fafafa;
+  color: #444;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.lv-notes-tool:hover {
+  background: #f0f0f0;
+  border-color: #ddd;
+}
+.dark .lv-notes-tool {
+  background: #252525;
+  border-color: #444;
+  color: #ddd;
+}
+.dark .lv-notes-tool:hover {
+  background: #333;
+}
+
+.lv-notes-tool--size {
+  font-weight: 800;
+  font-family: Georgia, serif;
+}
+.lv-notes-tool--size-md { font-size: 0.88rem; }
+.lv-notes-tool--size-lg { font-size: 1.05rem; }
+
+.lv-notes-tool-divider {
+  width: 1px;
+  height: 18px;
+  background: #e8e8e8;
+  margin: 0 0.15rem;
+}
+.dark .lv-notes-tool-divider {
+  background: #444;
+}
+
+.lv-notes-swatch {
+  width: 22px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: 50%;
+}
+.lv-notes-swatch--yellow { background: #fef08a; }
+.lv-notes-swatch--green { background: #bbf7d0; }
+.lv-notes-swatch--pink { background: #fbcfe8; }
+.lv-notes-swatch--blue { background: #bfdbfe; }
+
+.lv-notes-editor .lv-note-size-sm { font-size: 0.78rem; }
+.lv-notes-editor .lv-note-size-md { font-size: 0.95rem; }
+.lv-notes-editor .lv-note-size-lg { font-size: 1.15rem; line-height: 1.55; }
+
 .lv-notes-editor {
   flex: 1;
   overflow-y: auto;

@@ -19,6 +19,7 @@ const FolderView = ({
   cupCount = 0,
   onClose,
   onSourcesChanged,
+  onLessonChanged,
   onStartLesson,
   onOpenDocument,
 }) => {
@@ -132,12 +133,17 @@ const FolderView = ({
   };
 
   const handleResetLesson = async () => {
+    if (!window.confirm('Reset this course to section 1? Your mastery trophy and notes are kept.')) {
+      return;
+    }
     try {
+      sessionStorage.removeItem(`coast_lesson_chat_${folderName}`);
       await fetch(`${API_URL}/api/folders/${encodeURIComponent(folderName)}/lesson/reset`, {
         method: 'POST',
         headers: headers(),
       });
       await fetchLessonState();
+      onLessonChanged?.();
     } catch { /* ignore */ }
   };
 
@@ -192,6 +198,7 @@ const FolderView = ({
   const contentReady = lessonState?.content_ready !== false;
   const sharedReady = lessonState?.shared_content_ready !== false;
   const isComplete = lessonState?.is_complete;
+  const everMastered = lessonState?.ever_mastered;
   const currentSection = lessonState?.current_section || 0;
   const totalSections = lessonState?.total_sections || 0;
   const sections = lessonState?.sections || [];
@@ -383,6 +390,7 @@ const FolderView = ({
                   sections={sections}
                   currentSection={currentSection}
                   isComplete={isComplete}
+                  everMastered={everMastered}
                   sectionProgress={sectionProgress}
                   onIslandClick={handleIslandClick}
                 />
@@ -396,7 +404,11 @@ const FolderView = ({
                       disabled={!contentReady}
                     >
                       <Play size={18} />
-                      {isInProgress ? 'Continue lesson' : 'Start lesson'}
+                      {everMastered
+                        ? 'Replay lesson'
+                        : isInProgress
+                          ? 'Continue lesson'
+                          : 'Start lesson'}
                     </button>
                   )}
                   {hasOutline && !contentReady && (
@@ -408,6 +420,12 @@ const FolderView = ({
                       <span>Lesson complete — review sections below 100% on the map.</span>
                     </div>
                   )}
+                  {everMastered && !isComplete && (
+                    <div className="fv-v2-complete-msg fv-v2-complete-msg--mastered">
+                      <CheckCircle size={20} />
+                      <span>Course mastered — replaying from section 1. Your trophy stays.</span>
+                    </div>
+                  )}
                   <div className="fv-v2-roadmap-meta">
                     <span><Clock size={13} /> ~{lessonState?.estimated_minutes || 0} min</span>
                     {!isCurated && (
@@ -415,12 +433,17 @@ const FolderView = ({
                         <button type="button" className="fv-v2-link-btn" onClick={handleGenerateOutline} disabled={generating}>
                           Regenerate
                         </button>
-                        {isComplete && (
+                        {(isComplete || everMastered) && (
                           <button type="button" className="fv-v2-link-btn" onClick={handleResetLesson}>
                             <RotateCcw size={13} /> Reset
                           </button>
                         )}
                       </>
+                    )}
+                    {isCurated && everMastered && (
+                      <button type="button" className="fv-v2-link-btn" onClick={handleResetLesson}>
+                        <RotateCcw size={13} /> Reset
+                      </button>
                     )}
                   </div>
                 </div>

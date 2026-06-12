@@ -276,6 +276,7 @@ const NotebookPage = ({ onClose }) => {
             setFolderRefreshKey(k => k + 1);
           }}
           onSourcesChanged={() => setFolderRefreshKey(k => k + 1)}
+          onLessonChanged={() => setFolderRefreshKey(k => k + 1)}
           onStartLesson={(folder, sectionIdx, opts) => {
             if (opts?.review) {
               setInitialReviewSection(sectionIdx ?? null);
