@@ -111,7 +111,11 @@ const FolderView = ({
       if (res.ok) {
         const data = await res.json().catch(() => ({}));
         if (data.error) {
-          setGenerateError(data.error);
+          setGenerateError(
+            data.oma_indexing
+              ? `${data.error} OMA indexing continues in the background.`
+              : data.error,
+          );
           return;
         }
         const src = data.outline_source === 'oma' ? 'OMA' : 'raw text';
