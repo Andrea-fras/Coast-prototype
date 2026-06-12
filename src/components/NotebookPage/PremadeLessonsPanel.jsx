@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { isFolderMastered } from '../../utils/lessonProgress';
 import trophyIcon from '../../assets/lesson-icons/trophy.svg';
 import prismaticCover from '../../assets/premade-covers/prismatic-system.png';
 import cookingCover from '../../assets/premade-covers/science-of-cooking.png';
@@ -26,17 +27,22 @@ function truncateAbout(text, max = 145) {
   return `${text.slice(0, max).trim()}…`;
 }
 
-function PremadeCard({ lesson, onOpen }) {
+function PremadeCard({ lesson, onOpen, mastered }) {
   const isFree = (lesson.cupCost ?? 0) === 0;
   const cover = COVER_BY_ID[lesson.id];
 
   return (
     <button
       type="button"
-      className="nb-premade-card"
+      className={`nb-premade-card${mastered ? ' nb-premade-card--mastered' : ''}`}
       onClick={() => onOpen(lesson.folderName)}
     >
-      {isFree ? (
+      {mastered ? (
+        <span className="nb-premade-card-badge nb-premade-card-badge--mastered">
+          <img src={trophyIcon} alt="" />
+          Mastered
+        </span>
+      ) : isFree ? (
         <span className="nb-premade-card-badge">Free</span>
       ) : (
         <span className="nb-premade-card-badge nb-premade-card-badge--paid">
@@ -64,7 +70,7 @@ function PremadeCard({ lesson, onOpen }) {
   );
 }
 
-const PremadeLessonsPanel = ({ lessons, cupCount, onOpenFolder }) => {
+const PremadeLessonsPanel = ({ lessons, cupCount, folderMeta = {}, onOpenFolder }) => {
   const [genre, setGenre] = useState('all');
 
   const genres = useMemo(
@@ -105,7 +111,12 @@ const PremadeLessonsPanel = ({ lessons, cupCount, onOpenFolder }) => {
           <h2 className="nb-premade-section-title">Recommended:</h2>
           <div className="nb-premade-grid">
             {recommended.map((lesson) => (
-              <PremadeCard key={`rec-${lesson.id}`} lesson={lesson} onOpen={onOpenFolder} />
+              <PremadeCard
+                key={`rec-${lesson.id}`}
+                lesson={lesson}
+                onOpen={onOpenFolder}
+                mastered={isFolderMastered(folderMeta[lesson.folderName])}
+              />
             ))}
           </div>
         </section>
@@ -130,7 +141,12 @@ const PremadeLessonsPanel = ({ lessons, cupCount, onOpenFolder }) => {
 
         <div className="nb-premade-grid">
           {filtered.map((lesson) => (
-            <PremadeCard key={lesson.id} lesson={lesson} onOpen={onOpenFolder} />
+            <PremadeCard
+              key={lesson.id}
+              lesson={lesson}
+              onOpen={onOpenFolder}
+              mastered={isFolderMastered(folderMeta[lesson.folderName])}
+            />
           ))}
         </div>
       </section>

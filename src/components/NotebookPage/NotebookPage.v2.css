@@ -759,6 +759,25 @@
   height: 13px;
 }
 
+.nb-premade-card-badge--mastered {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #ffd033;
+  border-color: rgba(255, 181, 3, 0.35);
+  background: rgba(255, 181, 3, 0.12);
+}
+
+.nb-premade-card-badge--mastered img {
+  width: 14px;
+  height: 13px;
+}
+
+.nb-premade-card--mastered {
+  border-color: rgba(255, 181, 3, 0.35);
+  background: linear-gradient(145deg, rgba(255, 181, 3, 0.08), rgba(255, 255, 255, 0.03));
+}
+
 .nb-premade-card-title {
   font-family: 'Nunito Sans', sans-serif;
   font-size: 1.18rem;

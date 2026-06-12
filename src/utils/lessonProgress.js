@@ -14,10 +14,14 @@ export function computeFolderProgress(meta) {
 }
 
 export function isFolderMastered(meta) {
-  if (!meta?.has_outline || !meta.is_complete) return false;
-  const prog = meta.section_progress || [];
-  const total = meta.total_sections || prog.length;
+  if (!meta?.has_outline) return false;
+  const total = meta.total_sections || meta.section_progress?.length || 0;
   if (total === 0) return false;
+
+  // Finishing every section in Pedro's lesson flow counts as mastered.
+  if (meta.is_complete && (meta.current_section || 0) >= total) return true;
+
+  const prog = meta.section_progress || [];
   for (let i = 0; i < total; i += 1) {
     if ((prog[i]?.mastery_pct ?? 0) < 100) return false;
   }
@@ -60,7 +64,11 @@ export function getProgressTier(meta) {
 export function findContinueFolder(folderNames, metaMap) {
   const candidates = folderNames
     .map((name) => ({ name, meta: metaMap[name] || {} }))
-    .filter(({ meta }) => getCardState(meta) === 'in-progress');
+    .filter(({ meta }) => {
+      if (!meta?.has_outline) return false;
+      if (meta.is_complete) return false;
+      return getCardState(meta) === 'in-progress';
+    });
 
   if (candidates.length === 0) return null;
 

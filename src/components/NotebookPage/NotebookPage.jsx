@@ -59,8 +59,8 @@ const NotebookPage = ({ onClose }) => {
   );
 
   useEffect(() => {
-    if (sidebarTab !== 'your-lessons' || !token) return undefined;
-    if (userLessonFolders.length === 0) {
+    if (!token) return undefined;
+    if (folders.length === 0) {
       setFolderLessonMeta({});
       setFolderMetaLoading(false);
       return undefined;
@@ -70,7 +70,7 @@ const NotebookPage = ({ onClose }) => {
     if (Object.keys(folderLessonMeta).length === 0) setFolderMetaLoading(true);
 
     Promise.all(
-      userLessonFolders.map(async (f) => {
+      folders.map(async (f) => {
         try {
           const res = await fetch(
             `${API_URL}/api/folders/${encodeURIComponent(f)}/lesson`,
@@ -88,11 +88,11 @@ const NotebookPage = ({ onClose }) => {
     });
 
     return () => { cancelled = true; };
-  }, [sidebarTab, token, userLessonFoldersKey, folderRefreshKey]);
+  }, [token, folders.join('\x00'), folderRefreshKey]);
 
   const cupCount = useMemo(
-    () => userLessonFolders.filter((f) => isFolderMastered(folderLessonMeta[f])).length,
-    [userLessonFolders, folderLessonMeta],
+    () => folders.filter((f) => isFolderMastered(folderLessonMeta[f])).length,
+    [folders, folderLessonMeta],
   );
 
   const handleCreateFolder = async () => {
@@ -314,6 +314,7 @@ const NotebookPage = ({ onClose }) => {
               <PremadeLessonsPanel
                 lessons={visibleCurated}
                 cupCount={cupCount}
+                folderMeta={folderLessonMeta}
                 onOpenFolder={handleOpenFolder}
               />
             ) : (
