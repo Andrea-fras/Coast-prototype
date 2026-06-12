@@ -102,7 +102,7 @@ const FolderView = ({
         headers: headers(),
         signal: controller.signal,
       });
-      setGeneratingPhase('oma');
+      setGeneratingPhase('outline');
       const res = await fetchWithRetry(
         `${API_URL}/api/folders/${encodeURIComponent(folderName)}/outline`,
         { method: 'POST', headers: headers(), signal: controller.signal },
@@ -111,18 +111,13 @@ const FolderView = ({
       if (res.ok) {
         const data = await res.json().catch(() => ({}));
         if (data.error) {
-          setGenerateError(
-            data.oma_indexing
-              ? `${data.error} OMA indexing continues in the background.`
-              : data.error,
-          );
+          setGenerateError(data.error);
           return;
         }
-        const src = data.outline_source === 'oma' ? 'OMA' : 'raw text';
-        const pages = data.oma_pages_indexed ?? '?';
+        const src = data.outline_source === 'rag' ? 'RAG' : 'raw text';
         console.log(
-          `%c[Coast] Course outline built from ${src} (${pages} OMA pages indexed)`,
-          `color: ${data.outline_source === 'oma' ? '#059669' : '#d97706'}; font-weight: bold; font-size: 12px`,
+          `%c[Coast] Course outline built from ${src}`,
+          `color: ${data.outline_source === 'rag' ? '#d97706' : '#6b7280'}; font-weight: bold; font-size: 12px`,
           data,
         );
         await fetchLessonState();
@@ -132,7 +127,7 @@ const FolderView = ({
       }
     } catch (err) {
       if (err?.name === 'AbortError') {
-        setGenerateError('Timed out waiting for Content OMA. Try again in a few minutes.');
+        setGenerateError('Timed out generating the lesson plan. Try again.');
       } else {
         setGenerateError('Failed to generate lesson plan.');
       }
@@ -381,7 +376,7 @@ const FolderView = ({
                   {generating ? (
                     <>
                       <Loader size={16} className="spinning" />
-                      {generatingPhase === 'oma' ? 'Building Content OMA…' : 'Embedding sources…'}
+                      {generatingPhase === 'outline' ? 'Generating lesson plan…' : 'Embedding sources…'}
                     </>
                   ) : (
                     <>
