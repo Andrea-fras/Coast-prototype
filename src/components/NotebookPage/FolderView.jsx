@@ -123,6 +123,13 @@ const FolderView = ({
           setGenerateError(data.error);
           return;
         }
+        const src = data.outline_source === 'oma' ? 'OMA' : 'raw text';
+        const pages = data.oma_pages_indexed ?? '?';
+        console.log(
+          `%c[Coast] Course outline built from ${src} (${pages} OMA pages indexed)`,
+          `color: ${data.outline_source === 'oma' ? '#059669' : '#d97706'}; font-weight: bold; font-size: 12px`,
+          data.outline_note || data,
+        );
         await fetchLessonState();
       } else {
         const data = await res.json().catch(() => ({}));

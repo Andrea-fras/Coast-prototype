@@ -1,7 +1,13 @@
 /** Log OMA vs RAG retrieval info to the browser DevTools console. */
 export function logContentRetrieval(evt) {
   const cr = evt?.content_retrieval;
-  if (!cr?.primary) return;
+  if (!cr) return;
+  if (!cr.primary) {
+    if (cr.entries?.length) {
+      console.log('[Coast] Content retrieval (no primary label):', cr.entries);
+    }
+    return;
+  }
 
   const color =
     cr.primary === 'OMA' ? '#059669'
