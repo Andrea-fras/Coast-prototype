@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Activity, Clock, Database, HardDrive, MessageSquare, RefreshCw,
-  Server, TrendingUp, Users, X, Zap,
+  Activity, AlertTriangle, Clock, Database, HardDrive, MessageSquare, RefreshCw,
+  Server, Trash2, TrendingUp, Users, X, Zap,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { API_URL } from '../../config';
@@ -105,6 +105,8 @@ export default function ControlCenter({ onClose }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [lastFetch, setLastFetch] = useState(null);
+  const [cleaning, setCleaning] = useState(false);
+  const [cleanupMsg, setCleanupMsg] = useState('');
 
   const fetchData = useCallback(async (silent = false) => {
     if (!token) return;
@@ -127,6 +129,31 @@ export default function ControlCenter({ onClose }) {
       setLoading(false);
     }
   }, [token]);
+
+  const runCleanup = useCallback(async () => {
+    if (!token || cleaning) return;
+    const bots = data?.kpis?.loadtest_bots ?? data?.user_breakdown?.loadtest_bots ?? 0;
+    if (!bots) return;
+    if (!window.confirm(`Delete ${bots} load-test bot accounts (@loadtest.local)? This cannot be undone.`)) {
+      return;
+    }
+    setCleaning(true);
+    setCleanupMsg('');
+    try {
+      const res = await fetch(`${API_URL}/api/admin/cleanup-loadtest-users`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.detail || `HTTP ${res.status}`);
+      setCleanupMsg(json.message || `Removed ${json.deleted_users} bots.`);
+      fetchData(true);
+    } catch (e) {
+      setCleanupMsg(e.message || 'Cleanup failed');
+    } finally {
+      setCleaning(false);
+    }
+  }, [token, cleaning, data, fetchData]);
 
   useEffect(() => {
     fetchData();
@@ -157,7 +184,10 @@ export default function ControlCenter({ onClose }) {
 
   const disk = data?.server?.storage?.disk;
   const storageBreakdown = data?.server?.storage?.breakdown || [];
+  const dataMount = data?.server?.storage?.data_mount || [];
   const totalStorageUsed = storageBreakdown.reduce((s, i) => s + (i.bytes || 0), 0);
+  const loadtestBots = data?.kpis?.loadtest_bots ?? data?.user_breakdown?.loadtest_bots ?? 0;
+  const diskCritical = (disk?.used_pct ?? 0) >= 85;
 
   return (
     <div className="cc-overlay" role="dialog" aria-modal="true" aria-label="Coast Control Center">
@@ -194,6 +224,45 @@ export default function ControlCenter({ onClose }) {
           <div className="cc-error">{error}</div>
         )}
 
+        {data && diskCritical && (
+          <div className="cc-warn">
+            <AlertTriangle size={18} />
+            <div>
+              <strong>Disk at {disk.used_pct}%</strong>
+              <p>
+                Render gives you 10GB on /data. Largest folders are listed below.
+                Delete load-test bots, prune old uploads, or upgrade disk in Render → coast-api → Disks.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {data && loadtestBots > 0 && (
+          <div className="cc-warn cc-warn-info">
+            <Users size={18} />
+            <div>
+              <strong>{loadtestBots} load-test bots inflating user count</strong>
+              <p>
+                {data.kpis.total_rows ?? loadtestBots + data.kpis.total_users} total DB rows, but only{' '}
+                {data.kpis.total_users} real accounts. These came from concurrency load tests on production.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="cc-cleanup-btn"
+              onClick={runCleanup}
+              disabled={cleaning}
+            >
+              <Trash2 size={14} />
+              {cleaning ? 'Cleaning…' : 'Delete bots'}
+            </button>
+          </div>
+        )}
+
+        {cleanupMsg && (
+          <div className="cc-cleanup-msg">{cleanupMsg}</div>
+        )}
+
         {data && (
           <>
             <section className="cc-kpi-grid">
@@ -208,7 +277,7 @@ export default function ControlCenter({ onClose }) {
                 icon={Users}
                 label="DAU / WAU / MAU"
                 value={`${data.kpis.dau} / ${data.kpis.wau} / ${data.kpis.mau}`}
-                sub={`${data.kpis.total_users} total users`}
+                sub={`${data.kpis.total_users} real users${loadtestBots ? ` · ${loadtestBots} bots` : ''}`}
                 accent="#3dd6c8"
               />
               <KpiCard
@@ -346,6 +415,22 @@ export default function ControlCenter({ onClose }) {
                     />
                   ))}
                 </div>
+                {dataMount.length > 0 && (
+                  <>
+                    <p className="cc-chart-caption cc-mount-caption">/data breakdown</p>
+                    <div className="cc-storage-list">
+                      {dataMount.slice(0, 8).map((item) => (
+                        <StorageBar
+                          key={item.path}
+                          label={item.label}
+                          bytes={item.bytes}
+                          totalBytes={disk?.total_bytes || totalStorageUsed || 1}
+                          path={item.path}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
               </section>
 
               <section className="cc-panel">
@@ -385,8 +470,8 @@ export default function ControlCenter({ onClose }) {
                     </thead>
                     <tbody>
                       {(data.recent_signups || []).map((u) => (
-                        <tr key={u.id}>
-                          <td>{u.name}</td>
+                        <tr key={u.id} className={u.is_loadtest ? 'cc-row-bot' : ''}>
+                          <td>{u.name}{u.is_loadtest ? ' 🤖' : ''}</td>
                           <td>{u.email}</td>
                           <td>{u.course || '—'}</td>
                           <td>{formatTime(u.created_at)}</td>
