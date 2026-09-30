@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/authState';
 import { API_URL } from '../../config';
 import './FeedbackWidget.css';
 
@@ -17,13 +17,15 @@ const FeedbackWidget = ({ position = 'bottom-right' }) => {
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async () => {
     if (!message.trim() || sending) return;
     setSending(true);
+    setError('');
     try {
       const page = window.location.pathname || '/';
-      await fetch(`${API_URL}/api/feedback`, {
+      const res = await fetch(`${API_URL}/api/feedback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -31,6 +33,7 @@ const FeedbackWidget = ({ position = 'bottom-right' }) => {
         },
         body: JSON.stringify({ category, message, page }),
       });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setSent(true);
       setTimeout(() => {
         setOpen(false);
@@ -39,7 +42,8 @@ const FeedbackWidget = ({ position = 'bottom-right' }) => {
         setCategory('suggestion');
       }, 1600);
     } catch {
-      /* silently ignore */
+      // Keep the message so nothing typed is lost; the student can try again.
+      setError('Your feedback wasn’t sent. Check your connection and try again.');
     } finally {
       setSending(false);
     }
@@ -90,6 +94,8 @@ const FeedbackWidget = ({ position = 'bottom-right' }) => {
                   onChange={e => setMessage(e.target.value)}
                   rows={4}
                 />
+
+                {error && <p className="fb-error" role="alert">{error}</p>}
 
                 <div className="fb-actions">
                   <button className="fb-cancel" onClick={() => setOpen(false)}>Cancel</button>

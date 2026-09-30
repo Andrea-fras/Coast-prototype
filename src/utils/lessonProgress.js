@@ -55,26 +55,21 @@ export function getCardState(meta) {
   return 'in-progress';
 }
 
-/** @deprecated use getCardState */
-export function getProgressTier(meta) {
-  const state = getCardState(meta);
-  if (state === 'mastered') return 'mastered';
-  if (state === 'in-progress') return 'badge';
-  return 'lightbulb';
-}
-
 export function findContinueFolder(folderNames, metaMap) {
   const candidates = folderNames
     .map((name) => ({ name, meta: metaMap[name] || {} }))
     .filter(({ meta }) => {
       if (!meta?.has_outline) return false;
       if (meta.is_complete) return false;
-      return getCardState(meta) === 'in-progress';
+      return Boolean(meta.last_studied_at) || getCardState(meta) === 'in-progress';
     });
 
   if (candidates.length === 0) return null;
 
   candidates.sort((a, b) => {
+    const recentA = Date.parse(a.meta.last_studied_at || a.meta.updated_at || '') || 0;
+    const recentB = Date.parse(b.meta.last_studied_at || b.meta.updated_at || '') || 0;
+    if (recentB !== recentA) return recentB - recentA;
     const curA = a.meta.current_section || 0;
     const curB = b.meta.current_section || 0;
     if (curB !== curA) return curB - curA;
@@ -82,4 +77,14 @@ export function findContinueFolder(folderNames, metaMap) {
   });
 
   return candidates[0];
+}
+
+/** A course that is ready but not started yet (newest first), for when nothing is in progress. */
+export function findStartFolder(folderNames, metaMap) {
+  const ready = folderNames
+    .map((name) => ({ name, meta: metaMap[name] || {} }))
+    .filter(({ meta }) => meta?.has_outline && !meta.is_complete && !isFolderMastered(meta)
+      && getCardState(meta) === 'not-started');
+  ready.sort((a, b) => (Date.parse(b.meta.updated_at || '') || 0) - (Date.parse(a.meta.updated_at || '') || 0));
+  return ready[0] || null;
 }

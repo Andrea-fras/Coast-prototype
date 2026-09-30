@@ -1,35 +1,45 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useLessonNotes } from '../../utils/useLessonNotes';
+import { lessonChatKey } from '../../utils/studentCache';
+import React, { useState, useEffect, useRef, useCallback, useEffectEvent } from 'react';
 import { createPortal } from 'react-dom';
 import {
   X, ChevronRight, CheckCircle, Loader, Send, List, Clock,
-  ArrowLeft, RefreshCw, WifiOff, StickyNote, RotateCcw,
-  ChevronLeft, AlertTriangle, Lightbulb, TrendingUp,
+  ArrowLeft, RefreshCw, WifiOff, StickyNote,
+  ChevronLeft, Lightbulb, Square, Shuffle, PenLine,
   Calculator as CalculatorIcon,
 } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/authState';
 import { API_URL } from '../../config';
 import { fetchWithRetry } from '../../utils/fetchWithRetry';
 import { logContentRetrieval } from '../../utils/logContentRetrieval';
+import { useSmartScroll } from '../../utils/useSmartScroll';
+import { useStreamBuffer } from '../../utils/useStreamBuffer';
+import { beginChatStream, isActiveStream, endChatStream, cancelChatStream } from '../../utils/chatStreamGuard';
+import { resizeChatTextarea } from '../../utils/chatTextarea';
+import { useUnsendWindow } from '../../utils/useUnsendWindow';
+import { formatTilesUnlockedLine, formatTotalTilesCharted } from '../../utils/mapRewardText';
 import PedroMessage from '../PedroMessage';
 import Calculator from '../Calculator/Calculator';
+import RichNotesEditor from './RichNotesEditor';
+import SourceCitationViewer from './SourceCitationViewer';
+import {
+  readStoredNotesWidth,
+  storeNotesWidth,
+  NOTES_PANEL_MIN,
+} from '../../utils/notesEditor';
+import './RichNotesEditor.css';
 import mascot from '../../assets/sessioncompletebird.svg';
 import './LessonView.css';
 import './LessonView.fullscreen.css';
+import { stripPedroTags } from '../../utils/pedroTags';
 
-const CHAT_STORAGE_PREFIX = 'coast_lesson_chat_';
 
-const PEDRO_UI_TAGS = ['[SECTION_COMPLETE]', '[ANSWER_WRONG]', '[ANSWER_CORRECT]'];
-
-function stripPedroTags(text) {
-  let out = text || '';
-  for (const tag of PEDRO_UI_TAGS) out = out.replaceAll(tag, '');
-  return out.trim();
-}
 
 const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSection }) => {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
 
   const [showCalculator, setShowCalculator] = useState(false);
+  const [sourceCitation, setSourceCitation] = useState(null);
 
   const [lessonState, setLessonState] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -50,35 +60,44 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
   const [retryPayload, setRetryPayload] = useState(null);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
-  const [sectionFeedback, setSectionFeedback] = useState(null);
-  const [feedbackLoading, setFeedbackLoading] = useState(false);
 
   const [viewingSection, setViewingSection] = useState(null);
   const [viewingChat, setViewingChat] = useState([]);
-  const [viewingFeedback, setViewingFeedback] = useState(null);
   const [viewingLoading, setViewingLoading] = useState(false);
 
   const [notesOpen, setNotesOpen] = useState(false);
-  const [notesContent, setNotesContent] = useState('');
-  const [notesSaving, setNotesSaving] = useState(false);
-  const [notesLoaded, setNotesLoaded] = useState(false);
+  const note = useLessonNotes(user?.id, notesOpen ? folderName : null, token);
+  const [notesPanelWidth, setNotesPanelWidth] = useState(readStoredNotesWidth);
 
-  const [reviewStreaming, setReviewStreaming] = useState(false);
 
   const [reviewSectionIdx, setReviewSectionIdx] = useState(
     initialReviewSection != null ? initialReviewSection : null,
   );
   const isReviewMode = reviewSectionIdx !== null;
 
-  const chatAreaRef = useRef(null);
+  const { streamingText, tokenIdle, appendToken, resetStream, finalizeStream } = useStreamBuffer();
+  const scrollResetKey = `${folderName}:${viewingSection ?? 'cur'}:${isReviewMode ? reviewSectionIdx : (lessonState?.current_section ?? 0)}`;
+  const { scrollRef: chatAreaRef, handleScroll: onChatScroll, hasNewMessage, jumpToLatest } = useSmartScroll(
+    'lesson',
+    [scrollResetKey],
+    streamingText.length,
+  );
   const inputRef = useRef(null);
   const currentSectionRef = useRef(0);
   const conversationIdRef = useRef(null);
-  const notesTimerRef = useRef(null);
-  const notesRef = useRef(null);
+  const bodyRef = useRef(null);
+  const notesWidthRef = useRef(notesPanelWidth);
   const rewardClaimedRef = useRef(null);
+  const streamAbortRef = useRef(null);
+  const streamGenerationRef = useRef(0);
+  const pendingUserMessageRef = useRef(null);
+  const { canUnsend, startUnsendWindow, clearUnsendWindow } = useUnsendWindow();
+  const sectionStartInflightRef = useRef(null);
+  const lastAutoStartRef = useRef('');
+  const streamHandledRef = useRef(false);
+  const retryContextRef = useRef({ message: '', convId: null });
 
-  const storageKey = CHAT_STORAGE_PREFIX + folderName;
+  const storageKey = lessonChatKey(user?.id, folderName);
   const hdrs = () => ({ Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' });
 
   const emitMapProgress = useCallback((reward) => {
@@ -90,6 +109,42 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
   }, []);
 
   const isViewingPast = viewingSection !== null;
+
+  const applyStreamMeta = useCallback((evt) => {
+    if (!evt) return;
+    logContentRetrieval(evt);
+    if (evt.conversation_id) {
+      setConversationId(evt.conversation_id);
+      conversationIdRef.current = evt.conversation_id;
+    }
+    if (typeof evt.section_verified === 'boolean') {
+      setSectionComplete((prev) => evt.section_verified || prev);
+    }
+  }, []);
+
+  const completeChatStreamResponse = useCallback(({ metadataOnly = false, evt } = {}) => {
+    if (metadataOnly) {
+      applyStreamMeta(evt);
+      return;
+    }
+    if (streamHandledRef.current) {
+      applyStreamMeta(evt);
+      return;
+    }
+    streamHandledRef.current = true;
+    const fullText = stripPedroTags(finalizeStream());
+    setChatLoading(false);
+    pendingUserMessageRef.current = null;
+    clearUnsendWindow();
+    applyStreamMeta(evt);
+    const { message, convId } = retryContextRef.current;
+    if (!fullText) {
+      setRetryPayload({ message, convId });
+    } else {
+      setChatMessages(prev => [...prev, { role: 'pedro', content: fullText }]);
+      setRetryPayload(null);
+    }
+  }, [applyStreamMeta, finalizeStream, clearUnsendWindow]);
 
   useEffect(() => {
     const goOffline = () => setIsOffline(true);
@@ -105,17 +160,19 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
   useEffect(() => { fetchLessonState(); }, [folderName, token]);
 
   useEffect(() => {
+    if (inputRef.current) resizeChatTextarea(inputRef.current);
+  }, [loading, lessonState?.is_complete, isViewingPast, isReviewMode]);
+
+  useEffect(() => {
+    if (inputRef.current) resizeChatTextarea(inputRef.current);
+  }, [chatInput]);
+
+  useEffect(() => {
     if (!lessonState?.has_outline || initialReviewSection != null) return;
     if (initialViewSection != null && initialViewSection < (lessonState.current_section || 0)) {
       handleViewPastSection(initialViewSection);
     }
   }, [lessonState]);
-
-  useEffect(() => {
-    if (chatAreaRef.current) {
-      chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
-    }
-  }, [chatMessages, chatLoading, viewingChat]);
 
   // Claim section reward once the section is complete.
   useEffect(() => {
@@ -140,8 +197,10 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
         const data = await res.json();
         if (cancelled) return;
         rewardClaimedRef.current = claimKey;
-        setProgressReward(data);
-        if (!data.already_claimed) emitMapProgress(data);
+        if (!data.already_claimed) {
+          setProgressReward(data);
+          emitMapProgress(data);
+        }
       } catch { /* non-blocking */ }
     })();
     return () => { cancelled = true; };
@@ -154,11 +213,6 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
   }, [progressReward]);
 
   useEffect(() => {
-    if (!sectionComplete || feedbackLoading || sectionFeedback) return;
-    generateFeedback();
-  }, [sectionComplete]);
-
-  useEffect(() => {
     if (chatMessages.length === 0) return;
     const hasContent = chatMessages.some(m => m.content && m.content.length > 0);
     if (!hasContent) return;
@@ -169,106 +223,56 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
         conversationId: conversationIdRef.current,
         sectionComplete,
       }));
-    } catch {}
+    } catch { /* Server conversation remains the durable copy if cache is unavailable. */ }
   }, [chatMessages, sectionComplete, storageKey]);
 
   useEffect(() => {
+    notesWidthRef.current = notesPanelWidth;
+  }, [notesPanelWidth]);
+
+  const getNotesMaxWidth = useCallback(() => {
+    if (!bodyRef.current) return 900;
+    const bodyW = bodyRef.current.getBoundingClientRect().width;
+    const sidebarW = sidebarOpen ? 280 : 0;
+    return Math.max(NOTES_PANEL_MIN, bodyW - sidebarW);
+  }, [sidebarOpen]);
+
+  useEffect(() => {
     if (!notesOpen) return;
-    if (!notesLoaded) {
-      loadNotes();
-    } else if (notesRef.current && notesContent) {
-      notesRef.current.innerHTML = notesContent;
-    }
-  }, [notesOpen]);
+    const clamp = () => {
+      const maxW = getNotesMaxWidth();
+      setNotesPanelWidth((w) => Math.min(w, maxW));
+    };
+    clamp();
+    window.addEventListener('resize', clamp);
+    return () => window.removeEventListener('resize', clamp);
+  }, [notesOpen, sidebarOpen, getNotesMaxWidth]);
 
-  const loadNotes = async () => {
-    try {
-      const res = await fetchWithRetry(
-        `${API_URL}/api/folders/${encodeURIComponent(folderName)}/lesson-notes`,
-        { headers: hdrs() },
-      );
-      if (res.ok) {
-        const data = await res.json();
-        setNotesContent(data.content_html || '');
-        if (notesRef.current) notesRef.current.innerHTML = data.content_html || '';
-      }
-    } catch {}
-    setNotesLoaded(true);
-  };
+  const startNotesResize = useCallback((e) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startW = notesWidthRef.current;
 
-  const saveNotes = async (html) => {
-    setNotesSaving(true);
-    try {
-      await fetchWithRetry(
-        `${API_URL}/api/folders/${encodeURIComponent(folderName)}/lesson-notes`,
-        {
-          method: 'PUT',
-          headers: hdrs(),
-          body: JSON.stringify({ content_html: html }),
-        },
-      );
-    } catch {}
-    setNotesSaving(false);
-  };
+    const onMove = (ev) => {
+      const maxW = getNotesMaxWidth();
+      const delta = startX - ev.clientX;
+      const next = Math.min(maxW, Math.max(NOTES_PANEL_MIN, startW + delta));
+      setNotesPanelWidth(next);
+    };
 
-  const handleNotesInput = () => {
-    if (!notesRef.current) return;
-    const html = notesRef.current.innerHTML;
-    setNotesContent(html);
-    if (notesTimerRef.current) clearTimeout(notesTimerRef.current);
-    notesTimerRef.current = setTimeout(() => saveNotes(html), 1500);
-  };
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      storeNotesWidth(notesWidthRef.current);
+    };
 
-  const applyNotesFormat = (command, value = null) => {
-    if (!notesRef.current) return;
-    notesRef.current.focus();
-    document.execCommand(command, false, value);
-    handleNotesInput();
-  };
-
-  const applyNotesHighlight = (color) => {
-    applyNotesFormat('hiliteColor', color);
-  };
-
-  const applyNotesSize = (sizeClass) => {
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
-    const range = sel.getRangeAt(0);
-    const span = document.createElement('span');
-    span.className = sizeClass;
-    try {
-      range.surroundContents(span);
-    } catch {
-      applyNotesFormat('fontSize', sizeClass === 'lv-note-size-sm' ? '2' : sizeClass === 'lv-note-size-lg' ? '5' : '3');
-      return;
-    }
-    sel.removeAllRanges();
-    handleNotesInput();
-  };
-
-  const generateFeedback = async () => {
-    setFeedbackLoading(true);
-    const sections = lessonState?.sections || [];
-    const section = sections[currentSectionRef.current];
-    try {
-      const res = await fetchWithRetry(
-        `${API_URL}/api/folders/${encodeURIComponent(folderName)}/section-feedback`,
-        {
-          method: 'POST',
-          headers: hdrs(),
-          body: JSON.stringify({
-            section_index: currentSectionRef.current,
-            section_title: section?.title || '',
-          }),
-        },
-      );
-      if (res.ok) {
-        const data = await res.json();
-        setSectionFeedback(data.feedback);
-      }
-    } catch {}
-    setFeedbackLoading(false);
-  };
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }, [getNotesMaxWidth]);
 
   const fetchSectionVerified = async (sectionIdx) => {
     try {
@@ -284,8 +288,22 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
     } catch { /* non-blocking */ }
   };
 
-  const fetchLessonState = async () => {
-    setLoading(true);
+  const loadSectionHistory = async (sectionIdx) => {
+    try {
+      const res = await fetchWithRetry(
+        `${API_URL}/api/folders/${encodeURIComponent(folderName)}/section-chat/${sectionIdx}?resume=true`,
+        { headers: hdrs() },
+      );
+      if (res.ok) {
+        const chatData = await res.json();
+        return { messages: chatData.messages || [], conversationId: chatData.conversation_id };
+      }
+    } catch { /* ignore */ }
+    return null;
+  };
+
+  const fetchLessonState = async ({ quiet = false } = {}) => {
+    if (!quiet) setLoading(true);
     setLoadError(false);
     let data = null;
     try {
@@ -300,7 +318,6 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
       }
       data = await res.json();
       setLessonState(data);
-      if (data.section_verified) setSectionComplete(true);
     } catch {
       setLoadError(true);
       setLoading(false);
@@ -311,22 +328,38 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
     if (data?.has_outline) {
       if (initialReviewSection != null) {
         startReviewSection(initialReviewSection, data.sections, data.section_progress);
-      } else if (!data.is_complete) {
-        startSectionChat(data.current_section, data.sections);
+      } else if (!data.is_complete && data.content_ready !== false) {
+        const autoKey = `${folderName}:${data.current_section}`;
+        if (lastAutoStartRef.current !== autoKey) {
+          lastAutoStartRef.current = autoKey;
+          try {
+            await startSectionChat(data.current_section, data.sections, {
+              alreadyVerified: Boolean(data.section_verified),
+            });
+          } catch {
+            setLoadError(true);
+          }
+        }
       }
     }
   };
 
+  const pollPreparation = useEffectEvent(() => fetchLessonState({ quiet: true }));
+  useEffect(() => {
+    if (!lessonState?.has_outline || lessonState.content_ready !== false || lessonState.section_preparation?.error) return;
+    const timer = setInterval(() => pollPreparation(), 2500);
+    return () => clearInterval(timer);
+  }, [lessonState?.has_outline, lessonState?.content_ready, lessonState?.section_preparation?.error]);
+
   const startReviewSection = (sectionIdx, sections, sectionProgress) => {
+    setSourceCitation(null);
     setSectionComplete(false);
-    setSectionFeedback(null);
     setProgressReward(null);
     setConversationId(null);
     conversationIdRef.current = null;
     setRetryPayload(null);
     setViewingSection(null);
     setViewingChat([]);
-    setViewingFeedback(null);
     setReviewSectionIdx(sectionIdx);
     currentSectionRef.current = sectionIdx;
     const section = sections?.[sectionIdx];
@@ -337,6 +370,7 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
     const masteryNote = mastery != null ? ` (currently ${mastery}% mastery)` : '';
 
     setChatMessages([]);
+    resetStream();
     setChatLoading(true);
 
     sendToApi(
@@ -346,63 +380,96 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
     );
   };
 
-  const startSectionChat = (sectionIdx, sections) => {
-    setSectionComplete(false);
-    setSectionFeedback(null);
+  const startSectionChat = async (sectionIdx, sections, { fresh = false, alreadyVerified = false, force = false } = {}) => {
+    setSourceCitation(null);
     setProgressReward(null);
     setConversationId(null);
     conversationIdRef.current = null;
     setRetryPayload(null);
     setViewingSection(null);
     setViewingChat([]);
-    setViewingFeedback(null);
+    setReviewSectionIdx(null);
     currentSectionRef.current = sectionIdx;
-    const section = sections?.[sectionIdx];
-    if (!section) return;
 
-    try {
-      const stored = JSON.parse(sessionStorage.getItem(storageKey));
-      if (stored?.sectionIdx === sectionIdx && stored.messages?.length > 0) {
-        setChatMessages(stored.messages);
-        if (stored.conversationId) {
-          setConversationId(stored.conversationId);
-          conversationIdRef.current = stored.conversationId;
-        }
-        if (stored.sectionComplete) setSectionComplete(true);
-        fetchSectionVerified(sectionIdx);
+    const section = sections?.[sectionIdx];
+    if (!section) {
+      setChatLoading(false);
+      throw new Error(`Section ${sectionIdx + 1} not found in lesson outline`);
+    }
+
+    if (!fresh) {
+      setChatLoading(true);
+      const history = await loadSectionHistory(sectionIdx);
+      if (history?.messages.length) {
+        resetStream();
+        setChatMessages(history.messages);
+        setSectionComplete(Boolean(alreadyVerified));
+        setConversationId(history.conversationId);
+        conversationIdRef.current = history.conversationId;
+        setChatLoading(false);
         return;
       }
-    } catch {}
-
+      if (history === null) {
+        // Offline fallback is scoped to this student. Never start a replacement
+        // conversation merely because the server history could not be loaded.
+        try {
+          const stored = JSON.parse(sessionStorage.getItem(storageKey));
+          if (stored?.sectionIdx === sectionIdx && stored.messages?.length) {
+            resetStream();
+            setChatMessages(stored.messages);
+            setSectionComplete(Boolean(stored.sectionComplete || alreadyVerified));
+            setConversationId(stored.conversationId);
+            conversationIdRef.current = stored.conversationId;
+            setChatLoading(false);
+            return;
+          }
+        } catch { /* No usable local fallback. */ }
+        setChatLoading(false);
+        throw new Error('Could not restore your saved conversation');
+      }
+    }
+    setSectionComplete(Boolean(alreadyVerified));
     setChatMessages([]);
-    setChatLoading(true);
+    resetStream();
+    if (alreadyVerified) {
+      setChatLoading(false);
+      return;
+    }
 
-    sendToApi(
-      `I'm ready to learn about "${section.title}". Please teach me this section.`,
-      null,
-      sectionIdx,
-    );
+    const startKey = `section:${sectionIdx}`;
+    if (!force && sectionStartInflightRef.current === startKey) return;
+    if (force) sectionStartInflightRef.current = null;
+    sectionStartInflightRef.current = startKey;
+
+    setChatLoading(true);
+    try {
+      await sendToApi(
+        `I'm ready to learn about "${section.title}". Please teach me this section.`,
+        null,
+        sectionIdx,
+      );
+    } finally {
+      if (sectionStartInflightRef.current === startKey) {
+        sectionStartInflightRef.current = null;
+      }
+    }
   };
 
   const sendToApi = async (message, convId, sectionIdx) => {
     const secIdx = sectionIdx !== undefined ? sectionIdx : currentSectionRef.current;
+    const { controller, streamId } = beginChatStream(streamAbortRef, streamGenerationRef);
+
+    retryContextRef.current = { message, convId };
+    streamHandledRef.current = false;
     setChatLoading(true);
     setRetryPayload(null);
-    setChatMessages(prev => [...prev, { role: 'pedro', content: '' }]);
+    resetStream();
 
-    const updateLastPedro = (content) => {
-      setChatMessages(prev => {
-        const updated = [...prev];
-        updated[updated.length - 1] = { role: 'pedro', content };
-        return updated;
-      });
-    };
-
-    let res;
     try {
-      res = await fetchWithRetry(`${API_URL}/api/chat/stream`, {
+      const res = await fetchWithRetry(`${API_URL}/api/chat/stream`, {
         method: 'POST',
         headers: hdrs(),
+        signal: controller.signal,
         body: JSON.stringify({
           message,
           context_type: 'lesson',
@@ -411,27 +478,26 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
           section_index: secIdx,
         }),
       });
-    } catch {
-      updateLastPedro('');
-      setRetryPayload({ message, convId });
-      setChatLoading(false);
-      return;
-    }
 
-    if (!res.ok) {
-      updateLastPedro('Sorry, something went wrong. Try again!');
-      setRetryPayload({ message, convId });
-      setChatLoading(false);
-      return;
-    }
+      if (!isActiveStream(streamGenerationRef, streamId)) return;
 
-    try {
+      if (!res.ok) {
+        pendingUserMessageRef.current = null;
+        clearUnsendWindow();
+        setChatMessages(prev => [...prev, { role: 'pedro', content: 'Sorry, something went wrong. Try again!' }]);
+        setRetryPayload({ message, convId });
+        return;
+      }
+
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
-      let fullText = '';
       let buffer = '';
 
       while (true) {
+        if (!isActiveStream(streamGenerationRef, streamId)) {
+          await reader.cancel().catch(() => {});
+          return;
+        }
         const { done, value } = await reader.read();
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
@@ -442,63 +508,128 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
           if (!line.startsWith('data: ')) continue;
           try {
             const evt = JSON.parse(line.slice(6));
-            if (evt.token) {
-              fullText += evt.token;
-              updateLastPedro(stripPedroTags(fullText));
+            if (evt.token && isActiveStream(streamGenerationRef, streamId)) {
+              appendToken(evt.token);
             }
             if (evt.done) {
-              logContentRetrieval(evt);
-              if (evt.conversation_id) {
-                setConversationId(evt.conversation_id);
-                conversationIdRef.current = evt.conversation_id;
-              }
-              if (typeof evt.section_verified === 'boolean') {
-                setSectionComplete((prev) => evt.section_verified || prev);
-              }
+              completeChatStreamResponse({
+                metadataOnly: streamHandledRef.current,
+                evt,
+              });
             }
-          } catch {}
+          } catch { /* Skip malformed non-message SSE lines; completion/error state is handled after the stream. */ }
         }
       }
 
-      if (!fullText) {
-        updateLastPedro('Sorry, something went wrong. Try again!');
-        setRetryPayload({ message, convId });
-      } else {
-        setRetryPayload(null);
+      if (!isActiveStream(streamGenerationRef, streamId)) return;
+
+      if (!streamHandledRef.current) {
+        completeChatStreamResponse();
       }
-    } catch {
-      setRetryPayload({ message, convId });
+    } catch (err) {
+      if (err?.name === 'AbortError') return;
+      if (!isActiveStream(streamGenerationRef, streamId)) return;
+      if (!streamHandledRef.current) {
+        const partial = finalizeStream();
+        pendingUserMessageRef.current = null;
+        clearUnsendWindow();
+        // Once Pedro has started answering, the server finishes and saves the turn:
+        // reload it rather than asking the same question twice.
+        setRetryPayload({ ...retryContextRef.current, sectionIdx: secIdx, reload: Boolean(partial) });
+      }
+    } finally {
+      if (endChatStream(streamAbortRef, controller, streamGenerationRef, streamId)) {
+        setChatLoading(false);
+      }
     }
-    setChatLoading(false);
   };
 
-  const handleRetry = useCallback(() => {
+  const handleRetry = async () => {
     if (!retryPayload) return;
-    setChatMessages(prev => {
-      const last = prev[prev.length - 1];
-      if (last?.role === 'pedro' && !last.content) return prev.slice(0, -1);
-      return prev;
-    });
-    const { message, convId } = retryPayload;
-    sendToApi(message, convId);
-  }, [retryPayload]);
+    const { message, convId, sectionIdx, reload } = retryPayload;
+    if (!reload) {
+      sendToApi(message, convId);
+      return;
+    }
+    const history = await loadSectionHistory(sectionIdx);
+    const msgs = history?.messages || [];
+    const last = msgs[msgs.length - 1];
+    if (last?.role === 'pedro' && msgs.length >= chatMessages.length) {
+      resetStream();
+      setChatMessages(msgs);
+      setConversationId(history.conversationId);
+      conversationIdRef.current = history.conversationId;
+      setRetryPayload(null);
+    } else {
+      setRetryPayload({ ...retryPayload, finishing: true });
+    }
+  };
 
-  const handleSend = async () => {
-    const msg = chatInput.trim();
+  const handleSend = async (suggestion) => {
+    const msg = typeof suggestion === 'string' ? suggestion : chatInput.trim();
     if (!msg || chatLoading) return;
-    setChatInput('');
-    if (inputRef.current) inputRef.current.style.height = 'auto';
+    pendingUserMessageRef.current = msg;
+    if (typeof suggestion !== 'string') setChatInput('');
+    if (inputRef.current) resizeChatTextarea(inputRef.current);
     setRetryPayload(null);
     setAdvanceBlocked('');
     setChatMessages(prev => [...prev, { role: 'user', content: msg }]);
+    startUnsendWindow();
     await sendToApi(msg, conversationId);
+  };
+
+  // Labs in Pedro's replies send their results as the student's next message. One stable
+  // function, so streaming updates don't re-render every earlier message.
+  const handleSendRef = useRef(handleSend);
+  handleSendRef.current = handleSend;
+  const chatLoadingRef = useRef(chatLoading);
+  chatLoadingRef.current = chatLoading;
+  const sendLabResult = useCallback((text) => {
+    if (chatLoadingRef.current) {
+      window.alert('Pedro is still replying. Send the result once he has finished.');
+      return false;
+    }
+    handleSendRef.current(text);
+    return true;
+  }, []);
+
+  const handleCancelResponse = () => {
+    if (!canUnsend) return;
+    const pending = pendingUserMessageRef.current;
+    clearUnsendWindow();
+    cancelChatStream(streamAbortRef, streamGenerationRef);
+    resetStream();
+    setChatLoading(false);
+    if (!pending) return;
+    pendingUserMessageRef.current = null;
+    setChatInput(pending);
+    setChatMessages(prev => {
+      const last = prev[prev.length - 1];
+      if (last?.role === 'user' && last.content === pending) return prev.slice(0, -1);
+      return prev;
+    });
+    requestAnimationFrame(() => {
+      if (inputRef.current) {
+        resizeChatTextarea(inputRef.current);
+        inputRef.current.focus();
+      }
+    });
+  };
+
+  const handleChatKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
   };
 
   const handleAdvanceSection = async () => {
     setAdvancing(true);
     setAdvanceError(false);
     setAdvanceBlocked('');
-    setSectionFeedback(null);
+    cancelChatStream(streamAbortRef, streamGenerationRef);
+    sectionStartInflightRef.current = null;
+    resetStream();
     try {
       sessionStorage.removeItem(storageKey);
       const res = await fetchWithRetry(
@@ -509,23 +640,38 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
         const data = await res.json();
         setProgressReward(null);
         rewardClaimedRef.current = null;
-        const newState = {
-          ...lessonState,
-          current_section: data.current_section,
-          is_complete: data.is_complete,
-          progress_percent: Math.round((data.current_section / (lessonState?.total_sections || 1)) * 100),
-        };
-        setLessonState(newState);
 
         if (data.is_complete) {
+          setLessonState(prev => ({
+            ...prev,
+            current_section: data.current_section,
+            is_complete: true,
+            progress_percent: 100,
+            section_verified: false,
+          }));
           setChatMessages(prev => [...prev, {
             role: 'pedro',
-            content: "Congratulations! You've completed the entire course! You've done an amazing job working through all the material. Take a moment to be proud of what you've accomplished."
+            content: "Congratulations! You've completed the entire course! You've done an amazing job working through all the material. Take a moment to be proud of what you've accomplished.",
           }]);
           setSectionComplete(false);
-        } else if (data.next_section) {
-          setReviewSectionIdx(null);
-          startSectionChat(data.current_section, lessonState?.sections);
+          return;
+        }
+
+        const sections = data.sections?.length ? data.sections : (lessonState?.sections || []);
+        setLessonState(prev => ({
+          ...prev,
+          ...(data.sections?.length ? { sections: data.sections } : {}),
+          current_section: data.current_section,
+          is_complete: false,
+          section_verified: false,
+          progress_percent: Math.round((data.current_section / (prev?.total_sections || 1)) * 100),
+        }));
+
+        if (sections[data.current_section]?.preparation_version === 1) {
+          lastAutoStartRef.current = null;
+          await fetchLessonState({ quiet: true });
+        } else {
+          await startSectionChat(data.current_section, sections, { fresh: true, force: true });
         }
       } else {
         const err = await res.json().catch(() => ({}));
@@ -539,100 +685,35 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
       }
     } catch {
       setAdvanceError(true);
+    } finally {
+      setAdvancing(false);
     }
-    setAdvancing(false);
   };
 
   const handleViewPastSection = async (sectionIdx) => {
+    setSourceCitation(null);
     setViewingLoading(true);
     setViewingSection(sectionIdx);
-    setViewingFeedback(null);
     setViewingChat([]);
     setSidebarOpen(false);
 
     try {
-      const [chatRes, fbRes] = await Promise.all([
-        fetchWithRetry(
-          `${API_URL}/api/folders/${encodeURIComponent(folderName)}/section-chat/${sectionIdx}`,
-          { headers: hdrs() },
-        ),
-        fetchWithRetry(
-          `${API_URL}/api/folders/${encodeURIComponent(folderName)}/all-feedback`,
-          { headers: hdrs() },
-        ),
-      ]);
-
+      const chatRes = await fetchWithRetry(
+        `${API_URL}/api/folders/${encodeURIComponent(folderName)}/section-chat/${sectionIdx}`,
+        { headers: hdrs() },
+      );
       if (chatRes.ok) {
         const chatData = await chatRes.json();
         setViewingChat(chatData.messages || []);
       }
-
-      if (fbRes.ok) {
-        const fbData = await fbRes.json();
-        const match = fbData.sections?.find(s => s.section_index === sectionIdx);
-        if (match) setViewingFeedback(match.feedback);
-      }
-    } catch {}
+    } catch { /* the empty-history message below covers a failed load */ }
     setViewingLoading(false);
   };
 
   const handleBackToCurrent = () => {
+    setSourceCitation(null);
     setViewingSection(null);
     setViewingChat([]);
-    setViewingFeedback(null);
-  };
-
-  const handleRequestReview = async () => {
-    if (reviewStreaming || chatLoading) return;
-    setReviewStreaming(true);
-
-    const reviewIdx = currentSectionRef.current;
-    setChatMessages(prev => [...prev,
-      { role: 'user', content: 'Can you give me a review of everything we\'ve covered so far?' },
-      { role: 'pedro', content: '' },
-    ]);
-
-    try {
-      const res = await fetchWithRetry(
-        `${API_URL}/api/folders/${encodeURIComponent(folderName)}/review`,
-        {
-          method: 'POST',
-          headers: hdrs(),
-          body: JSON.stringify({ up_to_section: reviewIdx }),
-        },
-      );
-
-      if (res.ok) {
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let fullText = '';
-        let buffer = '';
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
-
-          for (const line of lines) {
-            if (!line.startsWith('data: ')) continue;
-            try {
-              const evt = JSON.parse(line.slice(6));
-              if (evt.token) {
-                fullText += evt.token;
-                setChatMessages(prev => {
-                  const updated = [...prev];
-                  updated[updated.length - 1] = { role: 'pedro', content: fullText };
-                  return updated;
-                });
-              }
-            } catch {}
-          }
-        }
-      }
-    } catch {}
-    setReviewStreaming(false);
   };
 
   if (loading) {
@@ -661,6 +742,19 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
     );
   }
 
+  if (lessonState?.has_outline && lessonState.content_ready === false) {
+    const preparation = lessonState.section_preparation;
+    return <div className="lv-container lv-container--fullscreen">
+      <div className="lv-loading" role="status" aria-live="polite">
+        {!preparation?.error && <Loader size={28} className="spinning" />}
+        <strong>{preparation?.error ? 'Preparation needs attention' : 'Your roadmap is ready'}</strong>
+        <span>{preparation?.error || 'Pedro is preparing this section’s pages and diagrams. The lesson will open automatically.'}</span>
+        {preparation && <span>{preparation.ready_pages} of {preparation.total_pages} assigned pages ready</span>}
+        <button className="lv-back-link" onClick={onClose}>Back to roadmap</button>
+      </div>
+    </div>;
+  }
+
   if (!lessonState?.has_outline) {
     return (
       <div className="lv-container lv-container--fullscreen">
@@ -677,13 +771,22 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
   const totalSections = lessonState.total_sections || 0;
   const isComplete = lessonState.is_complete;
   const sectionProgress = lessonState.section_progress || [];
-  const progressPercent = isComplete ? 100 : Math.round((currentIdx / Math.max(totalSections, 1)) * 100);
 
   const activeIdx = isReviewMode ? reviewSectionIdx : currentIdx;
   const displaySection = isViewingPast ? sections[viewingSection] : sections[activeIdx];
   const displayIdx = isViewingPast ? viewingSection : activeIdx;
   const displayMessages = isViewingPast ? viewingChat : chatMessages;
   const activeMastery = sectionProgress[displayIdx]?.mastery_pct;
+  const isStreamActive = !isViewingPast && (chatLoading);
+  const streamDisplay = isStreamActive ? stripPedroTags(streamingText) : '';
+  // Pedro asks something only where it matters; otherwise the student can simply continue.
+  const lastPedroText = [...displayMessages].reverse().find(m => m.role === 'pedro')?.content || '';
+  const awaitingAnswer = /^\s*>\s*\[!(question|q|try|practice|your-turn)\]/im.test(lastPedroText)
+    || /\?\s*$/.test(lastPedroText.trim());
+  const rewardTilesLine = progressReward
+    ? formatTilesUnlockedLine(progressReward.map, { verb: 'uncovered' })
+    : null;
+  const rewardTotalTiles = progressReward ? formatTotalTilesCharted(progressReward.map) : null;
 
   return (
     <div className="lv-container lv-container--fullscreen">
@@ -700,15 +803,11 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
               {progressReward.lesson_complete ? 'Lesson complete!' : 'Section complete!'}
             </p>
             <p className="lv-reward-xp">+{progressReward.xp_gained} XP</p>
-            {progressReward.map?.explored_delta_pct > 0 && (
-              <p className="lv-reward-map">
-                Map uncovered +{progressReward.map.explored_delta_pct}%
-              </p>
+            {rewardTilesLine && (
+              <p className="lv-reward-map">{rewardTilesLine}</p>
             )}
-            {progressReward.map?.explored_pct > 0 && (
-              <p className="lv-reward-explored">
-                {progressReward.map.explored_pct}% of the world revealed
-              </p>
+            {rewardTotalTiles && (
+              <p className="lv-reward-explored">{rewardTotalTiles}</p>
             )}
             {progressReward.lesson_complete && (
               <p className="lv-reward-bonus">Major expansion unlocked</p>
@@ -735,9 +834,17 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
           {displaySection && (
             <>
               <span className="lv-header-section-tag">
-                Section {displayIdx + 1} / {totalSections}
+                {displaySection.workshop ? 'Milestone' : 'Section'} {displayIdx + 1} of {totalSections}
               </span>
-              <span className="lv-header-title">{displaySection.title}</span>
+              <span className="lv-header-title">{displaySection.workshop?.title || displaySection.title}</span>
+              {sections.length > 1 && (
+                <span className="lv-header-segs" aria-hidden="true">
+                  {sections.map((_, i) => {
+                    const done = isComplete || i < currentIdx || (sectionProgress[i]?.mastery_pct ?? 0) >= 100;
+                    return <i key={i} className={`${done ? 'done' : ''}${i === displayIdx ? ' now' : ''}`.trim()} />;
+                  })}
+                </span>
+              )}
             </>
           )}
         </div>
@@ -755,7 +862,7 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
           <button
             type="button"
             className={`lv-notes-toggle ${notesOpen ? 'active' : ''}`}
-            onClick={() => setNotesOpen(prev => !prev)}
+            onClick={() => { setSourceCitation(null); setNotesOpen(prev => sourceCitation ? true : !prev); }}
             title="My Notes"
           >
             <StickyNote size={18} />
@@ -771,7 +878,7 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
         </div>
       </div>
 
-      <div className="lv-body">
+      <div className="lv-body" ref={bodyRef}>
         {/* Section Sidebar */}
         <div className={`lv-sidebar ${sidebarOpen ? 'open' : ''}`}>
           <h3 className="lv-sidebar-title">Sections</h3>
@@ -802,7 +909,7 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
                   <span className="lv-sidebar-item-marker">
                     {done ? <CheckCircle size={14} /> : <span>{i + 1}</span>}
                   </span>
-                  <span className="lv-sidebar-item-name">{sec.title}</span>
+                  <span className="lv-sidebar-item-name">{sec.workshop?.title || sec.title}</span>
                   <span className="lv-sidebar-item-time">
                     <Clock size={11} />
                     {sec.estimated_minutes || 20}m
@@ -820,7 +927,7 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
             <div className="lv-viewing-banner lv-review-banner">
               <button className="lv-back-current-btn" onClick={() => {
                 setReviewSectionIdx(null);
-                if (!isComplete) startSectionChat(currentIdx, sections);
+                if (!isComplete) startSectionChat(currentIdx, sections).catch(() => setLoadError(true));
               }}>
                 <ChevronLeft size={16} />
                 Back to lesson
@@ -844,7 +951,12 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
           )}
 
           {/* Section objectives — compact in fullscreen mode */}
-          {displaySection && (!isComplete || isReviewMode) && !isViewingPast && displaySection.learning_objectives?.length > 0 && (
+          {displaySection?.workshop && (!isComplete || isReviewMode) && !isViewingPast ? (
+            <details className="lv-workshop-goal">
+              <summary><span>This milestone</span>{displaySection.workshop.outcome}</summary>
+              <ul>{displaySection.workshop.criteria.map(item => <li key={item}>{item}</li>)}</ul>
+            </details>
+          ) : displaySection && (!isComplete || isReviewMode) && !isViewingPast && displaySection.learning_objectives?.length > 0 && (
             <div className="lv-section-banner lv-section-banner--compact">
               <div className="lv-section-objectives">
                 {displaySection.learning_objectives.map((obj, i) => (
@@ -855,7 +967,7 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
           )}
 
           {/* Chat Messages */}
-          <div className="lv-chat-area" ref={chatAreaRef}>
+          <div className="lv-chat-area" ref={chatAreaRef} onScroll={onChatScroll}>
             <div className="lv-chat-scroll-inner">
               {viewingLoading ? (
                 <div className="lv-loading" style={{ padding: '2rem' }}>
@@ -873,7 +985,8 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
                       )}
                       <div className="lv-msg-bubble">
                         {msg.role === 'pedro' ? (
-                          <PedroMessage text={msg.content} />
+                          <PedroMessage text={msg.content} sourceReferences={lessonState?.source_references} onCitation={setSourceCitation}
+                            onWidgetResult={isViewingPast ? null : sendLabResult} />
                         ) : (
                           <div className="lv-msg-user-text">{msg.content}</div>
                         )}
@@ -882,9 +995,26 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
                     );
                   })}
 
-                  {/* Viewing past feedback */}
-                  {isViewingPast && viewingFeedback && (
-                    <FeedbackCard feedback={viewingFeedback} />
+                  {isStreamActive && (
+                    <div className="lv-chat-msg pedro">
+                      <img src={mascot} alt="" className="lv-msg-avatar" />
+                      <div className={`lv-msg-bubble${!streamDisplay ? ' lv-msg-bubble--typing' : ''}`}>
+                        {streamDisplay ? (
+                          <PedroMessage text={streamDisplay} isStreaming streamIdle={tokenIdle}
+                            sourceReferences={lessonState?.source_references} onCitation={setSourceCitation} />
+                        ) : (
+                          <div className="lv-typing" aria-label="Pedro is typing">
+                            <span></span><span></span><span></span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {hasNewMessage && isStreamActive && (
+                    <button type="button" className="lv-jump-latest" onClick={jumpToLatest}>
+                      ↓ Jump to latest
+                    </button>
                   )}
 
                   {isViewingPast && viewingChat.length === 0 && !viewingLoading && (
@@ -894,17 +1024,6 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
                   )}
                 </>
               )}
-
-              {!isViewingPast && chatLoading && !reviewStreaming && (
-                <div className="lv-chat-msg pedro">
-                  <img src={mascot} alt="" className="lv-msg-avatar" />
-                  <div className="lv-msg-bubble">
-                    <div className="lv-typing">
-                      <span></span><span></span><span></span>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
@@ -912,25 +1031,16 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
           {!isViewingPast && retryPayload && !chatLoading && (
             <div className="lv-retry-bar">
               <WifiOff size={14} />
-              <span>Connection lost — your progress is saved</span>
+              <span>
+                {retryPayload.finishing
+                  ? 'Pedro is still finishing that answer. Try again in a moment.'
+                  : 'Connection lost — your progress is saved'}
+              </span>
               <button className="lv-retry-btn" onClick={handleRetry}>
                 <RefreshCw size={14} />
-                Retry
+                {retryPayload.reload ? 'Reload chat' : 'Retry'}
               </button>
             </div>
-          )}
-
-          {/* Section feedback card */}
-          {!isViewingPast && sectionComplete && !isComplete && !isReviewMode && (
-            <>
-              {feedbackLoading && (
-                <div className="lv-exam-loading">
-                  <Loader size={18} className="spinning" />
-                  <span>Analyzing your performance...</span>
-                </div>
-              )}
-              {sectionFeedback && <FeedbackCard feedback={sectionFeedback} />}
-            </>
           )}
 
           {/* Section Complete: Next Section */}
@@ -987,32 +1097,56 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
           {/* Input */}
           {(!isComplete || isReviewMode) && !isViewingPast && (
             <div className="lv-composer">
+              {!sectionComplete && displayMessages.length > 0 && (
+                <div className="lv-teaching-actions" aria-label="Learning support">
+                  {awaitingAnswer ? (
+                    <button type="button" disabled={chatLoading} onClick={() => handleSend('Give me a hint that helps me reason through this, without revealing the answer.')}>
+                      <Lightbulb aria-hidden="true" />Give me a hint
+                    </button>
+                  ) : (
+                    <button type="button" disabled={chatLoading} onClick={() => handleSend('Got it, continue.')}>
+                      <ChevronRight aria-hidden="true" />Continue
+                    </button>
+                  )}
+                  <button type="button" disabled={chatLoading} onClick={() => handleSend('Explain this another way, using a different explanation or analogy.')}>
+                    <Shuffle aria-hidden="true" />Explain another way
+                  </button>
+                  <button type="button" disabled={chatLoading} onClick={() => handleSend('Show me a worked example of a similar problem, then let me try the current question myself.')}>
+                    <PenLine aria-hidden="true" />Show a worked example
+                  </button>
+                </div>
+              )}
               <div className="lv-input-shell">
                 <textarea
                   ref={inputRef}
                   className="lv-input"
-                  placeholder={reviewStreaming ? 'Generating review...' : 'Write a message...'}
+                  placeholder="Write a message..."
                   value={chatInput}
                   onChange={e => {
                     setChatInput(e.target.value);
-                    e.target.style.height = 'auto';
-                    e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                    resizeChatTextarea(e.target);
                   }}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSend();
-                    }
-                  }}
-                  disabled={chatLoading || reviewStreaming}
-                  rows={1}
+                  onKeyDown={handleChatKeyDown}
+                  disabled={chatLoading}
+                  rows={3}
                 />
                 <div className="lv-composer-actions">
+                  {canUnsend && (
+                    <button
+                      type="button"
+                      className="lv-cancel-btn"
+                      onClick={handleCancelResponse}
+                      aria-label="Unsend message"
+                    >
+                      <Square size={14} fill="currentColor" />
+                      <span>Unsend</span>
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="lv-send-btn"
                     onClick={handleSend}
-                    disabled={chatLoading || reviewStreaming || !chatInput.trim()}
+                    disabled={chatLoading || !chatInput.trim()}
                     aria-label="Send message"
                   >
                     <Send size={16} />
@@ -1024,50 +1158,45 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
         </div>
 
         {/* Notes Panel */}
-        {notesOpen && (
-          <div className="lv-notes-panel">
-            <div className="lv-notes-header">
-              <h3 className="lv-notes-title">My Notes</h3>
-              <div className="lv-notes-header-right">
-                {notesSaving && <span className="lv-notes-saving">Saving...</span>}
-                <button className="lv-notes-close" onClick={() => setNotesOpen(false)}>
-                  <X size={16} />
-                </button>
-              </div>
-            </div>
-            <div className="lv-notes-toolbar" role="toolbar" aria-label="Note formatting">
-              <button type="button" className="lv-notes-tool" onMouseDown={(e) => e.preventDefault()} onClick={() => applyNotesFormat('bold')} title="Bold">
-                <strong>B</strong>
-              </button>
-              <span className="lv-notes-tool-divider" aria-hidden />
-              <button type="button" className="lv-notes-tool lv-notes-tool--size" onMouseDown={(e) => e.preventDefault()} onClick={() => applyNotesSize('lv-note-size-sm')} title="Small text">A</button>
-              <button type="button" className="lv-notes-tool lv-notes-tool--size lv-notes-tool--size-md" onMouseDown={(e) => e.preventDefault()} onClick={() => applyNotesSize('lv-note-size-md')} title="Normal text">A</button>
-              <button type="button" className="lv-notes-tool lv-notes-tool--size lv-notes-tool--size-lg" onMouseDown={(e) => e.preventDefault()} onClick={() => applyNotesSize('lv-note-size-lg')} title="Large text">A</button>
-              <span className="lv-notes-tool-divider" aria-hidden />
-              <button type="button" className="lv-notes-tool lv-notes-swatch lv-notes-swatch--yellow" onMouseDown={(e) => e.preventDefault()} onClick={() => applyNotesHighlight('#fef08a')} title="Yellow highlight" aria-label="Yellow highlight" />
-              <button type="button" className="lv-notes-tool lv-notes-swatch lv-notes-swatch--green" onMouseDown={(e) => e.preventDefault()} onClick={() => applyNotesHighlight('#bbf7d0')} title="Green highlight" aria-label="Green highlight" />
-              <button type="button" className="lv-notes-tool lv-notes-swatch lv-notes-swatch--pink" onMouseDown={(e) => e.preventDefault()} onClick={() => applyNotesHighlight('#fbcfe8')} title="Pink highlight" aria-label="Pink highlight" />
-              <button type="button" className="lv-notes-tool lv-notes-swatch lv-notes-swatch--blue" onMouseDown={(e) => e.preventDefault()} onClick={() => applyNotesHighlight('#bfdbfe')} title="Blue highlight" aria-label="Blue highlight" />
-              <button type="button" className="lv-notes-tool" onMouseDown={(e) => e.preventDefault()} onClick={() => applyNotesFormat('removeFormat')} title="Clear formatting">
-                <RotateCcw size={13} />
-              </button>
-            </div>
+        {notesOpen && !sourceCitation && (
+          <div
+            className="lv-notes-panel"
+            style={{ width: notesPanelWidth, maxWidth: '100%' }}
+          >
             <div
-              ref={notesRef}
-              className="lv-notes-editor"
-              contentEditable
-              suppressContentEditableWarning
-              onInput={handleNotesInput}
-              onPaste={(e) => {
-                e.preventDefault();
-                const html = e.clipboardData.getData('text/html');
-                const text = e.clipboardData.getData('text/plain');
-                document.execCommand('insertHTML', false, html || text);
-                handleNotesInput();
-              }}
-              data-placeholder="Start typing your notes here... You can paste text and images from the lesson."
+              className="lv-notes-resize-handle"
+              onMouseDown={startNotesResize}
+              role="separator"
+              aria-orientation="vertical"
+              aria-label="Resize notes panel"
             />
+            <div className="lv-notes-panel-inner">
+              <div className="lv-notes-header">
+                <h3 className="lv-notes-title">My Notes</h3>
+                <div className="lv-notes-header-right">
+                  {note.saving && <span className="lv-notes-saving">Saving…</span>}
+                  {note.error && <button type="button" onClick={note.retry} role="status">{note.error}</button>}
+                  <button className="lv-notes-close" onClick={() => setNotesOpen(false)}>
+                    <X size={16} />
+                  </button>
+                </div>
+              </div>
+              <RichNotesEditor
+                contentHtml={note.html}
+                readOnly={!note.loaded}
+                onChange={note.change}
+                showExport
+                exportTitle={`${folderName} — Notes`}
+                exportFilename={`coast-notes-${folderName.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.html`}
+                placeholder="Start typing your notes… Drag in images or paste from Pedro."
+              />
+            </div>
           </div>
+        )}
+        {sourceCitation && (
+          <SourceCitationViewer key={`${sourceCitation.source_id}:${sourceCitation.page}`}
+            folderName={folderName} citation={sourceCitation} variant="lesson"
+            onClose={() => setSourceCitation(null)} />
         )}
       </div>
 
@@ -1079,50 +1208,6 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
 };
 
 
-const FeedbackCard = ({ feedback }) => {
-  if (!feedback) return null;
-  const { strengths = [], weaknesses = [], tips = [] } = feedback;
-  if (!strengths.length && !weaknesses.length && !tips.length) return null;
-
-  return (
-    <div className="lv-feedback-card">
-      <h4 className="lv-feedback-heading">Section Review</h4>
-      {strengths.length > 0 && (
-        <div className="lv-feedback-group lv-feedback-strengths">
-          <div className="lv-feedback-group-header">
-            <TrendingUp size={14} />
-            <span>Strengths</span>
-          </div>
-          <ul>
-            {strengths.map((s, i) => <li key={i}>{s}</li>)}
-          </ul>
-        </div>
-      )}
-      {weaknesses.length > 0 && (
-        <div className="lv-feedback-group lv-feedback-weaknesses">
-          <div className="lv-feedback-group-header">
-            <AlertTriangle size={14} />
-            <span>Areas to Improve</span>
-          </div>
-          <ul>
-            {weaknesses.map((w, i) => <li key={i}>{w}</li>)}
-          </ul>
-        </div>
-      )}
-      {tips.length > 0 && (
-        <div className="lv-feedback-group lv-feedback-tips">
-          <div className="lv-feedback-group-header">
-            <Lightbulb size={14} />
-            <span>Tips</span>
-          </div>
-          <ul>
-            {tips.map((t, i) => <li key={i}>{t}</li>)}
-          </ul>
-        </div>
-      )}
-    </div>
-  );
-};
 
 
 export default LessonView;

@@ -70,7 +70,7 @@ export default function MapTreasureModal({ chest, token, onClose, onComplete }) 
         return;
       }
       if (!data.ok) {
-        setFeedback(data.feedback || data.message || 'Not quite — try again.');
+        setFeedback(data.feedback || data.message || data.detail || 'Could not grade your answer. Please retry.');
         return;
       }
       setOutcome(data);
@@ -83,7 +83,7 @@ export default function MapTreasureModal({ chest, token, onClose, onComplete }) 
   };
 
   return (
-    <div className="wm-treasure-overlay" role="dialog" aria-modal="true" data-theme="dark">
+    <div className="wm-treasure-overlay" role="dialog" aria-modal="true">
       <div className="wm-treasure-panel">
         <div className="wm-treasure-header">
           <h2 className="wm-treasure-title">🧳 {chest?.name || 'Treasure Chest'}</h2>
@@ -108,10 +108,10 @@ export default function MapTreasureModal({ chest, token, onClose, onComplete }) 
 
         {outcome && (
           <div className="wm-treasure-success">
-            <p className="wm-treasure-success-title">Chest opened!</p>
-            <p className="wm-treasure-success-xp">+{outcome.xp_gained} XP</p>
+            <p className="wm-treasure-success-title">{outcome.correct ? 'Chest opened!' : 'Keep exploring'}</p>
+            {outcome.correct > 0 && <p className="wm-treasure-success-xp">+{outcome.xp_gained} XP</p>}
             <p className="wm-treasure-success-sub">
-              You nailed “{outcome.concept_name}”
+              {outcome.correct ? `You nailed “${outcome.concept_name}”` : 'This chest is gone. Your next discovery brings another chance.'}
             </p>
             {outcome.feedback && (
               <p className="wm-treasure-success-feedback">{outcome.feedback}</p>

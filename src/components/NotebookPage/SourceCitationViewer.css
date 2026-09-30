@@ -1,0 +1,23 @@
+.source-preview { position: fixed; z-index: 120; right: 18px; top: 76px; bottom: 18px; width: min(620px, 49vw); display: flex; flex-direction: column; background: #0e0e0e; border: 1px solid rgba(255, 255, 255, .12); border-radius: 16px; box-shadow: -15px 0 60px #0008; overflow: hidden; }
+.source-preview header { display: flex; justify-content: space-between; align-items: center; padding: 16px; gap: 14px; }
+.source-preview h3 { color: #efebe1; font-size: .96rem; margin: 4px 0 0; }
+.source-preview-nav { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 0 16px 12px; color: #bdbdb5; font-size: .8rem; }
+.source-preview-content { overflow: auto; flex: 1; min-height: 0; padding: 12px; background: #0a0a0a; }
+.source-preview-content img { width: 100%; display: block; height: auto; }
+.source-preview-content pre { white-space: pre-wrap; line-height: 1.7; color: #e0dfd7; padding: 12px; }
+.source-preview-content > p { padding: 15px; color: #bebeb8; }
+.source-excerpt { font-size: .78rem; padding: 14px 18px; max-height: 25%; overflow: auto; color: #bfbdb6; line-height: 1.65; }
+.source-excerpt summary { color: #FFB503; cursor: pointer; }
+
+.source-preview button { display: inline-flex; justify-content: center; align-items: center; color: #dbd7cf; background: #1a1a1a; border: 1px solid rgba(255, 255, 255, .12); padding: 7px; border-radius: 8px; cursor: pointer; }
+.source-preview button:disabled { opacity: .4; cursor: default; }
+.source-preview button:focus-visible { outline: 2px solid #FFB503; outline-offset: 3px; }
+.source-preview-eyebrow { color: #FFB503; font-size: .65rem; font-weight: 800; letter-spacing: .13em; }
+.source-preview--lesson { position: relative; inset: auto; flex: 0 0 clamp(340px, 42vw, 620px); width: auto; min-width: 0; margin: 12px 12px 12px 0; box-shadow: none; }
+@media(max-width: 900px) {
+  .source-preview--lesson { position: absolute; inset: 8px; width: auto; margin: 0; z-index: 20; }
+}
+@media(max-width: 700px) {
+  .source-preview--sources { inset: 68px 8px 8px; width: auto; }
+  .source-preview-nav { gap: 8px; padding-left: 10px; padding-right: 10px; }
+}

@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import { initialTimer, timerReducer, restoreTimer, remainingSeconds } from '../src/utils/focusTimer.js';
+let state = timerReducer(initialTimer(), { type: 'toggle', now: 1000 });
+assert.equal(remainingSeconds(state, 601000), 900, 'Sleeping tab loses ten real minutes');
+state = restoreTimer(JSON.stringify(state), 601000);
+state = timerReducer(state, { type: 'toggle', now: 601000 });
+assert.equal(remainingSeconds(state, 99999999), 900, 'Paused time does not elapse');
+state = timerReducer(state, { type: 'toggle', now: 2000000 });
+state = restoreTimer(JSON.stringify(state), 99999999);
+assert.equal(state.sessions, 1, 'Reload counts completed focus once');
+assert.equal(state.mode, 'short');
+assert.equal(state.remaining, 300, 'Break begins with its full duration');
+assert.equal(state.deadline, null, 'Sleeping does not auto-run unattended cycles');
+assert.deepEqual(timerReducer(state, { type: 'tick', now: 999999999 }), state);
+assert.deepEqual(restoreTimer('{"preset":"broken"}', 0), initialTimer());
+console.log('Focus timer: sleep, reload, pause, break and malformed storage checks passed.');

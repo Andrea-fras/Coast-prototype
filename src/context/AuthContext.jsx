@@ -1,16 +1,12 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { loadSession } from '../utils/loadSession';
+import { clearStudentSession } from '../utils/studentCache';
+import React, { useState, useEffect } from 'react';
 
 import { API_URL } from '../config';
 const TOKEN_KEY = 'coast_token';
 const USER_KEY = 'coast_user';
 
-const AuthContext = createContext(null);
-
-export const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
-  return ctx;
-};
+import { AuthContext } from './authState';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
@@ -22,30 +18,57 @@ export const AuthProvider = ({ children }) => {
     }
   });
   const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY) || null);
-  const [loading, setLoading] = useState(true);
-
-  // Verify token on mount
+  const [loading, setLoading] = useState(() => Boolean(localStorage.getItem(TOKEN_KEY)));
+  const [sessionError, setSessionError] = useState('');
+  const [sessionAttempt, setSessionAttempt] = useState(0);
+  const retrySession = () => {
+    setSessionError('');
+    setLoading(true);
+    setSessionAttempt(value => value + 1);
+  };
+  const [imageGrant, setImageGrant] = useState(null);
+  const imageAccess = imageGrant?.token === token ? imageGrant.access : '';
   useEffect(() => {
+    let cancelled = false;
+    if (!token) return undefined;
+    const renew = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/image-access`, { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) setImageGrant({ token, access: data.access || '' });
+      } catch { /* The next renewal or sign-in will retry. */ }
+    };
+    renew();
+    const timer = setInterval(renew, 10 * 60 * 1000);
+    return () => { cancelled = true; clearInterval(timer); };
+  }, [token]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const controller = new AbortController();
     if (token) {
-      fetch(`${API_URL}/api/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then(res => {
-          if (!res.ok) throw new Error('Invalid token');
-          return res.json();
-        })
-        .then(userData => {
+      loadSession(`${API_URL}/api/auth/me`, token, { signal: controller.signal })
+        .then((userData) => {
+          if (cancelled) return;
+          if (userData === null) {
+            clearStudentSession();
+            setToken(null);
+            setUser(null);
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(USER_KEY);
+            return;
+          }
           setUser(userData);
           localStorage.setItem(USER_KEY, JSON.stringify(userData));
         })
         .catch(() => {
-          logout();
+          if (!cancelled) setSessionError('Coast could not reach the server to check your session. Your saved sign-in is still here.');
         })
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
+        .finally(() => { if (!cancelled) setLoading(false); });
     }
-  }, []);
+    return () => { cancelled = true; controller.abort(); };
+  }, [token, sessionAttempt]);
 
   const login = async (email, password) => {
     let res;
@@ -63,6 +86,8 @@ export const AuthProvider = ({ children }) => {
       throw new Error(err.detail || 'Login failed');
     }
     const data = await res.json();
+    clearStudentSession();
+    setSessionError('');
     setToken(data.token);
     setUser(data.user);
     localStorage.setItem(TOKEN_KEY, data.token);
@@ -70,13 +95,13 @@ export const AuthProvider = ({ children }) => {
     return data.user;
   };
 
-  const register = async (email, name, password, course = '') => {
+  const register = async (email, name, password, betaCode = '') => {
     let res;
     try {
       res = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name, password, course }),
+        body: JSON.stringify({ email, name, password, beta_code: betaCode }),
       });
     } catch {
       throw new Error('Cannot reach the Coast server. Make sure the backend is running on port 8000.');
@@ -86,6 +111,8 @@ export const AuthProvider = ({ children }) => {
       throw new Error(err.detail || 'Registration failed');
     }
     const data = await res.json();
+    clearStudentSession();
+    setSessionError('');
     setToken(data.token);
     setUser(data.user);
     localStorage.setItem(TOKEN_KEY, data.token);
@@ -94,6 +121,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    setSessionError('');
+    setLoading(false);
+    clearStudentSession();
     setToken(null);
     setUser(null);
     localStorage.removeItem(TOKEN_KEY);
@@ -117,7 +147,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, authFetch, updateUser }}>
+    <AuthContext.Provider value={{ user, token, imageAccess, loading, sessionError, retrySession, login, register, logout, authFetch, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

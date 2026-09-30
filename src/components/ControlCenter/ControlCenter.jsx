@@ -3,9 +3,11 @@ import {
   Activity, AlertTriangle, Clock, Database, HardDrive, MessageSquare, RefreshCw,
   Server, Trash2, TrendingUp, Users, X, Zap,
 } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/authState';
 import { API_URL } from '../../config';
 import coastLogo from '../../assets/Coastlogo-white-full.svg';
+import AiUsagePanel from './AiUsagePanel';
+import BetaCodesPanel from './BetaCodesPanel';
 import './ControlCenter.css';
 
 function formatBytes(bytes) {
@@ -311,6 +313,9 @@ export default function ControlCenter({ onClose }) {
             </section>
 
             <div className="cc-main-grid">
+              <AiUsagePanel token={token} Chart={MiniBarChart} />
+              <BetaCodesPanel token={token} formatTime={formatTime} />
+
               <section className="cc-panel cc-live-panel">
                 <div className="cc-panel-head">
                   <Users size={16} />
@@ -464,7 +469,7 @@ export default function ControlCenter({ onClose }) {
                       <tr>
                         <th>Name</th>
                         <th>Email</th>
-                        <th>Course</th>
+                        <th>Invite code</th>
                         <th>Joined</th>
                       </tr>
                     </thead>
@@ -473,7 +478,7 @@ export default function ControlCenter({ onClose }) {
                         <tr key={u.id} className={u.is_loadtest ? 'cc-row-bot' : ''}>
                           <td>{u.name}{u.is_loadtest ? ' 🤖' : ''}</td>
                           <td>{u.email}</td>
-                          <td>{u.course || '—'}</td>
+                          <td>{u.beta_code ? <code className="cc-code">{u.beta_code}</code> : '—'}</td>
                           <td>{formatTime(u.created_at)}</td>
                         </tr>
                       ))}

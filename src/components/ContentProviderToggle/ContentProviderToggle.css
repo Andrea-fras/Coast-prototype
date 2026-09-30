@@ -1,0 +1,57 @@
+.content-provider-toggle {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.5rem;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  font-family: Nunito, system-ui, sans-serif;
+  font-size: 0.72rem;
+}
+
+.cpt-label {
+  color: #94a3b8;
+  padding: 0 0.35rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cpt-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.35rem 0.65rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  background: transparent;
+  color: #cbd5e1;
+  transition: background 0.15s, color 0.15s;
+}
+
+.cpt-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.cpt-btn.active {
+  color: #0f172a;
+}
+
+.cpt-btn:first-of-type.active {
+  background: #fbbf24;
+}
+
+.cpt-btn:last-of-type.active {
+  background: #34d399;
+}
+
+.cpt-btn:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}

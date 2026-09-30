@@ -1,0 +1,150 @@
+/* Shared rich notes editor — used in lesson panel + notes workspace */
+
+.rich-notes {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.rich-notes-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.45rem 0.65rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.rich-notes-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 0.35rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+  transition: background 0.15s, color 0.15s;
+}
+
+.rich-notes-tool:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #eee;
+}
+
+.rich-notes-tool--size-sm { font-size: 0.72rem; }
+.rich-notes-tool--size-md { font-size: 0.88rem; }
+.rich-notes-tool--size-lg { font-size: 1.05rem; }
+
+.rich-notes-tool--export {
+  font-weight: 500;
+  font-size: 0.75rem;
+  padding: 0 0.5rem;
+}
+
+.rich-notes-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.12);
+  margin: 0 0.15rem;
+}
+
+.rich-notes-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  padding: 0;
+}
+
+.notes-swatch--yellow { background: #fef08a; }
+.notes-swatch--green { background: #bbf7d0; }
+.notes-swatch--pink { background: #fbcfe8; }
+.notes-swatch--blue { background: #bfdbfe; }
+
+.rich-notes-editor {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 1.1rem;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: #e8e8e8;
+  outline: none;
+  min-height: 120px;
+}
+
+.rich-notes-editor:empty::before {
+  content: attr(data-placeholder);
+  color: #666;
+  pointer-events: none;
+}
+
+.rich-notes-editor h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 1rem 0 0.5rem;
+  color: #f0f0f0;
+}
+
+.rich-notes-editor ul,
+.rich-notes-editor ol {
+  margin: 0.5rem 0;
+  padding-left: 1.4rem;
+}
+
+.rich-notes-editor img,
+.rich-notes-editor .notes-inline-img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 0.65rem 0;
+  display: block;
+}
+
+.rich-notes-editor .notes-size-sm,
+.rich-notes-editor .lv-note-size-sm { font-size: 0.78rem; }
+.rich-notes-editor .notes-size-md { font-size: 0.95rem; }
+.rich-notes-editor .notes-size-lg,
+.rich-notes-editor .lv-note-size-lg { font-size: 1.15rem; line-height: 1.55; }
+
+/* Light theme variant (lesson side panel) */
+.lv-notes-panel .rich-notes-toolbar {
+  border-bottom-color: #333;
+}
+
+.lv-notes-panel .rich-notes-tool {
+  color: #aaa;
+}
+
+.lv-notes-panel .rich-notes-tool:hover {
+  background: #333;
+  color: #eee;
+}
+
+.lv-notes-panel .rich-notes-divider {
+  background: #444;
+}
+
+.lv-notes-panel .rich-notes-editor {
+  color: #e8e8e8;
+}
+
+.lv-notes-panel .rich-notes-editor:empty::before {
+  color: #aaa;
+}
+
+.lv-notes-panel .rich-notes-editor h2 {
+  color: #f0f0f0;
+}
+
+.rich-notes-toolbar button:disabled { opacity: 0.4; cursor: default; }

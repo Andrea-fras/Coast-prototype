@@ -1,0 +1,61 @@
+/* Scope the four pastel highlights to readable ink, including old saved notes
+   and nested white text. CSS leaves the native editor selection/undo untouched.
+   The same rules are embedded in downloaded notes. */
+.notes-content :is(
+  mark,
+  [style*="background-color: #fef08a" i],
+  [style*="background-color:#fef08a" i],
+  [style*="background-color: rgb(254, 240, 138)" i],
+  [style*="background-color:rgb(254, 240, 138)" i],
+  [style*="background-color: rgb(254,240,138)" i],
+  [style*="background-color:rgb(254,240,138)" i],
+  [style*="background-color: #bbf7d0" i],
+  [style*="background-color:#bbf7d0" i],
+  [style*="background-color: rgb(187, 247, 208)" i],
+  [style*="background-color:rgb(187, 247, 208)" i],
+  [style*="background-color: rgb(187,247,208)" i],
+  [style*="background-color:rgb(187,247,208)" i],
+  [style*="background-color: #fbcfe8" i],
+  [style*="background-color:#fbcfe8" i],
+  [style*="background-color: rgb(251, 207, 232)" i],
+  [style*="background-color:rgb(251, 207, 232)" i],
+  [style*="background-color: rgb(251,207,232)" i],
+  [style*="background-color:rgb(251,207,232)" i],
+  [style*="background-color: #bfdbfe" i],
+  [style*="background-color:#bfdbfe" i],
+  [style*="background-color: rgb(191, 219, 254)" i],
+  [style*="background-color:rgb(191, 219, 254)" i],
+  [style*="background-color: rgb(191,219,254)" i],
+  [style*="background-color:rgb(191,219,254)" i]
+),
+.notes-content :is(
+  mark,
+  [style*="background-color: #fef08a" i],
+  [style*="background-color:#fef08a" i],
+  [style*="background-color: rgb(254, 240, 138)" i],
+  [style*="background-color:rgb(254, 240, 138)" i],
+  [style*="background-color: rgb(254,240,138)" i],
+  [style*="background-color:rgb(254,240,138)" i],
+  [style*="background-color: #bbf7d0" i],
+  [style*="background-color:#bbf7d0" i],
+  [style*="background-color: rgb(187, 247, 208)" i],
+  [style*="background-color:rgb(187, 247, 208)" i],
+  [style*="background-color: rgb(187,247,208)" i],
+  [style*="background-color:rgb(187,247,208)" i],
+  [style*="background-color: #fbcfe8" i],
+  [style*="background-color:#fbcfe8" i],
+  [style*="background-color: rgb(251, 207, 232)" i],
+  [style*="background-color:rgb(251, 207, 232)" i],
+  [style*="background-color: rgb(251,207,232)" i],
+  [style*="background-color:rgb(251,207,232)" i],
+  [style*="background-color: #bfdbfe" i],
+  [style*="background-color:#bfdbfe" i],
+  [style*="background-color: rgb(191, 219, 254)" i],
+  [style*="background-color:rgb(191, 219, 254)" i],
+  [style*="background-color: rgb(191,219,254)" i],
+  [style*="background-color:rgb(191,219,254)" i]
+) * {
+  color: #171717 !important;
+  -webkit-text-fill-color: #171717 !important;
+}
+

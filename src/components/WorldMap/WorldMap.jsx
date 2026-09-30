@@ -1,27 +1,37 @@
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { findContinueFolder, findStartFolder } from '../../utils/lessonProgress';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
-  BookOpen, ChevronRight, Compass, Flame, Focus, LayoutDashboard, Loader, LogOut, Map as MapIcon,
-  MessageCircle, Move, Play, Target, Timer, ZoomIn, ZoomOut, X,
+  Check, ChevronDown, Flame, Focus, LayoutDashboard, Loader, LogOut, Move, Play, Plus, Sparkles, Timer, ZoomIn, ZoomOut, X, HelpCircle,
 } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { formatTilesUnlockedLine } from '../../utils/mapRewardText';
+import { useAuth } from '../../context/authState';
 import { API_URL } from '../../config';
 import mascot from '../../assets/sessioncompletebird.svg';
-import coastLogo from '../../assets/Coastlogo-white-full.svg';
+import AppTopBar from '../AppNav/AppTopBar';
+import MapCover from '../MapCover/MapCover';
+import { tilesByFolder } from '../MapCover/mapCoverData';
+import { primeMapData } from '../../utils/mapData';
 import {
-  buildFogFeather,
-  buildObjectives,
   computeLevel,
+  getFullUnlock,
   getOrganicUnlock,
   getRegionName,
-  getWorldCanvas,
   getWorldMap,
+  getDiscoveryOrder,
   visibleTreasureChests,
+  WORLDS,
 } from './mapTerrain';
-import { buildAnimationSpec, drawMapAnimations, drawTileGrid } from './mapAnimations';
+import { buildLumenAnimSpec, drawLumenAnimations } from './lumenAnimations';
+import { buildNeonAnimSpec, drawNeonAnimations } from './neonAnimations';
+import { chartDistance } from './mapFog';
+import { loadFogLayer, loadWorldCanvas, peekFogLayer, peekWorldCanvas } from './mapAsync';
+import { discoveryStatus, newlyDiscovered } from './mapDiscovery';
+import { drawBeacons, visibleBeacons } from './mapBeacons';
+import { drawLightning } from './mapLightning';
+import WorldIntro from './WorldIntro';
 import MapTreasureModal from './MapTreasureModal';
 import './MapTreasureModal.css';
 import MapFocusSession from './MapFocusSession';
-import '../Dashboard/Dashboard.css';
 import './WorldMap.css';
 
 const MAP_SCALE = 5;
@@ -155,9 +165,8 @@ function getUnlockedTileBounds(unlocked) {
 }
 
 /** Frame cinematic drift to charted waters — tighter when little is unlocked. */
-function computeCinematicFraming(unlocked, vp, cell, featherPad = 3) {
+function computeCinematicFraming(unlocked, vp, cell, fallbackOrigin, featherPad = 3) {
   const bounds = getUnlockedTileBounds(unlocked);
-  const fallbackOrigin = { x: 72, y: 79 };
   if (!bounds || !vp?.clientWidth) {
     return {
       origin: fallbackOrigin,
@@ -215,17 +224,58 @@ function clampCameraCenter(cx, cy, z, vp, cell, minX, maxX, minY, maxY) {
   return { cx: x, cy: y };
 }
 
-function refreshUnlockCache(mapJson, world, unlockedRef, fogFeatherRef) {
+/** Charted tiles for the world on screen: a finished level stays fully charted. */
+function unlockedFor(mapJson, world) {
   // Unlock blooms from the world's own harbor origin — the backend grid
   // (size/origin) may differ from the generated world, so only its
   // reveal_radius (progress) is used here.
-  const size = world.size;
-  const origin = world.origin;
-  const { unlocked, frontier } = getOrganicUnlock(
-    origin.x, origin.y, mapJson?.reveal_radius || 4, size, world,
-  );
+  if ((world.level || 1) < (mapJson?.map_level || 1)) return getFullUnlock(world).unlocked;
+  return getOrganicUnlock(world.origin.x, world.origin.y, mapJson?.reveal_radius || 4, world.size, world).unlocked;
+}
+
+/**
+ * Charted tiles + fog for the world on screen. Fog is painted in a worker:
+ * until it arrives the previous layer of the same world stays up (so nothing
+ * new is revealed early), and `onFog` fires when the new one is ready.
+ */
+function refreshUnlockCache(mapJson, world, unlockedRef, fogRef, onFog) {
+  const unlocked = unlockedFor(mapJson, world);
   unlockedRef.current = unlocked;
-  fogFeatherRef.current = buildFogFeather(unlocked, frontier, size);
+  const ready = peekFogLayer(world, unlocked);
+  if (ready) {
+    fogRef.current = ready;
+    return unlocked;
+  }
+  if (fogRef.current && fogRef.current.level !== world.level) fogRef.current = null;
+  loadFogLayer(world, unlocked).then((layer) => {
+    if (unlockedRef.current !== unlocked) return;
+    fogRef.current = layer;
+    onFog?.();
+  });
+  return unlocked;
+}
+
+const ANIMATIONS = {
+  lumen: { build: buildLumenAnimSpec, draw: drawLumenAnimations },
+  neon: { build: buildNeonAnimSpec, draw: drawNeonAnimations },
+};
+const animSpecs = new Map();
+function animSpecFor(world) {
+  if (!animSpecs.has(world)) animSpecs.set(world, ANIMATIONS[world.id]?.build(world) || null);
+  return animSpecs.get(world);
+}
+
+const prefersReducedMotion = () => typeof window !== 'undefined'
+  && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+function readSeen(key) {
+  try {
+    const v = localStorage.getItem(key);
+    return v == null ? null : Number(v);
+  } catch { return null; }
+}
+function writeSeen(key, value) {
+  try { localStorage.setItem(key, String(value)); } catch { /* storage may be blocked */ }
 }
 
 /** Translate a backend-grid position (origin-relative) onto the world grid. */
@@ -240,44 +290,57 @@ function backendToWorld(pos, backendOrigin, world) {
   };
 }
 
-// Fog-of-war: each tile is one flat grey, with diagonal stripes emerging
-// at tile granularity — chunky pixel-art zigzag that scales with zoom.
-// Tiles are over-drawn by 1px so no antialiasing seams appear.
-const FOG_BG = '#33373e';
-const FOG_BG_ALT = '#383c44';
-
-function fogTileColor(x, y) {
-  return ((x + y) % 6 + 6) % 6 < 3 ? FOG_BG : FOG_BG_ALT;
+// Beyond the world's edge: the Reaches' cloud deck, the Meridian's night smog.
+function drawViewportFog(ctx, width, height, level = 1) {
+  ctx.fillStyle = (WORLDS[level] || WORLDS[1]).outside;
+  ctx.fillRect(0, 0, width, height);
 }
 
-function drawViewportFog(ctx, width, height) {
-  ctx.fillStyle = FOG_BG;
-  ctx.fillRect(0, 0, width, height);
+function isEditableKeyTarget(target) {
+  if (!target || !(target instanceof HTMLElement)) return false;
+  const tag = target.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+  if (target.isContentEditable) return true;
+  return Boolean(target.closest('[contenteditable="true"]'));
 }
 
 export default function WorldMap({
   isHome = false,
+  overlayActive = false,
   onClose,
   onOpenLessons,
-  onOpenChat,
+  onContinueLesson,
+  onOpenCourse,
+  onNavigate,
   onOpenControlCenter,
 }) {
   const { token, user, logout } = useAuth();
   const [data, setData] = useState(null);
   const [stats, setStats] = useState(null);
+  const [continueLesson, setContinueLesson] = useState(null);
   const [loading, setLoading] = useState(true);
   const [moving, setMoving] = useState(false);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
   const [dragging, setDragging] = useState(false);
-  const [navOpen, setNavOpen] = useState(true);
   const [mapFocus, setMapFocus] = useState(false);
   const [focusSession, setFocusSession] = useState(false);
+  const focusRef = useRef(false);
+  focusRef.current = focusSession;
   const [showTip, setShowTip] = useState(true);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [progressToast, setProgressToast] = useState(null);
   const [activeChest, setActiveChest] = useState(null);
-  const [markerTick, setMarkerTick] = useState(0);
+  // Which world is on screen: null follows the student's current level.
+  const [viewLevel, setViewLevel] = useState(null);
+  const [status, setStatus] = useState(null);
+  const [beaconIds, setBeaconIds] = useState([]);
+  const [discoveries, setDiscoveries] = useState([]);
+  const [revealChip, setRevealChip] = useState(null);
+  const [activeMarker, setActiveMarker] = useState(null);
+  const [worldIntro, setWorldIntro] = useState(null);
+  const [revealing, setRevealing] = useState(false);
+  const [worldReady, setWorldReady] = useState(false);
   const tileInspectOpenRef = useRef(false);
   const hasInitialCenterRef = useRef(false);
 
@@ -304,8 +367,12 @@ export default function WorldMap({
   const worldRef = useRef(null);
   const cellRef = useRef(10);
   const unlockedRef = useRef(new Set());
-  const fogFeatherRef = useRef(new Map());
-  const animSpecRef = useRef(null);
+  const fogRef = useRef(null);
+  const beaconsRef = useRef([]);
+  const revealRef = useRef(null);
+  const cameraTweenRef = useRef(null);
+  const viewLevelRef = useRef(null);
+  const motionRef = useRef(!prefersReducedMotion());
   const renderRef = useRef(null);
   const canvasSizeRef = useRef({ w: 0, h: 0 });
   const dragStart = useRef(null);
@@ -321,6 +388,7 @@ export default function WorldMap({
   }
   zoomRef.current = zoom;
   dataRef.current = data;
+  viewLevelRef.current = viewLevel;
 
   useEffect(() => {
     document.body.classList.add('wm-open');
@@ -330,31 +398,143 @@ export default function WorldMap({
     };
   }, []);
 
+  useEffect(() => {
+    if (overlayActive) closeTileInspect();
+  }, [overlayActive, closeTileInspect]);
+
   // One-time hint, fades out after a few seconds
   useEffect(() => {
     const t = window.setTimeout(() => setShowTip(false), 7000);
     return () => window.clearTimeout(t);
   }, []);
 
-  const load = useCallback(() => {
+  /**
+   * Put the right world on screen and recompute everything derived from the
+   * payload: charted tiles, fog layer, discoveries and beacons.
+   */
+  const applyWorld = useCallback((mapJson) => {
+    const mapLevel = mapJson?.map_level || 1;
+    const level = Math.min(viewLevelRef.current ?? mapLevel, mapLevel);
+    const world = getWorldMap(level);
+    const switched = worldRef.current !== world;
+    worldRef.current = world;
+    const markReady = () => {
+      const ok = Boolean(peekWorldCanvas(world) && fogRef.current?.level === (world.level || 1));
+      setWorldReady(ok);
+      if (ok) renderRef.current?.(performance.now() / 1000);
+    };
+    const unlocked = refreshUnlockCache(mapJson, world, unlockedRef, fogRef, markReady);
+    loadWorldCanvas(world).then(markReady);
+    markReady();
+    const complete = level < mapLevel;
+    const next = discoveryStatus(world, mapJson, { complete });
+    const beacons = visibleBeacons(next.items, chartDistance(world.size, unlocked), world.size);
+    beaconsRef.current = beacons;
+    setStatus(next);
+    setBeaconIds(beacons.map((b) => b.id));
+    return { world, switched, status: next, complete };
+  }, []);
+
+  /**
+   * Tween the camera so tile (x, y) sits in the middle of the viewport. The
+   * pan target is worked out when the flight starts (first frame), so it is
+   * right even if the map is still sizing itself when this is called.
+   */
+  const flyTo = useCallback((x, y, dur = 900) => {
+    cameraTweenRef.current = { x, y, dur, start: null, from: null };
+  }, []);
+
+  const finishReveal = useCallback(() => {
+    const r = revealRef.current;
+    if (!r) return;
+    revealRef.current = null;
+    setRevealing(false);
+    writeSeen(r.seenKey, r.to);
+    setRevealChip({ tiles: r.to - r.from, key: r.start });
+    window.setTimeout(() => setRevealChip((c) => (c?.key === r.start ? null : c)), 4200);
+    if (r.found.length) setDiscoveries((q) => [...q, ...r.found]);
+  }, []);
+
+  /** Lift the fog over tiles [from, to) of the discovery order, with sparkles. */
+  const startReveal = useCallback((world, from, to, found, seenKey) => {
+    const { keys } = getDiscoveryOrder(world);
+    const n = to - from;
+    const xs = new Int16Array(n);
+    const ys = new Int16Array(n);
+    let sx = 0;
+    let sy = 0;
+    for (let i = 0; i < n; i += 1) {
+      const key = keys[from + i];
+      const c = key.indexOf(',');
+      xs[i] = +key.slice(0, c);
+      ys[i] = +key.slice(c + 1);
+      sx += xs[i];
+      sy += ys[i];
+    }
+    const beforeSet = new Set(keys.slice(0, from));
+    const motion = motionRef.current;
+    setRevealing(true);
+    const reveal = {
+      world, from, to, xs, ys, found, seenKey,
+      before: peekFogLayer(world, beforeSet, { keep: false }),
+      start: null, // set on the first frame both fog layers are ready
+      dur: motion ? Math.min(3800, 1500 + n * 2.5) : 1,
+    };
+    revealRef.current = reveal;
+    if (!reveal.before) loadFogLayer(world, beforeSet, { keep: false }).then((layer) => { reveal.before = layer; });
+    // Frame the newly charted area; the discovery banner can fly to each find.
+    flyTo(sx / n, sy / n, 1100);
+  }, [flyTo]);
+
+  const loadStats = useCallback(() => {
     if (!token) return;
-    setLoading(true);
-    Promise.all([
-      fetch(`${API_URL}/api/map`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
-      fetch(`${API_URL}/api/stats`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()).catch(() => null),
-    ])
-      .then(([mapJson, statsJson]) => {
-        setData(mapJson);
-        setStats(statsJson);
-        worldRef.current = getWorldMap();
-        animSpecRef.current = buildAnimationSpec(worldRef.current);
-        refreshUnlockCache(mapJson, worldRef.current, unlockedRef, fogFeatherRef);
-      })
-      .catch(() => setData(null))
-      .finally(() => setLoading(false));
+    fetch(`${API_URL}/api/stats?tz_offset=${-new Date().getTimezoneOffset()}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((next) => { if (next) setStats(next); })
+      .catch(() => {});
   }, [token]);
 
+  const load = useCallback(() => {
+    if (!token) return;
+    // Refresh progress without blanking the map or resetting its camera.
+    fetch(`${API_URL}/api/map?compact=true`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => { if (!res.ok) throw new Error('Map could not be loaded'); return res.json(); })
+      .then((mapJson) => {
+        setData(mapJson);
+        primeMapData(mapJson);
+        const { world, status: st, complete } = applyWorld(mapJson);
+        const mapLevel = mapJson.map_level || 1;
+        // First visit to a new world: the intro plays before any reveal.
+        const introKey = user?.id ? `coast_world_intro_v2:${user.id}` : null;
+        const introSeen = introKey ? readSeen(introKey) : null;
+        if (mapLevel >= 2 && introKey && (introSeen ?? 1) < mapLevel) {
+          setWorldIntro({ level: mapLevel, key: introKey });
+        }
+        // Reveal whatever was charted since the student last looked.
+        if (complete || !user?.id) return;
+        const seenKey = `coast_map_seen:${user.id}:${world.id}`;
+        const count = unlockedRef.current.size;
+        const prev = readSeen(seenKey);
+        if (prev == null || prev > count) writeSeen(seenKey, count);
+        else if (prev < count && !revealRef.current) {
+          startReveal(world, prev, count, newlyDiscovered(st.items, prev, count), seenKey);
+        }
+      })
+      .catch(() => { if (!dataRef.current) setData(null); })
+      .finally(() => setLoading(false));
+    fetch(`${API_URL}/api/lessons/summary`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => res.ok ? res.json() : {})
+      .then((lessons) => setContinueLesson(
+        findContinueFolder(Object.keys(lessons), lessons) || findStartFolder(Object.keys(lessons), lessons),
+      ))
+      .catch(() => {});
+    loadStats();
+  }, [token, user?.id, applyWorld, startReveal, loadStats]);
+
   useEffect(() => { load(); }, [load]);
+
+  // Lessons and chat open over the map, which stays mounted: refresh the streak on the way back.
+  useEffect(() => { if (!overlayActive) loadStats(); }, [overlayActive, loadStats]);
 
   useEffect(() => {
     const onProgress = (e) => {
@@ -411,6 +591,7 @@ export default function WorldMap({
   }, []);
 
   const applyZoom = useCallback((nextZoom, anchorSx, anchorSy) => {
+    closeTileInspect();
     const z0 = zoomRef.current;
     const z1 = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, nextZoom));
     if (Math.abs(z1 - z0) < 0.001) return;
@@ -425,7 +606,7 @@ export default function WorldMap({
     renderRef.current?.(performance.now() / 1000);
     setZoom(z1);
     setPan(newPan);
-  }, [clampPan]);
+  }, [clampPan, closeTileInspect]);
 
   const centerOnPlayer = useCallback((player) => {
     const vp = viewportRef.current;
@@ -443,13 +624,15 @@ export default function WorldMap({
     setPan(newPan);
   }, [clampPan]);
 
+  // Everything in the marker layer carrying data-tx/ty (chests, landmarks,
+  // popovers) is pinned to its tile as the camera moves.
   const syncTreasureMarkers = useCallback(() => {
     const layer = markersRef.current;
     if (!layer) return;
     const cell = cellRef.current;
     const z = zoomRef.current;
     const { x: panX, y: panY } = panRef.current;
-    layer.querySelectorAll('.wm-treasure-marker').forEach((el) => {
+    layer.querySelectorAll('[data-tx]').forEach((el) => {
       const tx = Number(el.dataset.tx);
       const ty = Number(el.dataset.ty);
       if (Number.isNaN(tx) || Number.isNaN(ty)) return;
@@ -468,6 +651,38 @@ export default function WorldMap({
     const cell = cellRef.current;
     const z = zoomRef.current;
     const size = world.size;
+    const now = performance.now();
+
+    // Camera tween (fly to a discovery / follow a reveal).
+    const tween = cameraTweenRef.current;
+    if (tween && !dragStart.current) {
+      if (tween.start == null) {
+        tween.start = now;
+        tween.from = { ...panRef.current };
+      }
+      const to = {
+        x: (tween.x + 0.5) * cell * z - vp.clientWidth / 2,
+        y: (tween.y + 0.5) * cell * z - vp.clientHeight / 2,
+      };
+      const p = Math.min(1, (now - tween.start) / tween.dur);
+      const e = p < 0.5 ? 4 * p * p * p : 1 - (-2 * p + 2) ** 3 / 2;
+      panRef.current = clampPan(
+        tween.from.x + (to.x - tween.from.x) * e,
+        tween.from.y + (to.y - tween.from.y) * e,
+      );
+      if (p >= 1) {
+        cameraTweenRef.current = null;
+        setPan(panRef.current);
+      }
+    }
+
+    // Art and fog come from a worker: until they (and a pending reveal's
+    // "before" fog) are ready, keep the last frame rather than show a spoiler.
+    const art = peekWorldCanvas(world);
+    const fog = fogRef.current?.level === (world.level || 1) ? fogRef.current : null;
+    const pendingReveal = revealRef.current;
+    if (!art || !fog || (pendingReveal && pendingReveal.world === world && !pendingReveal.before)) return;
+    if (pendingReveal && pendingReveal.start == null) pendingReveal.start = now;
 
     const vpW = vp.clientWidth;
     const vpH = vp.clientHeight;
@@ -480,7 +695,7 @@ export default function WorldMap({
     if (!ctx) return;
 
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    drawViewportFog(ctx, canvas.width, canvas.height);
+    drawViewportFog(ctx, canvas.width, canvas.height, world.level);
 
     const { x: panX, y: panY } = panRef.current;
 
@@ -498,55 +713,79 @@ export default function WorldMap({
     const vx1 = Math.min(size, Math.ceil(worldRight / cell) + 1);
     const vy1 = Math.min(size, Math.ceil(worldBottom / cell) + 1);
 
-    // Blit the pre-rendered pixel-art world (cached offscreen canvas).
-    const worldCanvas = getWorldCanvas(world);
-    ctx.drawImage(
-      worldCanvas,
-      0, 0, worldCanvas.width, worldCanvas.height,
-      0, 0, size * cell, size * cell,
-    );
+    // Blit only the visible part of a world-sized layer.
+    const blit = (img) => {
+      const k = img.width / size;
+      ctx.drawImage(
+        img,
+        vx0 * k, vy0 * k, (vx1 - vx0) * k, (vy1 - vy0) * k,
+        vx0 * cell, vy0 * cell, (vx1 - vx0) * cell, (vy1 - vy0) * cell,
+      );
+    };
 
-    // Ambient life — water glints, birds, campfires, lighthouse beams, etc.
-    drawMapAnimations(ctx, {
-      world,
-      unlocked: unlockedRef.current,
-      time,
-      cell,
-      vx0,
-      vy0,
-      vx1,
-      vy1,
-      animSpec: animSpecRef.current,
-    });
+    // The pre-rendered pixel-art world (cached offscreen canvas).
+    blit(art);
 
-    drawTileGrid(ctx, {
-      unlocked: unlockedRef.current,
-      cell,
-      vx0,
-      vy0,
-      vx1,
-      vy1,
-    });
-
-    // Fog of war — flat per-tile greys in diagonal stripes, feathered near
-    // the charted edge so the map dissolves into fog instead of a hard border.
+    const motion = motionRef.current;
     const unlocked = unlockedRef.current;
-    const feather = fogFeatherRef.current;
-    for (let y = vy0; y < vy1; y += 1) {
-      for (let x = vx0; x < vx1; x += 1) {
-        const key = `${x},${y}`;
-        if (unlocked.has(key)) continue;
-        const alpha = feather.get(key);
-        if (alpha != null) ctx.globalAlpha = alpha;
-        ctx.fillStyle = fogTileColor(x, y);
-        ctx.fillRect(x * cell - 0.5, y * cell - 0.5, cell + 1, cell + 1);
-        if (alpha != null) ctx.globalAlpha = 1;
+    // Ambient life: gulls and lighthouse beams in the Reaches, traffic and the
+    // maglev in the Meridian.
+    ANIMATIONS[world.id]?.draw(ctx, {
+      world, unlocked, time, cell, vx0, vy0, vx1, vy1, spec: animSpecFor(world), motion,
+    });
+
+    // Fog of war: one pre-rendered layer (clouds or smog, with the glimpse band).
+    blit(fog.canvas);
+
+    // A reveal in progress: tiles not yet uncovered keep the old fog,
+    // and the moving edge sparkles.
+    const reveal = revealRef.current;
+    if (reveal && reveal.world === world) {
+      const p = Math.min(1, (now - reveal.start) / reveal.dur);
+      const e = p < 0.5 ? 2 * p * p : 1 - (-2 * p + 2) ** 2 / 2;
+      const n = reveal.to - reveal.from;
+      const shown = Math.floor(n * e);
+      if (shown < n) {
+        ctx.save();
+        ctx.beginPath();
+        for (let i = shown; i < n; i += 1) {
+          const x = reveal.xs[i];
+          const y = reveal.ys[i];
+          if (x < vx0 - 1 || x > vx1 || y < vy0 - 1 || y > vy1) continue;
+          ctx.rect(x * cell, y * cell, cell, cell);
+        }
+        ctx.clip();
+        blit(reveal.before.canvas);
+        ctx.restore();
       }
+      const spark = Math.max(2, Math.round(cell / 6));
+      for (let i = Math.max(0, shown - 60); i < shown; i += 3) {
+        const age = (shown - i) / 60;
+        const sx = (reveal.xs[i] + 0.5) * cell + Math.sin(i * 1.7) * cell * 0.3;
+        const sy = (reveal.ys[i] + 0.5) * cell - age * cell * 0.8;
+        const tint = world.id === 'neon' ? '39,230,255' : '255,236,170';
+        ctx.fillStyle = i % 2 ? `rgba(${tint},${1 - age})` : `rgba(255,255,255,${1 - age})`;
+        ctx.fillRect(Math.round(sx), Math.round(sy), spark, spark);
+      }
+      if (p >= 1) finishReveal();
     }
 
-    const player = backendToWorld(d.player, d.origin, world);
+    // The Meridian's polluted smog is full of lightning.
+    if (world.fog === 'smog') {
+      drawLightning(ctx, { world, dist: fog.dist, time, cell, vx0, vy0, vx1, vy1, motion });
+    }
+
+    // Beacons reach over the fog: smoke, lights, a floating island…
+    if (beaconsRef.current.length) {
+      drawBeacons(ctx, { items: beaconsRef.current, time, cell, motion, night: world.id === 'neon' });
+    }
+
+    const mapLevel = d.map_level || 1;
+    // The explorer steps out of frame while the focus timer is up.
+    const player = (world.level || 1) === mapLevel && !focusRef.current
+      ? backendToWorld(d.player, d.origin, world) : null;
     if (player) {
-      const bob = Math.sin(time * 3.2) * 1.5;
+      const bob = motion ? Math.sin(time * 3.2) * 1.5 : 0;
       ctx.font = `${cell + 4}px serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -562,7 +801,7 @@ export default function WorldMap({
 
     ctx.restore();
     syncTreasureMarkers();
-  }, [syncTreasureMarkers]);
+  }, [syncTreasureMarkers, clampPan, finishReveal]);
 
   renderRef.current = render;
 
@@ -581,12 +820,12 @@ export default function WorldMap({
   }, [loading]);
 
   useEffect(() => {
-    if (loading || !data) return undefined;
+    if (loading || !data || overlayActive) return undefined;
     let frame;
     let lastAnimFrame = 0;
     const tick = (t) => {
       const dragging = Boolean(dragStart.current);
-      if (dragging || t - lastAnimFrame >= 33) {
+      if (!document.hidden && (dragging || t - lastAnimFrame >= 33)) {
         renderRef.current?.(t / 1000);
         if (!dragging) lastAnimFrame = t;
       }
@@ -594,7 +833,7 @@ export default function WorldMap({
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [loading, data]);
+  }, [loading, data, overlayActive]);
 
   useEffect(() => {
     const onResize = () => {
@@ -616,18 +855,17 @@ export default function WorldMap({
         body: JSON.stringify({ dx, dy }),
       });
       const j = await res.json();
-      if (j.reveal_radius != null) {
-        worldRef.current = worldRef.current || getWorldMap();
-        refreshUnlockCache(j, worldRef.current, unlockedRef, fogFeatherRef);
-      }
+      if (j.reveal_radius != null) applyWorld(j);
       if (j.player) setData(j);
-    } catch {}
+    } catch { /* Keep the last confirmed player position after a failed move. */ }
     setMoving(false);
-  }, [token, moving]);
+  }, [token, moving, applyWorld]);
 
   useEffect(() => {
     if (focusSession) return undefined;
     const onKey = (e) => {
+      if (overlayActive) return;
+      if (isEditableKeyTarget(e.target)) return;
       if (e.key === 'ArrowUp') { e.preventDefault(); move(0, -1); }
       if (e.key === 'ArrowDown') { e.preventDefault(); move(0, 1); }
       if (e.key === 'ArrowLeft') { e.preventDefault(); move(-1, 0); }
@@ -635,7 +873,7 @@ export default function WorldMap({
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [move, focusSession]);
+  }, [move, focusSession, overlayActive]);
 
   // ── Cinematic camera while a focus session is active ──
   // Drifts within charted waters; framing tightens when little is unlocked.
@@ -647,7 +885,7 @@ export default function WorldMap({
     closeTileInspect();
     const saved = { pan: { ...panRef.current }, zoom: zoomRef.current };
     const cell = cellRef.current;
-    const framing = computeCinematicFraming(unlockedRef.current, vp, cell);
+    const framing = computeCinematicFraming(unlockedRef.current, vp, cell, worldRef.current?.origin || { x: 80, y: 80 });
     const {
       origin: camOrigin,
       roamX,
@@ -805,18 +1043,25 @@ export default function WorldMap({
 
     setPan(panRef.current);
 
+    if (moved < 6) setActiveMarker(null);
     if (moved < 6 && dataRef.current?.player) {
       const tile = screenToTile(e.clientX, e.clientY);
       if (tile) {
         const key = `${tile.x},${tile.y}`;
         if (unlockedRef.current.has(key)) {
           // tile_sections is keyed on the backend grid — translate back.
+          // Level 2+ tiles carry a "2:" prefix; level 1 keeps plain "x,y".
           const world = worldRef.current;
-          const bo = dataRef.current.origin || world?.origin || { x: 72, y: 79 };
-          const backendKey = world
+          const level = world?.level || 1;
+          const bo = dataRef.current.origins?.[level]
+            || ((dataRef.current.map_level || 1) === level ? dataRef.current.origin : null)
+            || world?.origin || { x: 72, y: 79 };
+          const local = world
             ? `${tile.x - world.origin.x + bo.x},${tile.y - world.origin.y + bo.y}`
             : key;
-          const section = dataRef.current.tile_sections?.[backendKey];
+          const backendKey = level > 1 ? `${level}:${local}` : local;
+          const ref = dataRef.current.tile_sections?.[backendKey];
+          const section = typeof ref === 'number' ? dataRef.current.section_catalog?.[ref] : ref;
           const canvas = canvasRef.current;
           const rect = canvas?.getBoundingClientRect();
           const cell = cellRef.current;
@@ -861,6 +1106,9 @@ export default function WorldMap({
 
   const handlePointerDown = (e) => {
     if (e.button !== 0) return;
+    // Any touch skips a reveal in progress and stops a camera flight.
+    if (revealRef.current) finishReveal();
+    cameraTweenRef.current = null;
     dragStart.current = {
       mx: e.clientX,
       my: e.clientY,
@@ -921,35 +1169,67 @@ export default function WorldMap({
     }
   }, [showProgressReward]);
 
+  const folderTiles = useMemo(() => (data ? tilesByFolder(data) : {}), [data]);
+  const continueTiles = continueLesson ? folderTiles[continueLesson.name]?.all || null : null;
+
+  const mapLevel = data?.map_level || 1;
+  const shownLevel = Math.min(viewLevel ?? mapLevel, mapLevel);
+  const shownWorld = worldRef.current;
   const openedChestSet = new Set(data?.treasures?.opened_ids || []);
-  const worldOrigin = worldRef.current?.origin || { x: 72, y: 79 };
-  const mapSize = worldRef.current?.size || 144;
-  const { unlocked: unlockedForChests } = (data && worldRef.current)
-    ? getOrganicUnlock(
-      worldOrigin.x, worldOrigin.y, data.reveal_radius || 4, mapSize, worldRef.current,
-    )
-    : { unlocked: new Set() };
-  const visibleChests = worldRef.current
-    ? visibleTreasureChests(worldRef.current, unlockedForChests, openedChestSet)
+  const mapSize = shownWorld?.size || 144;
+  const unlockedNow = (data && shownWorld) ? unlockedFor(data, shownWorld) : new Set();
+  const visibleChests = shownWorld
+    ? visibleTreasureChests(shownWorld, unlockedNow, openedChestSet)
     : [];
+  const beaconSet = new Set(beaconIds);
+  const landmarkMarkers = (status?.items || []).filter((it) => it.kind !== 'chest'
+    && (it.discovered || beaconSet.has(it.id)));
+  const markerItem = activeMarker ? (status?.items || []).find((it) => it.id === activeMarker.id) || null : null;
+  const nextFind = shownLevel === mapLevel ? status?.next || null : null;
 
   useLayoutEffect(() => {
     syncTreasureMarkers();
-  }, [syncTreasureMarkers, visibleChests, pan, zoom, loading]);
+  }, [syncTreasureMarkers, visibleChests.length, landmarkMarkers.length, markerItem, pan, zoom, loading]);
+
+  // Switching worlds re-frames the camera on the new world's harbour.
+  useEffect(() => {
+    if (!dataRef.current) return;
+    const { world, switched } = applyWorld(dataRef.current);
+    if (!switched) return;
+    updateCellSize();
+    const onLevel = (world.level || 1) === (dataRef.current.map_level || 1);
+    centerOnPlayer(onLevel ? backendToWorld(dataRef.current.player, dataRef.current.origin, world) : world.origin);
+    renderRef.current?.(performance.now() / 1000);
+  }, [viewLevel, applyWorld, updateCellSize, centerOnPlayer]);
+
+  // Discovery banners take turns; each stays long enough to read.
+  useEffect(() => {
+    if (!discoveries.length) return undefined;
+    const t = window.setTimeout(() => setDiscoveries((q) => q.slice(1)), 9000);
+    return () => window.clearTimeout(t);
+  }, [discoveries]);
 
   const levelInfo = computeLevel(data);
-  const regionName = getRegionName(
-    backendToWorld(data?.player, data?.origin, worldRef.current),
-    worldRef.current,
-  );
-  const objectives = buildObjectives(data, worldRef.current);
+  const xpPct = levelInfo.xpMax > 0 ? Math.min(100, Math.round((levelInfo.xp / levelInfo.xpMax) * 100)) : 0;
+  const week = Array.isArray(stats?.week) ? stats.week : [];
+  const todayIdx = week.reduce((last, day, i) => (day.status !== 'future' ? i : last), -1);
+  // "Current region" follows the camera, so panning around names the place you're looking at.
+  const vpEl = viewportRef.current;
+  const centerTile = vpEl && shownWorld ? {
+    x: Math.max(0, Math.min(mapSize - 1, Math.floor((pan.x + vpEl.clientWidth / 2) / (zoom * cellRef.current)))),
+    y: Math.max(0, Math.min(mapSize - 1, Math.floor((pan.y + vpEl.clientHeight / 2) / (zoom * cellRef.current)))),
+  } : backendToWorld(data?.player, data?.origin, shownWorld);
+  const regionName = getRegionName(centerTile, shownWorld);
   const displayName = user?.name || user?.email?.split('@')[0] || 'Explorer';
   const streak = stats?.streak ?? 0;
+  // A streak from yesterday is still alive until midnight; it lights up once they study today.
+  const streakLit = streak > 0 && stats?.studied_today !== false;
   const totalMapTiles = mapSize * mapSize;
-  const tilesCharted = unlockedForChests.size;
   const chartProgressPct = totalMapTiles > 0
-    ? Math.min(100, Math.round((tilesCharted / totalMapTiles) * 100))
+    ? Math.min(100, Math.round((unlockedNow.size / totalMapTiles) * 100))
     : 0;
+  const sectionsLabel = (n) => (n <= 1 ? 'next section' : `~${n} sections`);
+  const currentDiscovery = discoveries[0] || null;
 
   return (
     <div className={`wm-overlay wm-fullscreen ${isHome ? 'wm-home' : ''}`}>
@@ -961,6 +1241,12 @@ export default function WorldMap({
           </div>
         ) : (
           <>
+            {!worldReady && (
+              <div className="wm-loading wm-loading-full wm-loading-world" role="status">
+                <Loader size={28} className="spinning" />
+                <span>Charting {WORLDS[shownLevel]?.name || 'the coast'}…</span>
+              </div>
+            )}
             <canvas
               ref={canvasRef}
               className={`wm-canvas wm-canvas-full ${dragging ? 'dragging' : ''}`}
@@ -971,8 +1257,8 @@ export default function WorldMap({
             />
             <div
               ref={markersRef}
-              className="wm-treasure-markers"
-              aria-hidden={visibleChests.length === 0}
+              className={`wm-treasure-markers${zoom < 0.8 ? ' is-far' : ''}${revealing ? ' is-revealing' : ''}${worldReady ? '' : ' is-loading'}${focusSession ? ' is-hidden' : ''}`}
+              aria-hidden={visibleChests.length === 0 && landmarkMarkers.length === 0}
             >
               {visibleChests.map((chest) => (
                   <button
@@ -993,50 +1279,75 @@ export default function WorldMap({
                     <span className="wm-treasure-marker-label">{chest.name}</span>
                   </button>
               ))}
+              {landmarkMarkers.map((it) => (
+                <button
+                  key={it.id}
+                  type="button"
+                  className={`wm-landmark${it.discovered ? ' is-found' : ' is-rumour'}${it.kind === 'find' ? ' is-find' : ''}${markerItem?.id === it.id ? ' is-active' : ''}`}
+                  data-tx={it.x}
+                  data-ty={it.y}
+                  aria-label={it.discovered ? it.name : `Undiscovered place: ${it.teaser}`}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveMarker((m) => (m?.id === it.id ? null : it));
+                  }}
+                >
+                  {it.discovered
+                    ? <span className="wm-landmark__name">{it.name}</span>
+                    : <span className="wm-landmark__q" aria-hidden>?</span>}
+                </button>
+              ))}
+              {markerItem && (
+                <div
+                  className={`wm-landmark-card${markerItem.discovered ? '' : ' is-rumour'}`}
+                  data-tx={markerItem.x}
+                  data-ty={markerItem.y}
+                  role="dialog"
+                  aria-label={markerItem.discovered ? markerItem.name : 'Undiscovered place'}
+                  onPointerDown={(e) => e.stopPropagation()}
+                >
+                  <button type="button" className="wm-landmark-card__close" aria-label="Close" onClick={() => setActiveMarker(null)}>
+                    <X size={14} />
+                  </button>
+                  <span className="wm-landmark-card__kicker">
+                    {markerItem.discovered ? (markerItem.kind === 'find' ? 'Find' : 'Landmark') : 'Undiscovered'}
+                  </span>
+                  {markerItem.discovered ? (
+                    <>
+                      <strong>{markerItem.name}</strong>
+                      <p>{markerItem.lore}</p>
+                    </>
+                  ) : (
+                    <>
+                      <strong>{markerItem.teaser}</strong>
+                      <p>
+                        {markerItem.sectionsAway <= 1
+                          ? 'Master one more section to lift the fog here.'
+                          : `About ${markerItem.sectionsAway} mastered sections away.`}
+                      </p>
+                      {nextFind?.id === markerItem.id && (
+                        <span className="wm-landmark-card__bar"><i style={{ width: `${Math.round((nextFind.progress || 0) * 100)}%` }} /></span>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </>
         )}
       </div>
 
       {!focusSession && (
-      <div className={`wm-ui ${mapFocus ? 'wm-focus-mode' : ''}`} data-theme="dark">
-        <header className="wm-topbar">
-          <div className="wm-logo">
-            <img src={coastLogo} alt="Coast" className="wm-logo-img" />
-          </div>
-          {!mapFocus && (
-          <nav className={`rp-card wm-nav-island ${navOpen ? 'open' : 'collapsed'}`}>
-            <button
-              type="button"
-              className="wm-nav-toggle"
-              onClick={() => setNavOpen(v => !v)}
-              aria-label={navOpen ? 'Collapse navigation' : 'Expand navigation'}
-            >
-              <ChevronRight size={18} className="wm-nav-chevron" />
-            </button>
-            <div className="wm-nav-items">
-              <button type="button" className="wm-nav-item active" aria-current="page">
-                <span className="wm-nav-icon"><MapIcon size={22} /></span>
-                {navOpen && <span className="wm-nav-label">Map</span>}
-              </button>
-              <button type="button" className="wm-nav-item" onClick={onOpenLessons}>
-                <span className="wm-nav-icon"><BookOpen size={22} /></span>
-                {navOpen && <span className="wm-nav-label">Lessons</span>}
-              </button>
-              <button type="button" className="wm-nav-item" onClick={onOpenChat}>
-                <span className="wm-nav-icon"><MessageCircle size={22} /></span>
-                {navOpen && <span className="wm-nav-label">Chat</span>}
-              </button>
-            </div>
-          </nav>
-          )}
-        </header>
+      <div className={`wm-ui ${mapFocus ? 'wm-focus-mode' : ''}`}>
+        <AppTopBar current="map" onNavigate={onNavigate} hideNav={mapFocus} />
 
         <aside className="wm-left-stack">
           <div className="wm-profile-wrap" ref={profileRef}>
             <button
               type="button"
-              className="rp-card card streak-card wm-profile-card"
+              className="wm-me wm-glass-card"
+              data-tour="profile"
               onClick={(e) => {
                 e.stopPropagation();
                 setShowProfileMenu((v) => !v);
@@ -1046,40 +1357,56 @@ export default function WorldMap({
               tabIndex={mapFocus ? -1 : 0}
               aria-hidden={mapFocus}
             >
-              <div className="wm-profile-header">
-                <img src={mascot} alt="Pedro" className="rp-briefing-avatar" />
-                <div className="rp-briefing-title">
-                  <span className="rp-briefing-name">{displayName}</span>
-                  <span className="rp-briefing-sub">
-                    Level {levelInfo.level} · {levelInfo.xp} / {levelInfo.xpMax} XP
+              <span className="wm-me__head">
+                <img src={mascot} alt="" className="wm-me__avatar" />
+                <span className="wm-me__who">
+                  <span className="wm-me__name">{displayName}</span>
+                  <span className="wm-me__sub">Level {levelInfo.level} explorer</span>
+                </span>
+                <ChevronDown size={16} className="wm-me__chev" aria-hidden />
+              </span>
+              <span className="wm-me__xp">
+                <span className="wm-me__ring" aria-hidden>
+                  <svg viewBox="0 0 36 36">
+                    <defs>
+                      <linearGradient id="wm-amber" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0" stopColor="#ffb503" />
+                        <stop offset="1" stopColor="#ff7b02" />
+                      </linearGradient>
+                    </defs>
+                    <circle className="wm-me__ring-track" cx="18" cy="18" r="15" pathLength="100" />
+                    <circle className="wm-me__ring-fill" cx="18" cy="18" r="15" pathLength="100" style={{ strokeDashoffset: 100 - xpPct }} />
+                  </svg>
+                  <b>{levelInfo.level}</b>
+                </span>
+                <span className="wm-me__xp-text">
+                  <span><b>{levelInfo.xp}</b> / {levelInfo.xpMax} XP</span>
+                  <span className="wm-xp-bar"><span className="wm-xp-fill" style={{ width: `${xpPct}%` }} /></span>
+                </span>
+              </span>
+              <span className={`wm-me__streak ${streakLit ? 'hot' : 'cold'}`}>
+                <span className="wm-me__streak-head">
+                  <Flame size={18} className={streakLit ? 'wm-streak-flame' : 'wm-streak-flame-dormant'} aria-hidden />
+                  <span className="wm-me__streak-text">
+                    {streak === 0 ? 'Study today to start a streak'
+                      : streakLit ? <><b>{streak}-day</b> streak</>
+                        : <><b>{streak}-day</b> streak · study today to keep it</>}
                   </span>
-                </div>
-              </div>
-              <div className="wm-xp-bar">
-                <div
-                  className="wm-xp-fill"
-                  style={{ width: `${(levelInfo.xp / levelInfo.xpMax) * 100}%` }}
-                />
-              </div>
-              <h3 className={`wm-streak-heading ${streak > 0 ? 'hot' : 'cold'}`}>
-                Streak
-                {streak > 0 && <Flame size={20} className="wm-streak-flame" aria-hidden />}
-              </h3>
-              {streak > 0 ? (
-                <div className="streak-stat streak-active">
-                  <span className="streak-num">{streak}</span>
-                  <span className="streak-label">
-                    {streak === 1 ? 'day exploring' : 'days exploring'}
+                  <span className="wm-me__streak-short" aria-hidden>{streak}</span>
+                </span>
+                {week.length > 0 && (
+                  <span className="wm-week" aria-label="This week">
+                    {week.map((day, i) => (
+                      <span
+                        key={day.label}
+                        className={`wm-week__day wm-week__day--${day.status}${i === todayIdx ? ' wm-week__day--today' : ''}`}
+                      >
+                        {day.label.charAt(0)}
+                      </span>
+                    ))}
                   </span>
-                </div>
-              ) : (
-                <div className="streak-stat streak-zero">
-                  <Flame size={28} className="wm-streak-flame-dormant" aria-hidden />
-                  <span className="streak-goal-text">
-                    1 focus session today lights the flame
-                  </span>
-                </div>
-              )}
+                )}
+              </span>
             </button>
 
             {showProfileMenu && !mapFocus && (
@@ -1103,6 +1430,18 @@ export default function WorldMap({
                   type="button"
                   className="wm-profile-menu-logout"
                   role="menuitem"
+                  onClick={() => {
+                    setShowProfileMenu(false);
+                    window.dispatchEvent(new CustomEvent('coast:start-tour'));
+                  }}
+                >
+                  <HelpCircle size={16} />
+                  <span>Take the tour</span>
+                </button>
+                <button
+                  type="button"
+                  className="wm-profile-menu-logout"
+                  role="menuitem"
                   onClick={() => logout()}
                 >
                   <LogOut size={16} />
@@ -1112,7 +1451,7 @@ export default function WorldMap({
             )}
           </div>
 
-          <div className="rp-card wm-map-controls">
+          <div className="wm-map-controls wm-glass-card" data-tour="map-controls">
             <button
               type="button"
               className={`wm-zoom-btn wm-focus-btn ${mapFocus ? 'active' : ''}`}
@@ -1122,111 +1461,157 @@ export default function WorldMap({
               }}
               aria-label={mapFocus ? 'Exit map focus' : 'Focus map'}
               aria-pressed={mapFocus}
+              title={mapFocus ? 'Show cards' : 'Hide cards to explore the map'}
             >
-              <Focus size={20} />
+              <Focus size={19} />
             </button>
             <button type="button" className="wm-zoom-btn" onClick={() => zoomBy(1.2)} aria-label="Zoom in">
-              <ZoomIn size={20} />
+              <ZoomIn size={19} />
             </button>
             <button type="button" className="wm-zoom-btn" onClick={() => zoomBy(1 / 1.2)} aria-label="Zoom out">
-              <ZoomOut size={20} />
+              <ZoomOut size={19} />
             </button>
           </div>
         </aside>
 
         {!mapFocus && (
         <div className="wm-right-stack">
-          <div className="rp-card wm-region-card">
-            <h3 className="wm-region-heading">
-              <Compass size={24} className="wm-region-icon" />
-              Current Region
-            </h3>
-            <span className="wm-region-name">{regionName}</span>
-            <div className="wm-chart-progress">
-              <div className="wm-chart-progress-head">
-                <span className="wm-chart-progress-label">
-                  {tilesCharted.toLocaleString()} of {totalMapTiles.toLocaleString()} tiles charted
-                </span>
-              </div>
-              <div className="wm-chart-progress-track" aria-hidden>
-                <div
-                  className="wm-chart-progress-fill"
-                  style={{ width: `${chartProgressPct}%` }}
-                />
-              </div>
+          {revealChip && (
+            <div className="wm-reveal-chip" role="status" key={revealChip.key}>
+              <Sparkles size={14} aria-hidden /> +{revealChip.tiles.toLocaleString()} tiles charted
             </div>
-            <div className="rp-review-stats wm-region-stats">
-              <div className="rp-review-stat">
-                <span className="rp-review-stat-val">{data?.sections_mastered || 0}</span>
-                <span className="rp-review-stat-lbl">Mastered</span>
-              </div>
-              <div className="rp-review-stat">
-                <span className="rp-review-stat-val">{levelInfo.level}</span>
-                <span className="rp-review-stat-lbl">Level</span>
-              </div>
+          )}
+          {nextFind && (
+            <button
+              type="button"
+              className="wm-next-find-mobile wm-glass-card"
+              onClick={() => {
+                flyTo(nextFind.x, nextFind.y);
+                setActiveMarker(nextFind);
+              }}
+            >
+              <Sparkles size={14} aria-hidden />
+              <span className="wm-next-find-mobile__text">{nextFind.teaser}</span>
+              <em>{sectionsLabel(nextFind.sectionsAway)}</em>
+              <span className="wm-next-find-mobile__bar" aria-hidden>
+                <i style={{ width: `${Math.max(4, Math.round((nextFind.progress || 0) * 100))}%` }} />
+              </span>
+            </button>
+          )}
+          <section className="wm-next wm-glass-card" data-tour="next-step">
+            <div className="wm-next__cover">
+              <MapCover mapData={data} tiles={continueTiles} seed={continueLesson?.name || 'next-step'} maxTile={16} />
+              <span className="wm-next__tag"><i aria-hidden />Your next step</span>
             </div>
-            {objectives.length > 0 && (
-              <div className="wm-objectives">
-                <span className="wm-objectives-head">
-                  <Target size={16} />
-                  Quests
+            <div className="wm-next__body">
+              {continueLesson ? (() => {
+                const meta = continueLesson.meta || {};
+                const total = meta.total_sections || meta.section_progress?.length || 0;
+                const current = Math.min(meta.current_section || 0, Math.max(total - 1, 0));
+                const done = (meta.section_progress || []).filter((p, i) => p?.mastered || i < (meta.current_section || 0)).length;
+                return (
+                  <>
+                    <span className="wm-next__course">{formatFolderLabel(continueLesson.name)}</span>
+                    <h2>{meta.current_section_title || `Section ${current + 1}`}</h2>
+                    {total > 0 && (
+                      <span className="wm-next__segs" aria-label={`Section ${current + 1} of ${total}`}>
+                        {Array.from({ length: total }, (_, i) => {
+                          const prog = meta.section_progress?.[i];
+                          const cls = prog?.mastered || i < (meta.current_section || 0) ? 'done' : i === current ? 'now' : '';
+                          return <i key={i} className={cls} />;
+                        })}
+                      </span>
+                    )}
+                    <span className="wm-next__meta">
+                      <span>Section {current + 1} of {total}</span>
+                      <span>{Math.max(total - done, 0)} to go</span>
+                    </span>
+                    <button type="button" className="wm-next__cta" onClick={() => onContinueLesson?.(continueLesson.name)}>
+                      <Play size={17} /> {meta.last_studied_at || (meta.current_section || 0) > 0 ? 'Continue lesson' : 'Start lesson'}
+                    </button>
+                    <button type="button" className="wm-next__link" onClick={() => onOpenCourse?.(continueLesson.name)}>
+                      See the whole roadmap
+                    </button>
+                  </>
+                );
+              })() : (
+                <>
+                  <h2>Your next discovery awaits</h2>
+                  <p className="wm-next__empty">Turn your lecture slides into a lesson with Pedro.</p>
+                  <button type="button" className="wm-next__cta" onClick={() => onOpenLessons?.()}>
+                    <Plus size={17} /> Create a lesson
+                  </button>
+                </>
+              )}
+            </div>
+          </section>
+
+          <div className="wm-region wm-glass-card" data-tour="region">
+            <div className="wm-region__head">
+              <span className="wm-region__title">
+                <span className="wm-region__name">{regionName}</span>
+                <span className="wm-region__sub">
+                  {WORLDS[shownLevel]?.short} · {chartProgressPct}% charted
                 </span>
-                <ul className="wm-quest-list">
-                  {objectives.map(obj => (
-                    <li
-                      key={obj.id}
-                      className={`wm-quest${obj.done ? ' wm-quest--done' : ''}`}
+              </span>
+              {mapLevel >= 2 && (
+                <div className="wm-worlds" role="tablist" aria-label="Choose a world">
+                  {Array.from({ length: mapLevel }, (_, i) => i + 1).map((lv) => (
+                    <button
+                      key={lv}
+                      type="button"
+                      role="tab"
+                      aria-selected={shownLevel === lv}
+                      aria-label={`Level ${lv}: ${WORLDS[lv]?.name}`}
+                      title={WORLDS[lv]?.name}
+                      className={`wm-worlds__tab${shownLevel === lv ? ' is-active' : ''}`}
+                      onClick={() => {
+                        setActiveMarker(null);
+                        setViewLevel(lv === mapLevel ? null : lv);
+                      }}
                     >
-                      <span className={`wm-quest-check${obj.done ? ' wm-quest-check--done' : ''}`} aria-hidden />
-                      <div className="wm-quest-body">
-                        <span className="wm-quest-label">{obj.label}</span>
-                        {obj.progress != null && obj.progressMax != null && !obj.done && (
-                          <div className="wm-quest-progress">
-                            <div className="wm-quest-progress-track">
-                              <div
-                                className="wm-quest-progress-fill"
-                                style={{
-                                  width: `${Math.min(100, Math.round((obj.progress / obj.progressMax) * 100))}%`,
-                                }}
-                              />
-                            </div>
-                            <span className="wm-quest-progress-text">
-                              {obj.progress.toLocaleString()} / {obj.progressMax.toLocaleString()}
-                            </span>
-                          </div>
-                        )}
-                        <div className="wm-quest-rewards">
-                          {obj.reward && (
-                            <span className="wm-quest-reward">{obj.reward}</span>
-                          )}
-                          {obj.bonusReward && (
-                            <span className="wm-quest-reward wm-quest-reward--bonus">
-                              {obj.bonusReward}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </li>
+                      {lv}
+                    </button>
                   ))}
-                </ul>
-              </div>
-            )}
+                </div>
+              )}
+            </div>
+            <span className="wm-region__line" aria-hidden>
+              <i style={{ width: `${chartProgressPct}%` }} />
+            </span>
+            {nextFind ? (
+              <button
+                type="button"
+                className="wm-next-find"
+                title={nextFind.teaser}
+                onClick={() => {
+                  flyTo(nextFind.x, nextFind.y);
+                  setActiveMarker(nextFind);
+                }}
+              >
+                <Sparkles size={13} aria-hidden />
+                <span className="wm-next-find__teaser">{nextFind.teaser}</span>
+                <span className="wm-next-find__eta">{sectionsLabel(nextFind.sectionsAway)}</span>
+              </button>
+            ) : shownLevel < mapLevel ? (
+              <div className="wm-region__done"><Check size={13} aria-hidden /> Fully charted</div>
+            ) : null}
           </div>
 
           <button
             type="button"
-            className="rp-card wm-timer-launch"
+            className="wm-timer-launch wm-glass-card"
             onClick={() => setFocusSession(true)}
           >
             <span className="wm-timer-launch-icon">
-              <Timer size={24} />
+              <Timer size={20} />
             </span>
             <span className="wm-timer-launch-text">
-              <span className="wm-timer-launch-title">Study Timer</span>
+              <span className="wm-timer-launch-title">Study timer</span>
               <span className="wm-timer-launch-sub">Start a focus session</span>
             </span>
             <span className="wm-timer-launch-play">
-              <Play size={16} />
+              <Play size={15} />
             </span>
           </button>
         </div>
@@ -1240,6 +1625,44 @@ export default function WorldMap({
         )}
 
       </div>
+      )}
+
+      {currentDiscovery && !focusSession && !worldIntro && (
+        <div className={`wm-discovery wm-glass-card${currentDiscovery.kind === 'chest' ? ' is-chest' : ''}`} role="status" key={currentDiscovery.id}>
+          <span className="wm-discovery__kicker">
+            <Sparkles size={13} aria-hidden />
+            {currentDiscovery.kind === 'chest' ? 'Treasure spotted' : currentDiscovery.kind === 'find' ? 'New find' : 'New discovery'}
+          </span>
+          <h3>{currentDiscovery.name}</h3>
+          <p>{currentDiscovery.lore || 'A treasure chest washed up here. Open it for bonus XP.'}</p>
+          <div className="wm-discovery__actions">
+            <button
+              type="button"
+              className="wm-discovery__go"
+              onClick={() => {
+                flyTo(currentDiscovery.x, currentDiscovery.y);
+                if (currentDiscovery.kind !== 'chest') setActiveMarker(currentDiscovery);
+                setDiscoveries((q) => q.slice(1));
+              }}
+            >
+              Show me
+            </button>
+            <button type="button" className="wm-discovery__skip" onClick={() => setDiscoveries((q) => q.slice(1))}>
+              {discoveries.length > 1 ? `Next (${discoveries.length - 1} more)` : 'Close'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {worldIntro && (
+        <WorldIntro
+          level={worldIntro.level}
+          onDone={() => {
+            writeSeen(worldIntro.key, worldIntro.level);
+            setWorldIntro(null);
+            setViewLevel(null);
+          }}
+        />
       )}
 
       <MapFocusSession
@@ -1266,9 +1689,9 @@ export default function WorldMap({
                 : 'Section complete!'}
           </div>
           <div className="wm-progress-toast-xp">+{progressToast.xp_gained} XP</div>
-          {progressToast.map?.explored_delta_pct > 0 && (
+          {formatTilesUnlockedLine(progressToast.map) && (
             <div className="wm-progress-toast-map">
-              Map expanded +{progressToast.map.explored_delta_pct}% explored
+              {formatTilesUnlockedLine(progressToast.map)}
             </div>
           )}
           {progressToast.lesson_complete && (

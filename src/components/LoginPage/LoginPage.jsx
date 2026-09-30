@@ -1,30 +1,33 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Map, Sparkles, Trophy, Upload } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
-import { getWorldMap, getWorldCanvas, HQ } from '../WorldMap/mapTerrain';
-import { drawTileGrid } from '../WorldMap/mapAnimations';
+import { AlertCircle, ArrowRight, BrainCircuit, Eye, EyeOff, Hammer, KeyRound, Loader2, Map as MapIcon, Sparkles } from 'lucide-react';
+import { useAuth } from '../../context/authState';
+import { API_URL } from '../../config';
+import { getWorldMap } from '../WorldMap/mapTerrain';
+import { loadWorldCanvas } from '../WorldMap/mapAsync';
 import coastLogo from '../../assets/Coastlogo-white-full.svg';
 import mascot from '../../assets/sessioncompletebird.svg';
-import medalIcon from '../../assets/lesson-icons/medal.svg';
-import trophyIcon from '../../assets/lesson-icons/trophy.svg';
 import './LoginPage.css';
+
+const LANDING_URL = 'https://www.coast.academy';
 
 function LoginMapPreview() {
   const canvasRef = useRef(null);
   const wrapRef = useRef(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const wrap = wrapRef.current;
     if (!canvas || !wrap) return undefined;
 
-    const world = getWorldMap();
-    const tilePx = 16;
-    const worldCanvas = getWorldCanvas(world, tilePx);
+    // The student's first harbour, painted off the main thread.
+    const world = getWorldMap(1);
+    let art = null;
+    let cancelled = false;
 
     const draw = () => {
       const { width, height } = wrap.getBoundingClientRect();
-      if (width < 1 || height < 1) return;
+      if (!art || width < 1 || height < 1) return;
 
       const dpr = window.devicePixelRatio || 1;
       canvas.width = Math.floor(width * dpr);
@@ -36,77 +39,110 @@ function LoginMapPreview() {
       ctx.imageSmoothingEnabled = false;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+      const k = art.width / world.size; // art px per tile
       const tilesW = 30;
-      const tileAspect = height / width;
-      const tilesH = Math.max(8, Math.ceil(tilesW * tileAspect));
-      const startX = Math.floor(HQ.x - tilesW / 2);
-      const startY = Math.floor(HQ.y - tilesH / 2);
-      const sx = startX * tilePx;
-      const sy = startY * tilePx;
-      const sw = tilesW * tilePx;
-      const sh = tilesH * tilePx;
-
-      ctx.drawImage(worldCanvas, sx, sy, sw, sh, 0, 0, width, height);
-
-      const cell = width / tilesW;
-      const unlocked = new Set();
-      for (let ty = startY; ty < startY + tilesH; ty += 1) {
-        for (let tx = startX; tx < startX + tilesW; tx += 1) {
-          unlocked.add(`${tx},${ty}`);
-        }
-      }
-
-      ctx.save();
-      ctx.translate(-startX * cell, -startY * cell);
-      drawTileGrid(ctx, {
-        unlocked,
-        cell,
-        vx0: startX,
-        vy0: startY,
-        vx1: startX + tilesW,
-        vy1: startY + tilesH,
-      });
-      ctx.restore();
+      const tilesH = Math.max(8, tilesW * (height / width));
+      const startX = world.origin.x + 0.5 - tilesW / 2;
+      const startY = world.origin.y + 0.5 - tilesH / 2;
+      ctx.drawImage(art, startX * k, startY * k, tilesW * k, tilesH * k, 0, 0, width, height);
     };
 
-    draw();
+    loadWorldCanvas(world).then((c) => {
+      if (cancelled) return;
+      art = c;
+      draw();
+      setReady(true);
+    });
     const ro = new ResizeObserver(draw);
     ro.observe(wrap);
-    return () => ro.disconnect();
+    return () => {
+      cancelled = true;
+      ro.disconnect();
+    };
   }, []);
 
   return (
     <div className="login-map-preview" ref={wrapRef}>
-      <canvas ref={canvasRef} className="login-map-canvas" aria-hidden="true" />
+      <canvas ref={canvasRef} className={`login-map-canvas${ready ? ' is-ready' : ''}`} aria-hidden="true" />
       <div className="login-map-vignette" aria-hidden="true" />
       <img src={mascot} alt="" className="login-map-mascot" />
     </div>
   );
 }
 
+// Links from the landing page and invite links: ?mode=signup|login and ?code=COAST-XXXX-XXXX.
+function readInvite() {
+  if (typeof window === 'undefined') return { register: false, code: '' };
+  const params = new URLSearchParams(window.location.search);
+  const code = (params.get('code') || '').trim().toUpperCase();
+  return { register: params.get('mode') === 'signup' || Boolean(code), code };
+}
+
+const FEATURES = [
+  { Icon: Sparkles, title: 'Pedro, your personal tutor', text: 'Lessons from your own lectures. You move on once you’ve shown you understand.' },
+  { Icon: BrainCircuit, title: 'Remembers how you learn', text: 'Every course, what clicked and where you got stuck, kept for years.' },
+  { Icon: Hammer, title: 'Learn by building', text: 'Workshops coach you through real projects, milestone by milestone.' },
+  { Icon: MapIcon, title: 'A world that grows with you', text: 'Every section you finish uncovers more of your map.' },
+];
+
 const LoginPage = () => {
   const { login, register } = useAuth();
-  const [isRegister, setIsRegister] = useState(false);
+  const [invite] = useState(readInvite);
+  const [isRegister, setIsRegister] = useState(invite.register);
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
-  const [course, setCourse] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [betaCode, setBetaCode] = useState(invite.code);
+  const [codeRequired, setCodeRequired] = useState(true);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Read once, then tidy the address bar so a later sign-out doesn't reopen sign-up.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has('mode') && !url.searchParams.has('code')) return;
+    url.searchParams.delete('mode');
+    url.searchParams.delete('code');
+    window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+  }, []);
+
+  // The server decides whether sign-up is invite-only; assume it is until it answers.
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${API_URL}/api/auth/config`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((config) => {
+        if (!cancelled && config && config.beta_code_required === false) setCodeRequired(false);
+      })
+      .catch(() => { /* keep the code field; the server still enforces the rule */ });
+    return () => { cancelled = true; };
+  }, []);
+
+  const switchMode = (toRegister) => {
+    setIsRegister(toRegister);
+    setError('');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
 
+    if (isRegister) {
+      if (!name.trim()) {
+        setError('Please enter your name.');
+        return;
+      }
+      if (codeRequired && !betaCode.trim()) {
+        setError('Enter the beta code you were given.');
+        return;
+      }
+    }
+
+    setLoading(true);
     try {
       if (isRegister) {
-        if (!name.trim()) {
-          setError('Please enter your name');
-          setLoading(false);
-          return;
-        }
-        await register(email.trim(), name.trim(), password, course);
+        await register(email.trim(), name.trim(), password, codeRequired ? betaCode.trim() : '');
       } else {
         await login(email.trim(), password);
       }
@@ -120,70 +156,53 @@ const LoginPage = () => {
   return (
     <div className="login-page login-page--v2">
       <div className="login-pixel-bg" aria-hidden="true" />
+      <div className="login-glow" aria-hidden="true" />
 
       <div className="login-shell">
         <section className="login-hero">
           <img src={coastLogo} alt="Coast" className="login-hero-logo" />
           <p className="login-hero-tagline">
-            Learn on a living map. Master every section with Pedro. A fully adaptive system that learns how you learn and grows with you over years.
+            A personal tutor that turns your lectures into lessons and remembers how you learn, across every course, for years.
           </p>
 
           <div className="login-hero-visual">
             <LoginMapPreview />
-            <div className="login-hero-badges">
-              <span><img src={trophyIcon} alt="" /> Mastery stars</span>
-              <span><img src={medalIcon} alt="" /> Section rewards</span>
-            </div>
           </div>
 
           <ul className="login-feature-list">
-            <li>
-              <Map size={18} />
-              <div>
-                <strong>Exploration map</strong>
-                <span>Unlock terrain as you complete lessons: fog of war, treasures, and focus sessions.</span>
-              </div>
-            </li>
-            <li>
-              <Sparkles size={18} />
-              <div>
-                <strong>Pedro, your AI tutor</strong>
-                <span>Socratic lessons from your lectures. He verifies mastery before you advance.</span>
-              </div>
-            </li>
-            <li>
-              <Upload size={18} />
-              <div>
-                <strong>Your courses + premade deep dives</strong>
-                <span>Upload PDFs or start instantly with curated lessons.</span>
-              </div>
-            </li>
-            <li>
-              <Trophy size={18} />
-              <div>
-                <strong>Built for the long run</strong>
-                <span>Your pace, gaps, and review schedule adapt over months and years. XP and mastery profile stay with you.</span>
-              </div>
-            </li>
+            {FEATURES.map(({ Icon, title, text }) => (
+              <li key={title}>
+                <span className="login-feature-icon"><Icon size={16} /></span>
+                <div>
+                  <strong>{title}</strong>
+                  <span>{text}</span>
+                </div>
+              </li>
+            ))}
           </ul>
         </section>
 
         <section className="login-panel">
           <div className="login-step">
+            {isRegister && codeRequired && <span className="login-beta-pill"><span aria-hidden="true" />Private beta</span>}
             <h2>{isRegister ? 'Create your account' : 'Welcome back'}</h2>
             <p className="login-step-lead">
               {isRegister
-                ? 'Start your voyage. It only takes a minute.'
+                ? codeRequired
+                  ? 'Coast is invite-only for now. You’ll need the beta code you were given.'
+                  : 'Start learning with Pedro. It only takes a minute.'
                 : 'Sign in to pick up where you left off.'}
             </p>
 
             <form onSubmit={handleSubmit} className="login-form">
               {isRegister && (
                 <div className="login-field">
-                  <label>Full name</label>
+                  <label htmlFor="login-name">Full name</label>
                   <input
+                    id="login-name"
                     type="text"
                     placeholder="Alex Johnson"
+                    autoComplete="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
@@ -192,10 +211,12 @@ const LoginPage = () => {
               )}
 
               <div className="login-field">
-                <label>Email</label>
+                <label htmlFor="login-email">Email</label>
                 <input
+                  id="login-email"
                   type="email"
-                  placeholder="your@university.edu"
+                  placeholder="you@university.edu"
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -203,39 +224,69 @@ const LoginPage = () => {
               </div>
 
               <div className="login-field">
-                <label>Password</label>
-                <input
-                  type="password"
-                  placeholder="At least 6 characters"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                />
+                <label htmlFor="login-password">Password</label>
+                <div className="login-input-wrap">
+                  <input
+                    id="login-password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder={isRegister ? 'At least 8 characters' : 'Your password'}
+                    autoComplete={isRegister ? 'new-password' : 'current-password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    minLength={isRegister ? 8 : undefined}
+                  />
+                  <button
+                    type="button"
+                    className="login-input-action"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    aria-pressed={showPassword}
+                  >
+                    {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                  </button>
+                </div>
               </div>
 
-              {isRegister && (
+              {isRegister && codeRequired && (
                 <div className="login-field">
-                  <label>Course (optional)</label>
-                  <select value={course} onChange={(e) => setCourse(e.target.value)}>
-                    <option value="">Select your course</option>
-                    <option value="QM1">Quantitative Methods 1</option>
-                    <option value="Data Science">Data Science & AI</option>
-                    <option value="Economics">Economics</option>
-                    <option value="Statistics">Statistics</option>
-                    <option value="Other">Other</option>
-                  </select>
+                  <label htmlFor="login-beta-code">Beta code</label>
+                  <div className="login-input-wrap login-input-wrap--icon">
+                    <KeyRound size={16} className="login-input-icon" aria-hidden="true" />
+                    <input
+                      id="login-beta-code"
+                      className="login-code-input"
+                      type="text"
+                      placeholder="COAST-XXXX-XXXX"
+                      autoComplete="off"
+                      autoCapitalize="characters"
+                      spellCheck={false}
+                      value={betaCode}
+                      onChange={(e) => setBetaCode(e.target.value.toUpperCase())}
+                      aria-describedby="login-beta-code-hint"
+                      required
+                    />
+                  </div>
+                  <p className="login-field-hint" id="login-beta-code-hint">
+                    Each code works once. No code yet?{' '}
+                    <a href={`${LANDING_URL}/#join`} target="_blank" rel="noopener noreferrer">Join the waitlist</a>
+                  </p>
                 </div>
               )}
 
-              {error && <div className="login-error">{error}</div>}
+              {error && (
+                <div className="login-error" role="alert">
+                  <AlertCircle size={16} aria-hidden="true" />
+                  <span>{error}</span>
+                </div>
+              )}
 
               <button type="submit" className="login-primary-btn" disabled={loading}>
-                {loading
-                  ? 'Please wait…'
-                  : isRegister
-                    ? 'Start learning'
-                    : 'Sign in'}
+                {loading ? (
+                  <><Loader2 size={17} className="login-spin" aria-hidden="true" /> Please wait…</>
+                ) : (
+                  <>{isRegister ? 'Create account' : 'Sign in'} <ArrowRight size={17} aria-hidden="true" /></>
+                )}
               </button>
             </form>
 
@@ -243,20 +294,18 @@ const LoginPage = () => {
               {isRegister ? (
                 <p>
                   Already have an account?{' '}
-                  <button type="button" onClick={() => { setIsRegister(false); setError(''); }}>
-                    Sign in
-                  </button>
+                  <button type="button" onClick={() => switchMode(false)}>Sign in</button>
                 </p>
               ) : (
                 <p>
-                  Don&apos;t have an account?{' '}
-                  <button type="button" onClick={() => { setIsRegister(true); setError(''); }}>
-                    Create one
-                  </button>
+                  New to Coast?{' '}
+                  <button type="button" onClick={() => switchMode(true)}>Create an account</button>
                 </p>
               )}
             </div>
           </div>
+
+          <a className="login-home-link" href={LANDING_URL}>coast.academy</a>
         </section>
       </div>
     </div>

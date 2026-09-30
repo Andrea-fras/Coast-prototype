@@ -1,0 +1,25 @@
+.lesson-citation {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32em;
+  vertical-align: 0.06em;
+  margin: 0 0.12em;
+  padding: 0.12em 0.62em 0.1em 0.5em;
+  border: 1px solid rgba(255, 181, 3, 0.3);
+  border-radius: 999px;
+  background: rgba(255, 181, 3, 0.08);
+  color: #ffc94d;
+  font: inherit;
+  font-size: 0.74em;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s, transform 0.15s;
+}
+.lesson-citation svg { flex: none; }
+.lesson-citation:hover { border-color: rgba(255, 181, 3, 0.6); background-color: rgba(255, 181, 3, 0.16); transform: translateY(-1px); }
+.lesson-citation:focus-visible { outline: 2px solid #ffb503; outline-offset: 3px; }
+.lesson-citation-unavailable { color: rgba(242, 238, 230, 0.6); }
+@media (prefers-reduced-motion: reduce) { .lesson-citation { transition: none; } .lesson-citation:hover { transform: none; } }

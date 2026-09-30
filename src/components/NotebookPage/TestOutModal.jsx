@@ -1,26 +1,23 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Send, Loader, RefreshCw, WifiOff, CheckCircle } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/authState';
 import { API_URL } from '../../config';
 import { fetchWithRetry } from '../../utils/fetchWithRetry';
+import { logContentRetrieval } from '../../utils/logContentRetrieval';
 import PedroMessage from '../PedroMessage';
 import mascot from '../../assets/sessioncompletebird.svg';
 import './TestOutModal.css';
+import { stripPedroTags } from '../../utils/pedroTags';
 
-const PEDRO_UI_TAGS = ['[TEST_OUT_PASSED]', '[ANSWER_WRONG]', '[ANSWER_CORRECT]'];
-
-function stripPedroTags(text) {
-  let out = text || '';
-  for (const tag of PEDRO_UI_TAGS) out = out.replaceAll(tag, '');
-  return out.trim();
-}
 
 const TestOutModal = ({
   folderName,
   targetIndex,
   targetSection,
   skippedSections = [],
+  startIndex = 0,
+  wholeCourse = false,
   onClose,
   onPassed,
 }) => {
@@ -34,6 +31,8 @@ const TestOutModal = ({
   const [applyDone, setApplyDone] = useState(false);
   const [applyError, setApplyError] = useState(false);
   const [retryPayload, setRetryPayload] = useState(null);
+  const [placement, setPlacement] = useState(null);
+  const [result, setResult] = useState(null);
 
   const chatRef = useRef(null);
   const inputRef = useRef(null);
@@ -121,13 +120,13 @@ const TestOutModal = ({
               updateLastPedro(stripPedroTags(fullText));
             }
             if (evt.done) {
+              logContentRetrieval(evt);
               if (evt.conversation_id) {
                 setConversationId(evt.conversation_id);
                 convRef.current = evt.conversation_id;
               }
-              if (fullText.includes('[TEST_OUT_PASSED]') || evt.test_out_passed) {
-                setPassed(true);
-              }
+              if (evt.placement) setPlacement(evt.placement);
+              if (evt.test_out_passed) setPassed(true);
             }
           } catch { /* ignore */ }
         }
@@ -144,18 +143,15 @@ const TestOutModal = ({
   }, [folderName, targetIndex, token]);
 
   useEffect(() => {
-    if (startedRef.current || !targetSection) return;
+    if (startedRef.current || (!targetSection && !wholeCourse)) return;
     startedRef.current = true;
 
-    const skippedTitles = skippedSections.map(s => `"${s.title}"`).join(', ');
-    const opener = skippedSections.length > 0
-      ? `I want to test out to Section ${targetIndex + 1}: "${targetSection.title}". `
-        + `Test me on the key concepts from ${skippedTitles} to see if I can skip ahead.`
-      : `I want to test out to Section ${targetIndex + 1}: "${targetSection.title}". `
-        + `Please assess whether I'm ready to start this section.`;
+    const opener = wholeCourse
+      ? 'I think I already know a lot of this course. Check what I know so I can skip ahead.'
+      : `I think I already know the sections before "${targetSection.title}". Check what I know so I can skip ahead.`;
 
     sendToApi(opener, null);
-  }, [targetSection, targetIndex, skippedSections, sendToApi]);
+  }, [targetSection, wholeCourse, sendToApi]);
 
   const applyUnlock = useCallback(async () => {
     setApplying(true);
@@ -166,11 +162,12 @@ const TestOutModal = ({
         {
           method: 'POST',
           headers: hdrs(),
-          body: JSON.stringify({ target_section: targetIndex }),
+          body: JSON.stringify({ target_section: targetIndex, conversation_id: convRef.current }),
         },
       );
       if (res.ok) {
         const data = await res.json();
+        setResult(data);
         await onPassedRef.current?.(data);
         setApplyDone(true);
         return;
@@ -196,9 +193,16 @@ const TestOutModal = ({
     applyUnlock();
   }, [passed, applyUnlock]);
 
+  const stopHere = () => {
+    if (applyStartedRef.current) return;
+    applyStartedRef.current = true;
+    setPassed(true);
+    applyUnlock();
+  };
+
   const handleSend = async () => {
     const msg = input.trim();
-    if (!msg || loading || passed) return;
+    if (!msg || loading || passed || placement?.done) return;
     setInput('');
     if (inputRef.current) inputRef.current.style.height = 'auto';
     setMessages(prev => [...prev, { role: 'user', content: msg }]);
@@ -215,22 +219,48 @@ const TestOutModal = ({
     sendToApi(retryPayload.message, retryPayload.convId);
   };
 
-  const skippedLabel = skippedSections.length
-    ? skippedSections.map(s => s.title).join(', ')
-    : null;
+  const passedCount = placement?.passed_count || 0;
+  const checking = placement?.checking_section ?? startIndex;
+  const noSkip = placement?.done && !placement?.can_apply && !passed;
+  const finished = passed || noSkip;
+  const resultLine = result
+    ? (result.is_complete
+      ? 'Course complete — you showed you already know all of it.'
+      : `You'll start at Section ${result.current_section + 1}. ${result.skipped_sections?.length || 0} section${result.skipped_sections?.length === 1 ? '' : 's'} credited.`)
+    : '';
 
   return createPortal(
     <div className="test-out-overlay" role="dialog" aria-modal="true" aria-labelledby="test-out-title">
       <div className="test-out-modal">
         <header className="test-out-header">
           <div className="test-out-header-text">
-            <p className="test-out-kicker">Placement test</p>
+            <p className="test-out-kicker">Placement check</p>
             <h2 id="test-out-title" className="test-out-title">
-              Section {targetIndex + 1}: {targetSection?.title}
+              {wholeCourse ? 'Skip what you already know' : `Skip ahead to Section ${targetIndex + 1}`}
             </h2>
-            {skippedLabel && (
-              <p className="test-out-sub">
-                Pedro will test you on: {skippedLabel}
+            <p className="test-out-sub">
+              Pedro checks one section at a time. Stop whenever you like — you keep every section you pass.
+            </p>
+            <ol className="placement-track" aria-label="Sections in this check">
+              {skippedSections.map((sec, i) => {
+                const index = startIndex + i;
+                const status = index < startIndex + passedCount ? 'passed'
+                  : (!finished && index === checking) ? 'checking' : 'later';
+                return (
+                  <li key={index} className={`placement-step ${status}`} title={`Section ${index + 1}: ${sec.title}`}>
+                    <span className="placement-dot" aria-hidden="true" />
+                    <span className="placement-label">
+                      {index + 1}
+                      <span className="sr-only">{`: ${sec.title} — ${status}`}</span>
+                    </span>
+                  </li>
+                );
+              })}
+            </ol>
+            {!finished && placement && (
+              <p className="placement-status">
+                Checking Section {checking + 1}
+                {passedCount > 0 && ` · ${passedCount} passed`}
               </p>
             )}
           </div>
@@ -290,7 +320,7 @@ const TestOutModal = ({
             {applyDone && (
               <>
                 <CheckCircle size={18} />
-                <span>You're cleared for this section!</span>
+                <span>{resultLine || "You're all set!"}</span>
                 <button type="button" className="test-out-continue" onClick={onClose}>
                   Continue
                 </button>
@@ -308,7 +338,23 @@ const TestOutModal = ({
           </div>
         )}
 
-        {!passed && (
+        {noSkip && (
+          <div className="test-out-success neutral">
+            <span>No problem — you'll start at Section {(placement?.place_at ?? startIndex) + 1} and Pedro will teach it from there.</span>
+            <button type="button" className="test-out-continue" onClick={onClose}>Got it</button>
+          </div>
+        )}
+
+        {!finished && passedCount > 0 && !loading && (
+          <div className="placement-keep">
+            <span>{passedCount} section{passedCount === 1 ? '' : 's'} passed so far.</span>
+            <button type="button" className="placement-keep-btn" onClick={stopHere}>
+              Keep {passedCount} and stop here
+            </button>
+          </div>
+        )}
+
+        {!finished && (
           <div className="test-out-composer">
             <textarea
               ref={inputRef}

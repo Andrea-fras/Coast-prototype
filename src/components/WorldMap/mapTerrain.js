@@ -1,28 +1,28 @@
-/** Adapter — Coast world map + lesson fog / XP helpers for WorldMap.jsx */
+/**
+ * The worlds a student charts, and the fog-of-war maths shared by the map,
+ * the lesson cards and the backend mirror.
+ *
+ *   level 1  The Lumen Reaches (lumenWorld.js / lumenArt.js)
+ *   level 2  Neon Meridian     (neonWorld.js / neonArt.js), once level 1 is fully charted
+ */
 
-import {
-  generateWorldMap as generateCoastMap,
-  renderMapToCanvas,
-  getIslandAt,
-  HQ,
-  MAP_SIZE,
-  TERRAIN,
-  ISLAND_DEFS,
-} from './coastWorldMap';
+import { TERRAIN } from './mapTerrainTypes';
+import { generateLumenWorld } from './lumenWorld';
+import { renderLumenPixels } from './lumenArt';
+import { generateNeonWorld } from './neonWorld';
+import { renderNeonPixels } from './neonArt';
 
-export { MAP_SIZE, HQ, TERRAIN, ISLAND_DEFS };
+export { TERRAIN };
 
-export const TILE = {
-  DEEP: TERRAIN.DEEP_OCEAN,
-  OCEAN: TERRAIN.OCEAN,
-  SHALLOW: TERRAIN.SHALLOW_WATER,
-  BEACH: TERRAIN.BEACH,
-  GRASS: TERRAIN.GRASS,
-  FOREST: TERRAIN.FOREST,
-  PORT: TERRAIN.PATH,
+export const WORLDS = {
+  1: { level: 1, id: 'lumen', name: 'The Lumen Reaches', short: 'Lumen Reaches', fog: 'clouds', outside: '#8a93bf' },
+  2: { level: 2, id: 'neon', name: 'Neon Meridian', short: 'Neon Meridian', fog: 'smog', outside: '#0c0c0d' },
 };
 
-let cachedWorld = null;
+const GENERATORS = { 1: generateLumenWorld, 2: generateNeonWorld };
+const RENDERERS = { lumen: renderLumenPixels, neon: renderNeonPixels };
+
+const worldCache = new Map();
 
 function isLandTerrain(type) {
   return type >= TERRAIN.BEACH && type <= TERRAIN.PATH;
@@ -32,7 +32,7 @@ function isShallowWater(type) {
   return type === TERRAIN.SHALLOW_WATER || type === TERRAIN.REEF;
 }
 
-export function terrainMoveCost(type) {
+function terrainMoveCost(type) {
   if (isLandTerrain(type)) {
     if (type === TERRAIN.MOUNTAIN || type === TERRAIN.PEAK || type === TERRAIN.DEEP_FOREST) {
       return 0.58;
@@ -52,132 +52,79 @@ function movementCostAt(world, x, y) {
   return base * jitter;
 }
 
-function buildLegacyTiles(terrain, size) {
-  const tiles = new Uint8Array(size * size);
-  for (let y = 0; y < size; y += 1) {
-    for (let x = 0; x < size; x += 1) {
-      tiles[y * size + x] = terrain[y][x].type;
-    }
-  }
-  return tiles;
+/**
+ * @returns the world object for a level (generated once, then cached). Each
+ * world owns its geometry (size, origin); the backend mirrors it from the
+ * exported terrain files (scripts/export-map-terrain.mjs).
+ */
+export function getWorldMap(level = 1) {
+  const lv = level >= 2 ? 2 : 1;
+  if (worldCache.has(lv)) return worldCache.get(lv);
+  const mapData = GENERATORS[lv]();
+  const world = {
+    level: lv,
+    id: WORLDS[lv].id,
+    name: WORLDS[lv].name,
+    fog: WORLDS[lv].fog,
+    mapData,
+    terrain: mapData.terrain,
+    entities: mapData.entities,
+    islands: mapData.islands,
+    size: mapData.size,
+    origin: { ...mapData.origin },
+  };
+  worldCache.set(lv, world);
+  return world;
+}
+
+/** Pure pixels for a world's art (no DOM) — used by the map worker and tooling. */
+export function renderWorldPixels(world) {
+  return RENDERERS[world.id](world.mapData);
 }
 
 /**
- * @returns world object consumed by WorldMap + organic unlock.
- * The world's geometry is owned by the generator (MAP_SIZE, HQ) — the
- * backend grid may differ; callers translate backend coords to this grid.
+ * Full-map pixel art on an offscreen canvas at the world's native 8 art pixels
+ * per tile. Normally painted in the map worker (mapAsync.js); this synchronous
+ * path is the fallback. Readers use canvas.width / world.size as px per tile.
  */
-export function getWorldMap() {
-  if (!cachedWorld) {
-    const mapData = generateCoastMap(MAP_SIZE);
-    const ports = ISLAND_DEFS.map((isl) => ({
-      x: isl.cx,
-      y: isl.cy,
-      name: isl.name,
-      ancient: isl.biome === 'ruins',
-      level: isl.level,
-    }));
-    cachedWorld = {
-      mapData,
-      terrain: mapData.terrain,
-      entities: mapData.entities,
-      islands: mapData.islands,
-      tiles: buildLegacyTiles(mapData.terrain, MAP_SIZE),
-      ports,
-      size: MAP_SIZE,
-      origin: { x: HQ.x, y: HQ.y },
-    };
-  }
-  return cachedWorld;
+const worldCanvases = new Map();
+
+export function getWorldCanvas(world) {
+  const hit = worldCanvases.get(world.level);
+  if (hit) return hit;
+  const img = renderWorldPixels(world);
+  const canvas = document.createElement('canvas');
+  canvas.width = img.width;
+  canvas.height = img.height;
+  canvas.getContext('2d').putImageData(new ImageData(img.data, img.width, img.height), 0, 0);
+  worldCanvases.set(world.level, canvas);
+  return canvas;
 }
 
-/**
- * Full-map pixel-art render, cached on an offscreen canvas.
- * WorldMap blits the visible region from this each frame.
- */
-let cachedWorldCanvas = null;
-let cachedWorldCanvasTile = 0;
-
-export function getWorldCanvas(world, tilePx = 16) {
-  if (!cachedWorldCanvas || cachedWorldCanvasTile !== tilePx) {
-    const canvas = document.createElement('canvas');
-    renderMapToCanvas(canvas, world.mapData, { tileSize: tilePx });
-    cachedWorldCanvas = canvas;
-    cachedWorldCanvasTile = tilePx;
-  }
-  return cachedWorldCanvas;
+export function primeWorldCanvas(world, canvas) {
+  worldCanvases.set(world.level, canvas);
 }
 
 export function tileAt(world, x, y) {
-  const size = world?.size || MAP_SIZE;
+  const size = world.size;
   if (x < 0 || y < 0 || x >= size || y >= size) return TERRAIN.DEEP_OCEAN;
-  if (world?.terrain) return world.terrain[y][x].type;
-  return world.tiles[y * size + x];
+  return world.terrain[y][x].type;
 }
 
-export function getRegionName(player, originOrWorld) {
-  if (!player) return 'Unknown Waters';
-  const world = originOrWorld?.mapData ? originOrWorld : cachedWorld;
-  if (world?.mapData) {
-    const isl = getIslandAt(world.mapData, player.x, player.y);
-    if (isl) return isl.name;
+/** Name of the region under a tile: its district, else the nearest named place. */
+export function getRegionName(tile, world) {
+  if (!tile || !world) return 'Unknown Waters';
+  const t = world.terrain[tile.y]?.[tile.x];
+  const region = t?.r && world.islands.find((i) => i.id === t.r);
+  if (region) return region.name;
+  let best = null;
+  let bestD = Infinity;
+  for (const isl of world.islands) {
+    const d = Math.hypot(tile.x - isl.cx, tile.y - isl.cy) / (isl.r || 8);
+    if (d < bestD) { bestD = d; best = isl; }
   }
-  const origin = originOrWorld?.x != null
-    ? originOrWorld
-    : (world?.origin || { x: HQ.x, y: HQ.y });
-  const dist = Math.hypot(player.x - origin.x, player.y - origin.y);
-  if (dist < 8) return 'Harbor Home';
-  if (dist < 25) return 'Inner Archipelago';
-  if (dist < 45) return 'Coastal Reach';
-  if (dist < 70) return 'Open Straits';
-  if (dist < 100) return 'Far Shoals';
-  return 'The Deep Unknown';
-}
-
-export function buildObjectives(mapData, world) {
-  if (!mapData || !world) return [];
-  const quests = [];
-  const size = world.size || MAP_SIZE;
-  const totalTiles = size * size;
-  const origin = world.origin || { x: HQ.x, y: HQ.y };
-  const unlocked = getOrganicUnlock(
-    origin.x, origin.y, mapData.reveal_radius || 4, size, world,
-  ).unlocked;
-  const tilesCharted = unlocked.size;
-
-  const islandLocked = (isl) => !unlocked.has(`${isl.cx},${isl.cy}`);
-  const lockedIslands = (world.islands || ISLAND_DEFS).filter(islandLocked);
-
-  if (lockedIslands.length > 0) {
-    const target = lockedIslands.find((i) => i.level >= 5) || lockedIslands[0];
-    quests.push({
-      id: 'island',
-      label: `Discover ${target.name}`,
-      done: false,
-      reward: '+120 XP',
-      bonusReward: '+1 chest',
-    });
-  }
-
-  quests.push({
-    id: 'explore',
-    label: 'Chart the surrounding waters',
-    done: tilesCharted >= totalTiles * 0.95,
-    progress: tilesCharted,
-    progressMax: totalTiles,
-    reward: '+40 XP',
-  });
-
-  const sectionsMastered = mapData.sections_mastered || 0;
-  quests.push({
-    id: 'master',
-    label: 'Master a lesson section to 100%',
-    done: sectionsMastered > 0,
-    reward: '+80 XP',
-    bonusReward: 'Map expansion',
-  });
-
-  return quests.slice(0, 3);
+  if (best && bestD < 1.6) return best.name;
+  return world.level === 2 ? 'The Black Water' : 'The Lumen Sound';
 }
 
 export function computeLevel(mapData) {
@@ -199,7 +146,7 @@ export function cellDiscoveryHash(x, y) {
   return ((n ^ (n >>> 16)) & 0xffff) / 65535;
 }
 
-function countCellsInRadius(cx, cy, radius, size) {
+export function countCellsInRadius(cx, cy, radius, size) {
   let count = 0;
   const r = Math.ceil(radius);
   for (let dx = -r; dx <= r; dx += 1) {
@@ -271,87 +218,62 @@ function buildFrontierSet(unlocked, size) {
 }
 
 /**
- * Fog opacity feather: tiles just outside the charted area get partial
- * fog so the map dissolves into fog-of-war instead of hitting a hard edge.
- * Returns Map of "x,y" -> alpha for the 3 rings beyond the frontier.
+ * Every tile of a world in the order the fog lifts: a Dijkstra flood from the
+ * harbour where land is cheap and open sea expensive. Unlocking at a given
+ * radius charts the first N tiles of this list (N = cells in a disc of that
+ * radius), so it also tells exactly when any tile — or landmark — will appear.
+ * @returns {{ keys: string[], rank: Int32Array }} rank[y*size+x] = position
  */
-export function buildFogFeather(unlocked, frontier, size) {
-  const ringAlphas = [0.45, 0.72, 0.9];
-  const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1], [-1, -1], [-1, 1], [1, -1], [1, 1]];
-  const feather = new Map();
-  const seen = new Set();
-  let ring = frontier;
-
-  for (let r = 0; r < ringAlphas.length; r += 1) {
-    const next = new Set();
-    for (const key of ring) {
-      const [xs, ys] = key.split(',');
-      const x = Number(xs);
-      const y = Number(ys);
-      for (const [dx, dy] of dirs) {
-        const nx = x + dx;
-        const ny = y + dy;
-        if (nx < 0 || ny < 0 || nx >= size || ny >= size) continue;
-        const nk = `${nx},${ny}`;
-        if (unlocked.has(nk) || seen.has(nk)) continue;
-        seen.add(nk);
-        next.add(nk);
-        feather.set(nk, ringAlphas[r]);
-      }
-    }
-    ring = next;
-  }
-  return feather;
-}
-
-const organicUnlockCache = new Map();
-
-export function getOrganicUnlock(cx, cy, radius, size, world = null) {
-  const key = `${cx},${cy},${radius.toFixed(2)},${size}`;
-  const cached = organicUnlockCache.get(key);
-  if (cached) return cached;
-
-  const target = countCellsInRadius(cx, cy, radius, size);
-  const unlocked = new Set();
-  if (target <= 0) {
-    const empty = { unlocked, frontier: new Set() };
-    organicUnlockCache.set(key, empty);
-    return empty;
-  }
-
+const orderCache = new Map();
+export function getDiscoveryOrder(world) {
+  if (orderCache.has(world)) return orderCache.get(world);
+  const size = world.size;
+  const { x: cx, y: cy } = world.origin;
   const dirs = [
     [1, 0], [-1, 0], [0, 1], [0, -1],
     [-1, -1], [-1, 1], [1, -1], [1, 1],
   ];
-  const dist = new Map();
-  dist.set(`${cx},${cy}`, 0);
+  const dist = new Float64Array(size * size).fill(Infinity);
+  const rank = new Int32Array(size * size).fill(-1);
+  const keys = [];
+  dist[cy * size + cx] = 0;
   const heap = new MinHeap();
   heap.push([0, cx, cy]);
-
-  const w = world || cachedWorld;
-  const costAt = (x, y) => movementCostAt(w, x, y);
-
-  while (heap.size > 0 && unlocked.size < target) {
+  while (heap.size > 0) {
     const [d, x, y] = heap.pop();
-    const cellKey = `${x},${y}`;
-    if (d > (dist.get(cellKey) ?? Infinity)) continue;
-    if (x < 0 || y < 0 || x >= size || y >= size) continue;
-    unlocked.add(cellKey);
-
+    const i = y * size + x;
+    if (d > dist[i]) continue;
+    if (rank[i] < 0) {
+      rank[i] = keys.length;
+      keys.push(`${x},${y}`);
+    }
     for (const [dx, dy] of dirs) {
       const nx = x + dx;
       const ny = y + dy;
       if (nx < 0 || ny < 0 || nx >= size || ny >= size) continue;
-      const nk = `${nx},${ny}`;
+      const ni = ny * size + nx;
       const step = dx && dy ? 1.414 : 1;
-      const nd = d + step * costAt(nx, ny);
-      if (nd < (dist.get(nk) ?? Infinity)) {
-        dist.set(nk, nd);
+      const nd = d + step * movementCostAt(world, nx, ny);
+      if (nd < dist[ni]) {
+        dist[ni] = nd;
         heap.push([nd, nx, ny]);
       }
     }
   }
+  const order = { keys, rank };
+  orderCache.set(world, order);
+  return order;
+}
 
+const organicUnlockCache = new Map();
+
+export function getOrganicUnlock(cx, cy, radius, size, world) {
+  const key = `${world.level}:${cx},${cy},${radius.toFixed(2)},${size}`;
+  const cached = organicUnlockCache.get(key);
+  if (cached) return cached;
+  const target = countCellsInRadius(cx, cy, radius, size);
+  const { keys } = getDiscoveryOrder(world);
+  const unlocked = new Set(keys.slice(0, Math.max(0, target)));
   const result = { unlocked, frontier: buildFrontierSet(unlocked, size) };
   organicUnlockCache.set(key, result);
   if (organicUnlockCache.size > 48) {
@@ -360,34 +282,32 @@ export function getOrganicUnlock(cx, cy, radius, size, world = null) {
   return result;
 }
 
-/** Filter entities to tiles the player has charted (lesson fog). */
+/** Every tile of a world — a finished level stays fully charted. */
+export function getFullUnlock(world) {
+  const key = `${world.level}:full`;
+  if (organicUnlockCache.has(key)) return organicUnlockCache.get(key);
+  const unlocked = new Set(getDiscoveryOrder(world).keys);
+  const result = { unlocked, frontier: new Set() };
+  organicUnlockCache.set(key, result);
+  return result;
+}
+
 export function getTreasureChests(world) {
   if (!world?.entities) return [];
   return world.entities
     .filter((e) => e.type === 'treasure_chest')
     .map((e) => ({
-      id: `${e.x},${e.y}`,
+      id: e.id || `${e.x},${e.y}`,
       x: e.x,
       y: e.y,
       name: e.name || 'Treasure Chest',
     }));
 }
 
+/** Chests on charted tiles that the student hasn't opened yet. */
 export function visibleTreasureChests(world, unlockedSet, openedIds) {
   return getTreasureChests(world).filter((c) => {
     if (openedIds?.has(c.id)) return false;
     return unlockedSet?.has(`${c.x},${c.y}`);
-  });
-}
-
-export function visibleEntities(world, unlockedSet) {
-  if (!world?.entities || !unlockedSet) return world?.entities || [];
-  return world.entities.filter((e) => {
-    const key = `${e.x},${e.y}`;
-    if (unlockedSet.has(key)) return true;
-    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-      if (unlockedSet.has(`${e.x + dx},${e.y + dy}`)) return true;
-    }
-    return false;
   });
 }

@@ -1,0 +1,213 @@
+.gt-root {
+  position: fixed;
+  inset: 0;
+  z-index: 10100; /* above lessons, chat and modals */
+  font-family: 'Nunito Sans', sans-serif;
+}
+
+.gt-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(6, 8, 12, 0.72);
+  transition: background 0.3s ease;
+}
+
+/* With a spotlight, the dimming comes from the spotlight's shadow instead. */
+.gt-backdrop.has-hole {
+  background: transparent;
+}
+
+.gt-spotlight {
+  position: absolute;
+  border-radius: 16px;
+  box-shadow:
+    0 0 0 2px rgba(255, 181, 3, 0.9),
+    0 0 0 6px rgba(255, 181, 3, 0.18),
+    0 0 0 9999px rgba(6, 8, 12, 0.72);
+  pointer-events: none;
+  transition: top 0.35s cubic-bezier(0.22, 1, 0.36, 1), left 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.35s cubic-bezier(0.22, 1, 0.36, 1), height 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.gt-card {
+  position: absolute;
+  width: min(340px, calc(100vw - 32px));
+  padding: 1rem 1.1rem 0.95rem;
+  background: #15171c;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 18px;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.55);
+  color: #fff;
+  outline: none;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.25s ease, transform 0.25s ease, top 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    left 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.gt-card.is-ready {
+  opacity: 1;
+  transform: none;
+}
+
+.gt-card--center {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, calc(-50% + 6px));
+}
+
+.gt-card--center.is-ready {
+  transform: translate(-50%, -50%);
+}
+
+.gt-card:focus-visible {
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.55), 0 0 0 2px rgba(255, 181, 3, 0.6);
+}
+
+.gt-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.55rem;
+}
+
+.gt-mascot {
+  width: 30px;
+  height: 30px;
+}
+
+.gt-count {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #FFB503;
+}
+
+.gt-skip {
+  margin-left: auto;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+}
+
+.gt-skip:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.gt-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.02rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.gt-body {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.gt-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.95rem;
+}
+
+.gt-dots {
+  display: flex;
+  gap: 5px;
+}
+
+.gt-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  transition: width 0.25s ease, background 0.25s ease;
+}
+
+.gt-dots span.done {
+  background: rgba(255, 181, 3, 0.5);
+}
+
+.gt-dots span.on {
+  width: 18px;
+  background: #FFB503;
+}
+
+.gt-actions {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.gt-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 10px;
+  padding: 0.5rem 0.85rem;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+}
+
+.gt-btn--primary {
+  background: linear-gradient(to right, #FFB503, #FF7B02);
+  color: #fff;
+}
+
+.gt-btn--primary:hover {
+  filter: brightness(1.08);
+}
+
+.gt-btn--ghost {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.gt-btn--ghost:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.gt-btn:focus-visible,
+.gt-skip:focus-visible {
+  outline: 2px solid #FFB503;
+  outline-offset: 2px;
+}
+
+/* Phones: the card becomes a sheet that never covers the highlight. */
+@media (max-width: 639px) {
+  .gt-card,
+  .gt-card--center,
+  .gt-card--center.is-ready {
+    top: auto;
+    left: 16px;
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    width: auto;
+    transform: none;
+  }
+
+  .gt-card.gt-card--sheet-top {
+    top: calc(16px + env(safe-area-inset-top, 0px));
+    bottom: auto;
+  }
+}
+
+.gt-root[data-reduced-motion='true'] .gt-spotlight,
+.gt-root[data-reduced-motion='true'] .gt-card {
+  transition: none;
+}

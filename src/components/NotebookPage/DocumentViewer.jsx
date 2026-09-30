@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, FileText, Loader, Download } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/authState';
 import { API_URL } from '../../config';
 import './DocumentViewer.css';
 
@@ -10,26 +10,29 @@ const DocumentViewer = ({ folderName, source, onClose }) => {
   const [loadingPdf, setLoadingPdf] = useState(true);
 
   useEffect(() => {
-    loadPdf();
-    return () => {
-      if (pdfUrl) URL.revokeObjectURL(pdfUrl);
-    };
-  }, [source.source_id]);
-
-  const loadPdf = async () => {
+    const controller = new AbortController();
+    let objectUrl;
+    setPdfUrl(null);
     setLoadingPdf(true);
-    try {
-      const res = await fetch(
-        `${API_URL}/api/folders/${encodeURIComponent(folderName)}/sources/${encodeURIComponent(source.source_id)}/file`,
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-      if (res.ok) {
+    (async () => {
+      try {
+        const res = await fetch(
+          `${API_URL}/api/folders/${encodeURIComponent(folderName)}/sources/${encodeURIComponent(source.source_id)}/file`,
+          { headers: { Authorization: `Bearer ${token}` }, signal: controller.signal },
+        );
+        if (!res.ok) throw new Error('Document could not be loaded');
         const blob = await res.blob();
-        setPdfUrl(URL.createObjectURL(blob));
-      }
-    } catch { /* ignore */ }
-    setLoadingPdf(false);
-  };
+        if (controller.signal.aborted) return;
+        objectUrl = URL.createObjectURL(blob);
+        setPdfUrl(objectUrl);
+      } catch { /* The unavailable state below offers the original download. */ }
+      finally { if (!controller.signal.aborted) setLoadingPdf(false); }
+    })();
+    return () => {
+      controller.abort();
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [folderName, source.source_id, token]);
 
   const isPdf = source.source_type === 'pdf';
 

@@ -1,20 +1,57 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
 import './App.css';
-import NotebookPage from './components/NotebookPage/NotebookPage';
-import PedroChat from './components/PedroChat/PedroChat';
+const NotebookPage = lazy(() => import('./components/NotebookPage/NotebookPage'));
+const PedroChat = lazy(() => import('./components/PedroChat/PedroChat'));
 import WorldMap from './components/WorldMap/WorldMap';
 import LoginPage from './components/LoginPage/LoginPage';
-import OnboardingModal from './components/OnboardingModal/OnboardingModal';
+const OnboardingModal = lazy(() => import('./components/OnboardingModal/OnboardingModal'));
 import FeedbackWidget from './components/FeedbackWidget/FeedbackWidget';
-import ControlCenter from './components/ControlCenter/ControlCenter';
-import { useAuth } from './context/AuthContext';
+const GuidedTour = lazy(() => import('./components/GuidedTour/GuidedTour'));
+import { buildCoastTour } from './components/GuidedTour/coastTour';
+import ContentProviderToggle from './components/ContentProviderToggle/ContentProviderToggle';
+const ControlCenter = lazy(() => import('./components/ControlCenter/ControlCenter'));
+import { useAuth } from './context/authState';
 import { API_URL } from './config';
 
 function App() {
-  const { user, loading, token } = useAuth();
+  const { user, loading, token, sessionError, retrySession } = useAuth();
   const [showNotebook, setShowNotebook] = useState(false);
+  const [initialLessonFolder, setInitialLessonFolder] = useState(null);
+  const [initialCourseFolder, setInitialCourseFolder] = useState(null);
   const [showPedroChat, setShowPedroChat] = useState(false);
   const [showControlCenter, setShowControlCenter] = useState(false);
+  const [replayTour, setReplayTour] = useState(false);
+
+  // Map, Lessons and Chat are reachable from every main screen through the shared nav.
+  const navigate = useCallback((target, folder = null) => {
+    if (target === 'map') {
+      setShowNotebook(false);
+      setShowPedroChat(false);
+    } else if (target === 'lessons' || target === 'course' || target === 'lesson') {
+      setShowPedroChat(false);
+      setInitialLessonFolder(target === 'lesson' ? folder : null);
+      setInitialCourseFolder(target === 'course' ? folder : null);
+      setShowNotebook(true);
+    } else if (target === 'chat') {
+      setShowNotebook(false);
+      setShowPedroChat(true);
+    }
+  }, []);
+
+  // The product tour drives the real screens so every step highlights the actual control.
+  const tourActions = useMemo(() => ({
+    showMap: () => navigate('map'),
+    openLessons: () => navigate('lessons'),
+    openChat: () => navigate('chat'),
+  }), [navigate]);
+  const tourSteps = useMemo(() => buildCoastTour(tourActions), [tourActions]);
+
+  useEffect(() => {
+    const start = () => setReplayTour(true);
+    window.addEventListener('coast:start-tour', start);
+    return () => window.removeEventListener('coast:start-tour', start);
+  }, []);
+  const endReplay = useCallback(() => { tourActions.showMap(); setReplayTour(false); }, [tourActions]);
 
   const currentFeature = showNotebook ? 'notebook'
     : showPedroChat ? 'pedro_chat'
@@ -23,6 +60,7 @@ function App() {
   useEffect(() => {
     if (!token) return;
     const ping = () => {
+      if (document.hidden) return; // a background tab isn't a live session
       fetch(`${API_URL}/api/heartbeat`, {
         method: 'POST',
         headers: {
@@ -38,10 +76,11 @@ function App() {
   }, [token, currentFeature]);
 
   const featureRef = useRef(currentFeature);
-  const startRef = useRef(Date.now());
+  const startRef = useRef(0);
+  useEffect(() => { startRef.current = Date.now(); }, []);
 
   const flushActivity = useCallback((feature, startTime) => {
-    if (!token || !feature) return;
+    if (!token || !feature || !startTime) return;
     const dur = Date.now() - startTime;
     if (dur < 1000) return;
     fetch(`${API_URL}/api/activity`, {
@@ -98,11 +137,15 @@ function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [user?.is_admin]);
 
-  if (loading) {
+  if (loading || sessionError) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5' }}>
-        <p style={{ fontFamily: 'Nunito, sans-serif', color: '#aaa', fontSize: '1rem' }}>Loading...</p>
-      </div>
+      <main className="coast-session-screen">
+        <section className="coast-session-card" aria-live="polite">
+          <h1>{sessionError ? 'Let’s reconnect' : 'Opening Coast…'}</h1>
+          <p role={sessionError ? 'alert' : 'status'}>{sessionError || 'Checking your saved session.'}</p>
+          {sessionError && <button type="button" onClick={retrySession}>Try again</button>}
+        </section>
+      </main>
     );
   }
 
@@ -114,26 +157,34 @@ function App() {
 
   return (
     <>
-      {showOnboarding && <OnboardingModal />}
+      {showOnboarding && <Suspense fallback={<div role="status">Preparing your welcome…</div>}><OnboardingModal tourActions={tourActions} /></Suspense>}
+      {replayTour && !showOnboarding && (
+        <Suspense fallback={null}><GuidedTour steps={tourSteps} onFinish={endReplay} onSkip={endReplay} /></Suspense>
+      )}
       {showNotebook && (
-        <NotebookPage onClose={() => setShowNotebook(false)} />
+        <Suspense fallback={<div role="status" className="coast-screen-loading">Opening your lessons…</div>}><NotebookPage initialLessonFolder={initialLessonFolder} initialCourseFolder={initialCourseFolder} onNavigate={navigate} onClose={() => setShowNotebook(false)} /></Suspense>
       )}
       {showPedroChat && (
-        <PedroChat onClose={() => setShowPedroChat(false)} />
+        <Suspense fallback={<div role="status">Opening Pedro…</div>}><PedroChat onNavigate={navigate} onClose={() => setShowPedroChat(false)} /></Suspense>
       )}
 
       <WorldMap
         isHome
-        onOpenLessons={() => setShowNotebook(true)}
-        onOpenChat={() => setShowPedroChat(true)}
+        overlayActive={showNotebook || showPedroChat}
+        onNavigate={navigate}
+        onOpenLessons={() => navigate('lessons')}
+        onContinueLesson={(folder) => navigate('lesson', folder)}
+        onOpenCourse={(folder) => navigate('course', folder)}
+        onOpenChat={() => navigate('chat')}
         onOpenControlCenter={user.is_admin ? () => setShowControlCenter(true) : undefined}
       />
 
       {showControlCenter && user.is_admin && (
-        <ControlCenter onClose={() => setShowControlCenter(false)} />
+        <Suspense fallback={null}><ControlCenter onClose={() => setShowControlCenter(false)} /></Suspense>
       )}
 
       <FeedbackWidget position="bottom-left" />
+      <ContentProviderToggle />
     </>
   );
 }

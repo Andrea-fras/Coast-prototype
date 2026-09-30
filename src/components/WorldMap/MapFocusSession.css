@@ -1,239 +1,407 @@
-/* Full-screen relaxing focus session over the drifting map */
-.wm-fs-overlay {
+/* Focus timer over the drifting world: the map is the backdrop, the time is
+   big and quiet, and chrome fades away while the timer runs. Everything sits
+   in one centred column so a 9:16 crop of a screen recording keeps it all. */
+.wm-fs {
+  --fs-accent: #ffb503;
   position: absolute;
   inset: 0;
   z-index: 60;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
   pointer-events: auto;
-  background:
-    radial-gradient(ellipse at center, rgba(5, 8, 14, 0.18) 0%, rgba(5, 8, 14, 0.55) 72%, rgba(5, 8, 14, 0.78) 100%);
-  animation: wmFsFadeIn 0.6s ease-out;
+  color: #fff;
+  animation: wm-fs-in 0.7s ease-out;
 }
 
-@keyframes wmFsFadeIn {
+.wm-fs.is-idle {
+  cursor: none;
+}
+
+@keyframes wm-fs-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-.wm-fs-close {
+/* Just enough shade to keep white type legible on the brightest world. */
+.wm-fs__shade {
   position: absolute;
-  top: 1.5rem;
-  left: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.55rem 0.95rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 14px;
-  background: rgba(10, 12, 20, 0.55);
-  backdrop-filter: blur(12px);
-  color: rgba(255, 255, 255, 0.65);
-  font-family: 'Nunito Sans', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 44% 32% at 50% 45%, rgba(6, 8, 16, 0.46), rgba(6, 8, 16, 0) 100%),
+    radial-gradient(ellipse at center, rgba(6, 8, 16, 0) 55%, rgba(6, 8, 16, 0.42) 100%);
 }
 
-.wm-fs-close:hover {
-  background: rgba(255, 255, 255, 0.1);
+/* Floating app buttons (help, dev toggles) stay out of the shot. */
+:root[data-focus-timer='on'] .fb-fab,
+:root[data-focus-timer='on'] .content-provider-toggle {
+  display: none;
+}
+
+/* ---------- chrome that hides while running ---------- */
+.wm-fs__chrome {
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.wm-fs.is-idle .wm-fs__chrome {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.wm-fs.is-idle .wm-fs__back {
+  transform: translateY(-6px);
+}
+
+.wm-fs__back {
+  position: absolute;
+  top: calc(1.25rem + env(safe-area-inset-top, 0px));
+  left: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px 0 11px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 99px;
+  background: rgba(10, 12, 22, 0.42);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: rgba(255, 255, 255, 0.8);
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.6s ease, transform 0.6s ease, background 0.2s, color 0.2s;
+}
+
+.wm-fs__back:hover {
+  background: rgba(255, 255, 255, 0.14);
   color: #fff;
 }
 
-.wm-fs-center {
+/* ---------- the stage ---------- */
+.wm-fs__stage {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
-  animation: wmFsRise 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  width: min(420px, calc(100vw - 32px));
+  animation: wm-fs-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@keyframes wmFsRise {
-  from { opacity: 0; transform: translateY(24px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes wm-fs-rise {
+  from { opacity: 0; transform: translateY(18px) scale(0.98); }
+  to { opacity: 1; transform: none; }
 }
 
-.wm-fs-tabs {
+.wm-fs__label {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.32em;
+  text-indent: 0.32em; /* keep letterspaced text optically centred */
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.82);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.45);
+}
+
+.wm-fs__time {
   display: flex;
-  gap: 0.5rem;
-  padding: 0.3rem;
-  border-radius: 16px;
-  background: rgba(10, 12, 20, 0.5);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  align-items: baseline;
+  margin: 2px 0 14px;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: clamp(88px, 15vw, 196px);
+  font-weight: 200;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 2px 36px rgba(0, 0, 0, 0.34), 0 0 2px rgba(0, 0, 0, 0.18);
+  transition: opacity 0.4s ease;
 }
 
-.wm-fs-tab {
+.wm-fs:not(.is-running) .wm-fs__time {
+  opacity: 0.92;
+}
+
+.wm-fs__colon {
+  position: relative;
+  top: -0.06em;
+  margin: 0 0.04em;
+}
+
+.wm-fs.is-running .wm-fs__colon {
+  animation: wm-fs-blink 2s steps(1, end) infinite;
+}
+
+@keyframes wm-fs-blink {
+  50% { opacity: 0.6; }
+}
+
+.wm-fs__line {
+  display: block;
+  width: min(300px, 64vw);
+  height: 3px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.26);
+  box-shadow: 0 1px 10px rgba(0, 0, 0, 0.35);
+}
+
+.wm-fs__line i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--fs-accent);
+  box-shadow: 0 0 12px var(--fs-accent);
+  transform-origin: left center;
+  transition: transform 0.9s linear, background 0.4s ease;
+}
+
+.wm-fs__dots {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.wm-fs__dots i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.34);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+
+.wm-fs__dots i.is-on {
+  background: var(--fs-accent);
+  box-shadow: 0 0 8px var(--fs-accent);
+}
+
+/* ---------- controls ---------- */
+.wm-fs__controls {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.5rem 1.15rem;
-  border: none;
-  border-radius: 12px;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.5);
-  font-family: 'Nunito Sans', sans-serif;
-  font-size: 0.88rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  gap: 18px;
+  margin-top: 34px;
 }
 
-.wm-fs-tab.active {
-  background: rgba(255, 181, 3, 0.16);
-  color: #FFB503;
-}
-
-.wm-fs-ring-wrap {
-  position: relative;
-  width: 300px;
-  height: 300px;
+.wm-fs__btn,
+.wm-fs__btn-spacer {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 50%;
-  background: rgba(8, 10, 18, 0.45);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+  background: rgba(10, 12, 22, 0.4);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: rgba(255, 255, 255, 0.82);
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.2s, color 0.2s;
 }
 
-.wm-fs-ring {
-  width: 100%;
-  height: 100%;
-  transform: rotate(-90deg);
+.wm-fs__btn-spacer {
+  visibility: hidden;
 }
 
-.wm-fs-ring-bg {
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.08);
-  stroke-width: 7;
+.wm-fs__btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
 }
 
-.wm-fs-ring-progress {
-  fill: none;
-  stroke-width: 7;
-  stroke-linecap: round;
-  transition: stroke-dashoffset 0.5s linear, stroke 0.3s;
+.wm-fs__btn:active {
+  transform: scale(0.94);
 }
 
-.wm-fs-time-display {
+.wm-fs__btn--play {
+  width: 64px;
+  height: 64px;
+  border: 0;
+  background: #fff;
+  color: #10121c;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.3);
+}
+
+.wm-fs__btn--play:hover {
+  background: #fff;
+  color: #10121c;
+  transform: scale(1.05);
+}
+
+.wm-fs__play-icon {
+  margin-left: 3px;
+}
+
+.wm-fs__btn:focus-visible {
+  outline: 2px solid var(--fs-accent);
+  outline-offset: 3px;
+}
+
+.wm-fs__options {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 22px;
+  animation: wm-fs-rise 0.5s ease;
+}
+
+.wm-fs__seg {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 99px;
+  background: rgba(10, 12, 22, 0.4);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.wm-fs__seg button {
+  height: 28px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 99px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.62);
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 12.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.wm-fs__seg button:hover {
+  color: #fff;
+}
+
+.wm-fs__seg button.is-on {
+  background: rgba(255, 255, 255, 0.9);
+  color: #10121c;
+}
+
+.wm-fs__hint {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+@media (hover: none) {
+  .wm-fs__hint {
+    display: none;
+  }
+}
+
+/* ---------- a finished block ---------- */
+.wm-fs__done {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
+  gap: 6px;
+  pointer-events: none;
+  text-align: center;
+  background: radial-gradient(ellipse 40% 30% at 50% 50%, rgba(6, 8, 16, 0.55), rgba(6, 8, 16, 0));
+  animation: wm-fs-done 5.2s ease forwards;
 }
 
-.wm-fs-time {
-  font-family: 'Nunito Sans', sans-serif;
-  font-weight: 800;
-  font-size: 4rem;
-  color: #fff;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.55);
-}
-
-.wm-fs-mode-label {
+.wm-fs__done strong {
   font-family: 'Nunito', sans-serif;
-  font-size: 0.92rem;
+  font-size: clamp(26px, 4vw, 38px);
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.5);
 }
 
-.wm-fs-controls {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+.wm-fs__done span:last-child {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.78);
 }
 
-.wm-fs-ctrl {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
+.wm-fs__done-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 180px;
+  height: 180px;
+  margin: -90px 0 0 -90px;
+  border: 2px solid var(--fs-accent);
   border-radius: 50%;
-  cursor: pointer;
-  color: #fff;
-  transition: transform 0.15s, opacity 0.15s;
+  box-shadow: 0 0 40px var(--fs-accent), inset 0 0 30px var(--fs-accent);
+  animation: wm-fs-ring 1.8s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
 }
 
-.wm-fs-ctrl:hover {
-  transform: scale(1.06);
+@keyframes wm-fs-done {
+  0% { opacity: 0; transform: scale(0.96); }
+  8% { opacity: 1; transform: none; }
+  82% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
-.wm-fs-ctrl.secondary {
-  width: 48px;
-  height: 48px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  color: rgba(255, 255, 255, 0.7);
+@keyframes wm-fs-ring {
+  from { opacity: 0.9; transform: scale(0.4); }
+  to { opacity: 0; transform: scale(3.2); }
 }
 
-.wm-fs-ctrl.primary {
-  width: 64px;
-  height: 64px;
-  box-shadow: 0 6px 24px rgba(255, 181, 3, 0.35);
+/* While a block is being celebrated the clock steps back. */
+.wm-fs:has(.wm-fs__done) .wm-fs__stage {
+  opacity: 0.12;
+  transition: opacity 0.4s ease;
 }
 
-.wm-fs-sessions {
+/* ---------- watermark ---------- */
+.wm-fs__mark {
+  position: absolute;
+  bottom: calc(1.4rem + env(safe-area-inset-bottom, 0px));
+  left: 50%;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  margin-left: 0.25rem;
-  min-width: 56px;
-}
-
-.wm-fs-sessions span {
-  font-family: 'Nunito Sans', sans-serif;
-  font-weight: 800;
-  font-size: 1.5rem;
-  color: #fff;
-  line-height: 1;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
-}
-
-.wm-fs-sessions small {
+  gap: 7px;
+  transform: translateX(-50%);
+  opacity: 0.62;
+  pointer-events: none;
   font-family: 'Nunito', sans-serif;
-  font-size: 0.7rem;
+  font-size: 13px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
 }
 
-.wm-fs-presets {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.wm-fs-preset {
-  padding: 0.5rem 1.1rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  background: rgba(10, 12, 20, 0.5);
-  backdrop-filter: blur(10px);
-  color: rgba(255, 255, 255, 0.55);
-  font-family: 'Nunito Sans', sans-serif;
-  font-size: 0.8rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-}
-
-.wm-fs-preset.active {
-  background: rgba(255, 181, 3, 0.14);
-  border-color: rgba(255, 181, 3, 0.3);
-  color: #FFB503;
+.wm-fs__mark img {
+  width: 20px;
+  height: auto;
+  filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.45));
 }
 
 @media (max-width: 560px) {
-  .wm-fs-ring-wrap {
-    width: 240px;
-    height: 240px;
+  .wm-fs__controls {
+    margin-top: 28px;
   }
 
-  .wm-fs-time {
-    font-size: 3.1rem;
+  .wm-fs__back {
+    left: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wm-fs,
+  .wm-fs__stage,
+  .wm-fs__options,
+  .wm-fs.is-running .wm-fs__colon,
+  .wm-fs__done-ring {
+    animation: none;
+  }
+
+  .wm-fs__done {
+    animation: none;
   }
 }

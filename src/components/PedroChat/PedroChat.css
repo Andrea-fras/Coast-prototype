@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════
-   Global Pedro Chat — v2 dark (matches lesson UI)
+   Chat with Pedro — history on the left, conversation on the right
    ═══════════════════════════════════════════════════════ */
 
 .pedro-chat-page {
@@ -8,34 +8,24 @@
   z-index: 5000;
   display: flex;
   flex-direction: column;
-  background: #161616;
-  isolation: isolate;
   overflow: hidden;
-  font-family: 'Nunito', system-ui, -apple-system, sans-serif;
+  isolation: isolate;
+  background: #161616;
+  font-family: 'Nunito Sans', system-ui, -apple-system, sans-serif;
+  color: #f6f3ee;
   animation: pedroChatFadeIn 0.25s ease-out;
 }
 
 .pedro-chat-page::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
   background:
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 31px,
-      rgba(255, 255, 255, 0.025) 31px,
-      rgba(255, 255, 255, 0.025) 32px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 31px,
-      rgba(255, 255, 255, 0.025) 31px,
-      rgba(255, 255, 255, 0.025) 32px
-    );
+    radial-gradient(ellipse 40% 40% at 60% 20%, rgba(255, 181, 3, 0.06), transparent),
+    repeating-linear-gradient(0deg, transparent 0 31px, rgba(255, 255, 255, 0.022) 31px 32px),
+    repeating-linear-gradient(90deg, transparent 0 31px, rgba(255, 255, 255, 0.022) 31px 32px);
 }
 
 @keyframes pedroChatFadeIn {
@@ -43,394 +33,334 @@
   to { opacity: 1; }
 }
 
-.pedro-chat-page > * {
+.pedro-chat-page > .pedro-chat-body {
   position: relative;
   z-index: 1;
 }
 
-/* Header */
-
-.pedro-chat-header {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.65rem 1.25rem;
-  background: #161616;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.pedro-chat-header-left {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.pedro-chat-close,
-.pedro-chat-history-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: rgba(255, 255, 255, 0.55);
-  padding: 0.45rem;
-  border-radius: 8px;
-  transition: background 0.15s, color 0.15s;
-}
-
-.pedro-chat-close:hover,
-.pedro-chat-history-toggle:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: #fff;
-}
-
-.pedro-chat-history-toggle.active {
-  background: rgba(255, 181, 3, 0.15);
-  color: #ffb503;
-}
-
-.pedro-chat-header-center {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  min-width: 0;
-}
-
-.pedro-chat-header-mascot {
-  width: 28px;
-  height: 28px;
-}
-
-.pedro-chat-header-title {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #fff;
-}
-
-.pedro-chat-new-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.75);
-  border-radius: 10px;
-  padding: 0.45rem 0.75rem;
-  font-family: inherit;
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-  white-space: nowrap;
-}
-
-.pedro-chat-new-btn:hover {
-  background: rgba(255, 181, 3, 0.12);
-  border-color: rgba(255, 181, 3, 0.3);
-  color: #ffb503;
-}
-
-/* Body layout */
-
 .pedro-chat-body {
+  display: grid;
   flex: 1;
-  display: flex;
+  grid-template-columns: 280px minmax(0, 1fr);
   min-height: 0;
-  position: relative;
+  padding-top: 76px;
 }
 
-.pedro-chat-history-backdrop {
-  display: none;
-  position: absolute;
-  inset: 0;
-  z-index: 4;
-  background: rgba(0, 0, 0, 0.45);
-  border: none;
-  cursor: pointer;
-}
-
-/* Collapsible history */
-
+/* ---------- history ---------- */
 .pedro-chat-history {
-  width: 0;
-  overflow: hidden;
-  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  background: rgba(14, 14, 14, 0.96);
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
-  transition: width 0.22s ease;
-}
-
-.pedro-chat-history.open {
-  width: 280px;
-}
-
-.pedro-chat-history-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1rem 0.5rem;
-}
-
-.pedro-chat-history-head h2 {
-  margin: 0;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.4);
-}
-
-.pedro-chat-history-head button {
-  display: none;
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.45);
-  cursor: pointer;
-  padding: 0.25rem;
-  border-radius: 6px;
-}
-
-.pedro-chat-history-head button:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.06);
+  min-height: 0;
+  /* Ends above the feedback button in the bottom-left corner. */
+  margin: 4px 0 84px 16px;
+  padding: 14px;
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  background: rgba(20, 20, 23, 0.74);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(18px) saturate(1.25);
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
 }
 
 .pedro-chat-history-new {
   display: flex;
+  flex: none;
   align-items: center;
-  gap: 0.45rem;
-  margin: 0 0.75rem 0.75rem;
-  padding: 0.6rem 0.75rem;
-  background: rgba(255, 181, 3, 0.12);
-  border: 1px solid rgba(255, 181, 3, 0.25);
-  border-radius: 10px;
-  color: #ffb503;
-  font-family: inherit;
-  font-size: 0.82rem;
-  font-weight: 700;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 38px;
+  margin-bottom: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.045);
+  font-family: 'Nunito', sans-serif;
+  font-size: 13.5px;
+  font-weight: 900;
+  color: #f6f3ee;
   cursor: pointer;
-  transition: background 0.15s;
-  white-space: nowrap;
+  transition: background 0.2s;
 }
 
 .pedro-chat-history-new:hover {
-  background: rgba(255, 181, 3, 0.2);
+  background: rgba(255, 255, 255, 0.075);
 }
 
-.pedro-chat-history-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 0 0.5rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
+.pedro-chat-history-label {
+  margin: 12px 8px 6px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(246, 243, 238, 0.45);
 }
 
 .pedro-chat-history-empty {
-  font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.35);
-  text-align: center;
-  padding: 2rem 1rem;
-  margin: 0;
+  margin: 12px 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(246, 243, 238, 0.45);
 }
 
 .pedro-chat-history-item {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
+  display: block;
   width: 100%;
-  padding: 0.6rem 0.65rem;
-  border: none;
-  border-radius: 8px;
+  padding: 10px;
+  border: 0;
+  border-radius: 12px;
   background: transparent;
-  color: rgba(255, 255, 255, 0.6);
   font-family: inherit;
-  font-size: 0.82rem;
-  font-weight: 600;
   text-align: left;
+  color: #f6f3ee;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-  min-width: 0;
-}
-
-.pedro-chat-history-item span {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.pedro-chat-history-item svg {
-  flex-shrink: 0;
-  opacity: 0.55;
+  transition: background 0.2s;
 }
 
 .pedro-chat-history-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.045);
 }
 
-.pedro-chat-history-item.active {
-  background: rgba(255, 181, 3, 0.12);
-  color: #ffb503;
+.pedro-chat-history-item[aria-current='true'] {
+  background: rgba(255, 255, 255, 0.085);
 }
 
-.pedro-chat-history-item.active svg {
-  opacity: 1;
+.pedro-chat-history-item b {
+  display: block;
+  overflow: hidden;
+  font-size: 13.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-/* Main chat */
+.pedro-chat-history-item small {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(246, 243, 238, 0.45);
+}
 
+.pedro-chat-history-backdrop {
+  display: none;
+}
+
+/* ---------- conversation ---------- */
 .pedro-chat-main {
-  flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  background: transparent;
 }
 
-.pedro-chat-messages {
+.pedro-chat-toolbar {
+  display: none;
+}
+
+.pedro-chat-page .pedro-chat-messages {
   flex: 1;
-  min-height: 0;
-  max-width: 820px;
-  margin: 0 auto;
   width: 100%;
-  padding-bottom: 0.75rem;
+  max-width: 768px;
+  min-height: 0;
+  margin: 0 auto;
+  padding: 24px 24px 12px;
+}
+
+.pedro-chat-page .lv-chat-scroll-inner {
+  gap: 18px;
+}
+
+.pedro-chat-page .lv-chat-msg {
+  gap: 14px;
+  animation: pedroMsgIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes pedroMsgIn {
+  from { opacity: 0; translate: 0 8px; }
+}
+
+.pedro-chat-page .lv-msg-avatar {
+  width: 40px;
+  height: 40px;
+  margin-top: 2px;
+  border-radius: 0;
 }
 
 .pedro-chat-page .lv-chat-msg.pedro .lv-msg-bubble {
-  background: #1a1a1a;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.pedro-chat-page .lv-msg-user-text {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.pedro-chat-page .lv-typing span {
-  background: rgba(255, 255, 255, 0.35);
-}
-
-/* Empty state */
-
-.pedro-chat-empty {
   flex: 1;
+  min-width: 3.5rem;
+  max-width: 100%;
+  padding: 16px 20px 17px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 6px 20px 20px 20px;
+  background: linear-gradient(180deg, #1d1f21 0%, #191a1c 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035), 0 10px 30px rgba(0, 0, 0, 0.18);
+  color: rgba(242, 238, 230, 0.88);
+}
+
+.pedro-chat-page .lv-chat-msg.user .lv-msg-bubble {
+  max-width: 75%;
+}
+
+.pedro-chat-page .lv-chat-msg .lv-msg-user-text {
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 20px 6px 20px 20px;
+  background: rgba(255, 255, 255, 0.07);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: #f6f3ee;
+}
+
+.pedro-chat-page .lv-chat-msg .lv-typing span {
+  background: rgba(246, 243, 238, 0.45);
+}
+
+/* ---------- empty state: Pedro says hello ---------- */
+.pedro-chat-empty {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem 1.5rem;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.pedro-hello {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 720px;
+  margin: auto;
+  padding: 16px 0 8px;
   text-align: center;
-  max-width: 520px;
-  margin: 0 auto;
 }
 
-.pedro-empty-mascot {
-  width: 88px;
-  height: 88px;
-  margin-bottom: 1.25rem;
+.pedro-hello__bird {
+  width: 96px;
+  height: auto;
+  animation: pedroHop 3.4s ease-in-out infinite;
 }
 
-.pedro-chat-empty h2 {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #fff;
-  margin: 0 0 0.75rem;
+@keyframes pedroHop {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -5px; }
 }
 
-.pedro-chat-intro {
-  font-size: 0.92rem;
-  color: rgba(255, 255, 255, 0.55);
-  line-height: 1.6;
-  margin: 0 0 1.25rem;
-}
-
-.pedro-chat-capabilities {
-  list-style: none;
+.pedro-hello h1 {
   margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
+  font-family: 'Nunito', sans-serif;
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: -0.015em;
+}
+
+.pedro-hello p {
+  max-width: 480px;
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: rgba(246, 243, 238, 0.7);
+}
+
+.pedro-starters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+  margin-top: 18px;
+}
+
+.pedro-starter {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.045);
+  font-family: inherit;
   text-align: left;
-  width: 100%;
-  max-width: 340px;
+  color: #f6f3ee;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s, background 0.2s;
 }
 
-.pedro-chat-capabilities li {
-  position: relative;
-  padding-left: 1.1rem;
-  font-size: 0.86rem;
-  color: rgba(255, 255, 255, 0.45);
+.pedro-starter:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: rgba(255, 181, 3, 0.3);
+  background: rgba(255, 181, 3, 0.05);
+}
+
+.pedro-starter:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pedro-starter svg {
+  color: #ffb503;
+}
+
+.pedro-starter b {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.pedro-starter small {
+  font-size: 12.5px;
+  font-weight: 600;
   line-height: 1.45;
+  color: rgba(246, 243, 238, 0.5);
 }
 
-.pedro-chat-capabilities li::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0.55em;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: rgba(255, 181, 3, 0.65);
-}
-
-/* Composer (lesson-style) */
-
-.pedro-chat-composer {
+/* ---------- composer ---------- */
+.pedro-chat-page .pedro-chat-composer {
   flex-shrink: 0;
-  padding: 0 1.25rem max(1.25rem, env(safe-area-inset-bottom, 0px));
-  max-width: 820px;
-  margin: 0 auto;
-  width: 100%;
   box-sizing: border-box;
+  width: 100%;
+  max-width: 768px;
+  margin: 0 auto;
+  padding: 8px 24px max(20px, env(safe-area-inset-bottom, 0px));
   background: transparent;
 }
 
-.pedro-chat-page .lv-composer {
-  background: transparent;
-}
-
-.pedro-chat-page .lv-input-shell,
-.pedro-input-shell {
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
-  padding: 0.95rem 1rem 0.85rem;
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgb(38 38 38);
-  transition: border-color 0.2s ease;
+.pedro-chat-page .pedro-input-shell {
   position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 8px 8px 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  background: rgb(38 38 38);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.pedro-chat-page .lv-input-shell:focus-within,
-.pedro-input-shell:focus-within {
+.pedro-chat-page .pedro-input-shell:focus-within {
   border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 0 0 4px rgba(255, 181, 3, 0.08), 0 12px 30px rgba(0, 0, 0, 0.3);
 }
 
 .pedro-chat-page .lv-input {
-  background: transparent;
+  flex: 1;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 0;
   border: none;
-  color: #fff;
-  padding: 0;
-  min-height: 1.5rem;
+  background: transparent;
   box-shadow: none;
   resize: none;
   font-family: inherit;
-  font-size: 0.92rem;
+  font-size: 15px;
   line-height: 1.5;
-  width: 100%;
+  color: #eee;
 }
 
 .pedro-chat-page .lv-input:focus {
@@ -438,106 +368,182 @@
 }
 
 .pedro-chat-page .lv-input::placeholder {
-  color: rgba(255, 255, 255, 0.38);
+  color: rgba(246, 243, 238, 0.45);
 }
 
 .pedro-chat-page .lv-composer-actions {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  gap: 6px;
 }
 
-.pedro-chat-page .lv-send-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  border: none;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+.pedro-chat-page .lv-cancel-btn {
+  border-color: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.72);
 }
 
-.pedro-chat-page .lv-send-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.12);
+.pedro-chat-page .lv-cancel-btn:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
   color: #fff;
 }
 
-.pedro-chat-page .lv-send-btn:not(:disabled) {
-  background: rgba(255, 181, 3, 0.18);
-  color: #ffb503;
+.pedro-chat-page .lv-send-btn {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex: none;
+  border: none;
+  border-radius: 13px;
+  background: linear-gradient(90deg, #ffb503, #ff7b02);
+  color: #1c1305;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s;
 }
 
-.pedro-chat-page .lv-send-btn:not(:disabled):hover {
-  background: rgba(255, 181, 3, 0.28);
-  color: #ffc933;
+.pedro-chat-page .lv-send-btn:hover:not(:disabled) {
+  transform: scale(1.06);
 }
 
 .pedro-chat-page .lv-send-btn:disabled {
-  opacity: 0.4;
+  background: linear-gradient(90deg, #ffb503, #ff7b02);
+  opacity: 0.35;
   cursor: not-allowed;
 }
 
+.pedro-chat-history-new:focus-visible,
+.pedro-chat-history-item:focus-visible,
+.pedro-chat-tool:focus-visible,
+.pedro-starter:focus-visible,
+.pedro-chat-page .lv-send-btn:focus-visible {
+  outline: 2px solid #ffb503;
+  outline-offset: 2px;
+}
+
 .pedro-usage-hint {
+  margin-top: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
   text-align: center;
-  font-size: 0.72rem;
-  color: rgba(255, 255, 255, 0.35);
-  padding: 0.45rem 0 0;
+  color: rgba(246, 243, 238, 0.45);
 }
 
 .pedro-usage-hint.depleted {
-  color: #f87171;
-  font-weight: 600;
+  color: #ff8a73;
 }
 
-/* Responsive */
-
-@media (max-width: 768px) {
-  .pedro-chat-new-btn span {
-    display: none;
+/* ---------- narrower screens: history becomes a drawer ---------- */
+@media (max-width: 980px) {
+  .pedro-chat-body {
+    grid-template-columns: minmax(0, 1fr);
+    padding-top: 68px;
   }
 
-  .pedro-chat-new-btn {
-    padding: 0.45rem;
+  .pedro-chat-toolbar {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    max-width: 768px;
+    margin: 0 auto;
+    padding: 4px 16px 0;
+    box-sizing: border-box;
+  }
+
+  .pedro-chat-tool {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.045);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    color: rgba(246, 243, 238, 0.8);
+    cursor: pointer;
+  }
+
+  .pedro-chat-tool[aria-pressed='true'] {
+    border-color: rgba(255, 181, 3, 0.3);
+    color: #ffd27a;
   }
 
   .pedro-chat-history {
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    z-index: 5;
-    width: min(300px, 88vw);
-    transform: translateX(-105%);
-    transition: transform 0.22s ease;
-    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.35);
+    position: fixed;
+    z-index: 20;
+    top: 68px;
+    bottom: 12px;
+    left: 12px;
+    width: min(300px, calc(100vw - 24px));
+    margin: 0;
+    transform: translateX(calc(-100% - 24px));
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .pedro-chat-history.open {
-    width: min(300px, 88vw);
-    transform: translateX(0);
+    transform: none;
   }
 
   .pedro-chat-history-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 15;
     display: block;
+    border: 0;
+    background: rgba(8, 8, 10, 0.5);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
   }
 
-  .pedro-chat-history-head button {
-    display: flex;
+  .pedro-starters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pedro-chat-page .pedro-chat-messages {
+    padding: 16px 16px 8px;
+  }
+
+  .pedro-chat-page .pedro-chat-composer {
+    padding: 8px 12px max(14px, env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Leave room for the help button in the bottom-left corner. */
+  .pedro-chat-page .pedro-input-shell {
+    margin-left: calc(1.5rem + 44px - 12px + 10px);
+  }
+
+  .pedro-chat-page .lv-chat-msg.user .lv-msg-bubble {
+    max-width: 85%;
   }
 }
 
-@media (min-width: 769px) {
-  .pedro-chat-history:not(.open) {
-    border-right: none;
+@media (max-width: 720px) {
+  .pedro-hello h1 {
+    font-size: 26px;
+  }
+
+  .pedro-hello__bird {
+    width: 80px;
+  }
+
+  .pedro-chat-page .lv-msg-avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .pedro-chat-page .lv-chat-msg.pedro .lv-msg-bubble {
+    padding: 14px 16px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pedro-chat-page {
+  .pedro-chat-page,
+  .pedro-chat-page .lv-chat-msg,
+  .pedro-hello__bird {
     animation: none;
   }
 

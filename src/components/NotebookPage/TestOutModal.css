@@ -1,5 +1,4 @@
-body.coast-test-out-active .fv-v2-back,
-body.coast-test-out-active .nb-v2-cups {
+body.coast-test-out-active .fv-v2-back {
   pointer-events: none;
   opacity: 0.35;
 }
@@ -237,4 +236,108 @@ body.coast-test-out-active .nb-v2-cups {
 .test-out-send:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+/* ── Adaptive placement progress ───────────────────────────── */
+.placement-track {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.placement-step {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.5rem 0.2rem 0.35rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.72rem;
+  font-weight: 700;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+.placement-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.placement-step.passed {
+  background: rgba(74, 222, 128, 0.12);
+  color: #4ade80;
+}
+
+.placement-step.passed .placement-dot {
+  background: #4ade80;
+}
+
+.placement-step.checking {
+  background: rgba(255, 181, 3, 0.14);
+  color: #FFB503;
+}
+
+.placement-step.checking .placement-dot {
+  background: #FFB503;
+  box-shadow: 0 0 0 3px rgba(255, 181, 3, 0.25);
+  animation: placement-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes placement-pulse {
+  50% { box-shadow: 0 0 0 5px rgba(255, 181, 3, 0.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .placement-step.checking .placement-dot { animation: none; }
+}
+
+.placement-status {
+  margin: 0.5rem 0 0;
+  font-size: 0.76rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.placement-keep {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 1.1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.placement-keep-btn {
+  margin-left: auto;
+  background: rgba(74, 222, 128, 0.12);
+  border: 1px solid rgba(74, 222, 128, 0.35);
+  border-radius: 10px;
+  padding: 0.4rem 0.75rem;
+  color: #4ade80;
+  font-weight: 700;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.placement-keep-btn:hover {
+  background: rgba(74, 222, 128, 0.2);
+}
+
+.test-out-success.neutral {
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }

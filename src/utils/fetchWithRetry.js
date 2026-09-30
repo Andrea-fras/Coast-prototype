@@ -3,6 +3,7 @@ export async function fetchWithRetry(url, options = {}, { retries = 3, baseDelay
     try {
       return await fetch(url, options);
     } catch (err) {
+      if (err?.name === 'AbortError') throw err;
       const isNetworkError = !err.response;
       if (!isNetworkError || attempt === retries) throw err;
       await new Promise(r => setTimeout(r, baseDelay * (2 ** attempt)));

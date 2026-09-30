@@ -1,64 +1,227 @@
-import React, { useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useAuth } from '../../context/authState';
 import { API_URL } from '../../config';
+import { fetchWithRetry } from '../../utils/fetchWithRetry';
+import { beginChatStream, isActiveStream, endChatStream } from '../../utils/chatStreamGuard';
+import { useStreamBuffer } from '../../utils/useStreamBuffer';
+import PedroMessage from '../PedroMessage';
 import mascot from '../../assets/sessioncompletebird.svg';
-import { Sparkles, ArrowRight, ArrowLeft, Map, Gem, ShieldCheck, Star } from 'lucide-react';
+import { Sparkles, ArrowRight, ArrowLeft, MessageCircle, Send, Brain } from 'lucide-react';
+import GuidedTour from '../GuidedTour/GuidedTour';
+import { buildCoastTour } from '../GuidedTour/coastTour';
 import './OnboardingModal.css';
+import '../NotebookPage/LessonView.css';
 
-const STEPS = [
-  {
-    icon: Sparkles,
-    title: (name) => `Welcome to Coast, ${name}!`,
-    paragraphs: [
-      "I'm Pedro, your AI study companion. Let me walk you through how Coast works — it'll only take a minute.",
-    ],
-  },
-  {
-    icon: Map,
-    title: () => 'Your learning map',
-    paragraphs: [
-      'The map is a visual representation of everything you\'ve learned. As you complete lessons, new regions unlock and your knowledge landscape grows.',
-      'Explore the map to find interactive elements — including rare drops hidden across the terrain.',
-    ],
-  },
-  {
-    icon: Gem,
-    title: () => 'Discover more, find more',
-    paragraphs: [
-      'The more lessons you complete, the more of the map you uncover — and the more drops you can find.',
-      'Rare drops aren\'t just collectibles. They connect to active recall, helping you strengthen what you\'ve learned by testing your memory at the right moments.',
-    ],
-  },
-  {
-    icon: ShieldCheck,
-    title: () => 'Master each section with Pedro',
-    paragraphs: [
-      'Every section you study with Pedro stays open until you\'ve truly mastered it. Pedro will verify your understanding before you can move on.',
-      'Once verified, you earn XP and reveal new areas of the map.',
-    ],
-  },
-  {
-    icon: Star,
-    title: () => 'Complete lessons, collect stars',
-    paragraphs: [
-      'Finish all sections in a lesson for a big XP bonus and even more map discovery.',
-      'Master a full lesson to earn a star. Try to collect as many as you can!',
-    ],
-  },
-];
+const ONBOARDING_START = '[ONBOARDING_START]';
 
-export default function OnboardingModal() {
-  const { token, updateUser, user } = useAuth();
-  const [step, setStep] = useState(0);
-  const [saving, setSaving] = useState(false);
+function OnboardingPedroChat({ token, onComplete, onConversationId }) {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [conversationId, setConversationId] = useState(null);
+  const [pedroDone, setPedroDone] = useState(false);
+  const [traitsSaved, setTraitsSaved] = useState([]);
+  const startedRef = useRef(false);
+  const streamAbortRef = useRef(null);
+  const streamGenRef = useRef(0);
+  const chatEndRef = useRef(null);
+  const { streamingText, appendToken, resetStream, finalizeStream } = useStreamBuffer();
 
-  const firstName = user?.name?.split(' ')[0] || 'there';
-  const current = STEPS[step];
-  const isFirst = step === 0;
-  const isLast = step === STEPS.length - 1;
-  const Icon = current.icon;
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, streamingText]);
+
+  const sendStream = useCallback(async (text, { hidden = false } = {}) => {
+    const { controller, streamId } = beginChatStream(streamAbortRef, streamGenRef);
+    if (!hidden) {
+      setMessages((prev) => [...prev, { role: 'user', content: text }]);
+    }
+    setLoading(true);
+    resetStream();
+
+    try {
+      const res = await fetchWithRetry(`${API_URL}/api/chat/stream`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          message: text,
+          context_type: 'onboarding',
+          context_id: 'profile',
+          conversation_id: conversationId,
+        }),
+      });
+
+      if (!res.ok) throw new Error('stream failed');
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let meta = null;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const evt = JSON.parse(line.slice(6));
+            if (evt.token && isActiveStream(streamGenRef, streamId)) appendToken(evt.token);
+            if (evt.done) meta = evt;
+          } catch { /* ignore */ }
+        }
+      }
+
+      if (!isActiveStream(streamGenRef, streamId)) return;
+
+      const fullText = finalizeStream() || meta?.reply || '';
+      if (fullText) {
+        setMessages((prev) => [...prev, { role: 'pedro', content: fullText }]);
+      }
+      if (meta?.conversation_id) {
+        setConversationId(meta.conversation_id);
+        onConversationId?.(meta.conversation_id);
+      }
+      if (meta?.onboarding_complete) {
+        setPedroDone(true);
+        if (meta.traits_saved?.length) setTraitsSaved(meta.traits_saved);
+      }
+    } catch {
+      setMessages((prev) => [...prev, {
+        role: 'pedro',
+        content: "Sorry, I hit a snag — try sending your message again!",
+      }]);
+    } finally {
+      if (endChatStream(streamAbortRef, controller, streamGenRef, streamId)) {
+        setLoading(false);
+      }
+    }
+  }, [token, conversationId, appendToken, resetStream, finalizeStream, onConversationId]);
+
+  useEffect(() => {
+    if (startedRef.current || !token) return;
+    startedRef.current = true;
+    sendStream(ONBOARDING_START, { hidden: true });
+  }, [token, sendStream]);
+
+  const handleSend = async () => {
+    const msg = input.trim();
+    if (!msg || loading || pedroDone) return;
+    setInput('');
+    await sendStream(msg);
+  };
 
   const handleFinish = async () => {
+    onComplete(conversationId);
+  };
+
+  return (
+    <div className="onboarding-chat">
+      <div className="onboarding-chat-messages">
+        {messages.map((m, i) => (
+          m.role === 'pedro' ? (
+            <div key={i} className="lv-chat-msg pedro">
+              <img src={mascot} alt="" className="lv-msg-avatar" />
+              <div className="lv-msg-bubble">
+                <PedroMessage text={m.content} />
+              </div>
+            </div>
+          ) : (
+            <div key={i} className="lv-chat-msg user">
+              <div className="lv-msg-user-text">{m.content}</div>
+            </div>
+          )
+        ))}
+        {loading && streamingText && (
+          <div className="lv-chat-msg pedro">
+            <img src={mascot} alt="" className="lv-msg-avatar" />
+            <div className="lv-msg-bubble">
+              <PedroMessage text={streamingText} isStreaming />
+            </div>
+          </div>
+        )}
+        {loading && !streamingText && (
+          <div className="lv-chat-msg pedro">
+            <img src={mascot} alt="" className="lv-msg-avatar" />
+            <div className="lv-msg-bubble lv-msg-bubble--typing">
+              <div className="lv-typing">
+                <span /><span /><span />
+              </div>
+            </div>
+          </div>
+        )}
+        <div ref={chatEndRef} />
+      </div>
+
+      {pedroDone && traitsSaved.length > 0 && (
+        <div className="onboarding-memory-card">
+          <Brain size={18} />
+          <div>
+            <strong>Saved to your memory</strong>
+            <ul>
+              {traitsSaved.map((t, i) => (
+                <li key={i}>{t.description}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
+      {!pedroDone ? (
+        <div className="onboarding-chat-input-row">
+          <textarea
+            className="onboarding-chat-input"
+            rows={2}
+            placeholder="Tell Pedro how you like to study…"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
+            disabled={loading}
+          />
+          <button
+            type="button"
+            className="onboarding-chat-send"
+            onClick={handleSend}
+            disabled={loading || !input.trim()}
+          >
+            <Send size={16} />
+          </button>
+        </div>
+      ) : (
+        <button type="button" className="onboarding-next onboarding-next--full" onClick={handleFinish}>
+          Start exploring <Sparkles size={16} />
+        </button>
+      )}
+    </div>
+  );
+}
+
+export default function OnboardingModal({ tourActions }) {
+  const { token, updateUser, user } = useAuth();
+  const [phase, setPhase] = useState('welcome'); // welcome → tour → pedro-intro → chat
+  const [saving, setSaving] = useState(false);
+  const conversationIdRef = useRef(null);
+  const completedRef = useRef(false);
+  const tourSteps = useMemo(() => buildCoastTour(tourActions), [tourActions]);
+
+  const firstName = user?.name?.split(' ')[0] || 'there';
+
+  const handleFinish = async (convId = null) => {
+    if (completedRef.current) {
+      updateUser({ onboarding_completed: true });
+      return;
+    }
     setSaving(true);
     try {
       const res = await fetch(`${API_URL}/api/auth/onboarding`, {
@@ -67,10 +230,14 @@ export default function OnboardingModal() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ preferences: {} }),
+        body: JSON.stringify({
+          preferences: {},
+          conversation_id: convId || conversationIdRef.current || undefined,
+        }),
       });
       if (res.ok) {
         const data = await res.json();
+        completedRef.current = true;
         updateUser({ onboarding_completed: true, ...data });
       } else {
         updateUser({ onboarding_completed: true });
@@ -81,17 +248,56 @@ export default function OnboardingModal() {
     setSaving(false);
   };
 
-  const handleNext = async () => {
-    if (isLast) {
-      await handleFinish();
-    } else {
-      setStep((s) => s + 1);
-    }
+  const handleSkipAll = () => {
+    tourActions?.showMap?.();
+    handleFinish();
   };
 
-  const handleBack = () => {
-    if (!isFirst) setStep((s) => s - 1);
+  const endTour = () => {
+    tourActions?.showMap?.();
+    setPhase('pedro-intro');
   };
+
+  if (phase === 'tour') {
+    return <GuidedTour steps={tourSteps} onFinish={endTour} onSkip={endTour} finishLabel="Meet Pedro" />;
+  }
+
+  if (phase === 'chat') {
+    return (
+      <div className="onboarding-overlay">
+        <div className="onboarding-card onboarding-card--chat">
+          <div className="onboarding-header">
+            <img src={mascot} alt="Pedro" className="onboarding-mascot" />
+            <div className="onboarding-header-text">
+              <span className="onboarding-kicker">Quick chat</span>
+              <h2>Pedro gets to know you</h2>
+            </div>
+          </div>
+          <p className="onboarding-chat-sub">
+            ~1 minute — share as much or as little as you like. Pedro remembers for future lessons.
+          </p>
+          <OnboardingPedroChat
+            token={token}
+            onConversationId={(id) => { conversationIdRef.current = id; }}
+            onComplete={(convId) => handleFinish(convId)}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  const isIntro = phase === 'pedro-intro';
+  const Icon = isIntro ? MessageCircle : Sparkles;
+  const title = isIntro ? 'Now, a quick hello' : `Welcome to Coast, ${firstName}!`;
+  const paragraphs = isIntro
+    ? [
+        'Pedro will ask a couple of short questions about how you like to study — usually under a minute.',
+        'It helps personalise every lesson. Share as much or as little as you want.',
+      ]
+    : [
+        'Coast turns your own lectures into lessons with Pedro, your AI tutor — and a map that grows as you learn.',
+        'Let me show you around. It takes about a minute, and you can skip at any point.',
+      ];
 
   return (
     <div className="onboarding-overlay">
@@ -99,53 +305,46 @@ export default function OnboardingModal() {
         <div className="onboarding-header">
           <img src={mascot} alt="Pedro" className="onboarding-mascot" />
           <div className="onboarding-header-text">
-            <span className="onboarding-kicker">Getting started</span>
-            <h2>Pedro&apos;s quick tour</h2>
+            <span className="onboarding-kicker">{isIntro ? 'Almost there' : 'Getting started'}</span>
+            <h2>{isIntro ? 'Meet Pedro' : 'Hi, I’m Pedro'}</h2>
           </div>
         </div>
 
-        <div className="onboarding-progress">
-          {STEPS.map((_, i) => (
-            <div
-              key={i}
-              className={`onboarding-dot ${i === step ? 'active' : ''} ${i < step ? 'done' : ''}`}
-            />
-          ))}
-        </div>
-
-        <div className="onboarding-step" key={step}>
+        <div className="onboarding-step" key={phase}>
           <div className="onboarding-step-icon">
             <Icon size={24} />
           </div>
-          <h3 className="onboarding-step-title">
-            {typeof current.title === 'function' ? current.title(firstName) : current.title}
-          </h3>
+          <h3 className="onboarding-step-title">{title}</h3>
           <div className="onboarding-step-body">
-            {current.paragraphs.map((text, i) => (
-              <p key={i}>{text}</p>
-            ))}
+            {paragraphs.map((text, i) => <p key={i}>{text}</p>)}
           </div>
         </div>
 
         <div className="onboarding-actions">
           <div className="onboarding-actions-left">
-            {!isFirst ? (
-              <button className="onboarding-back" onClick={handleBack} disabled={saving}>
-                <ArrowLeft size={16} />
-                Back
-              </button>
+            {isIntro ? (
+              <>
+                <button type="button" className="onboarding-back" onClick={() => setPhase('tour')} disabled={saving}>
+                  <ArrowLeft size={16} />
+                  Tour again
+                </button>
+                <button type="button" className="onboarding-skip" onClick={handleSkipAll} disabled={saving}>
+                  Skip chat
+                </button>
+              </>
             ) : (
-              <button className="onboarding-skip" onClick={handleFinish} disabled={saving}>
-                Skip for now
+              <button type="button" className="onboarding-skip" onClick={() => setPhase('pedro-intro')} disabled={saving}>
+                Skip tour
               </button>
             )}
           </div>
-          <button className="onboarding-next" onClick={handleNext} disabled={saving}>
-            {saving ? 'Saving...' : isLast ? (
-              <>Start exploring <Sparkles size={16} /></>
-            ) : (
-              <>Next <ArrowRight size={16} /></>
-            )}
+          <button
+            type="button"
+            className="onboarding-next"
+            onClick={() => setPhase(isIntro ? 'chat' : 'tour')}
+            disabled={saving}
+          >
+            {isIntro ? <>Chat with Pedro <MessageCircle size={16} /></> : <>Show me around <ArrowRight size={16} /></>}
           </button>
         </div>
       </div>

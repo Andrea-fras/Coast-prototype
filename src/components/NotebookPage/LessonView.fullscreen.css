@@ -1,4 +1,3 @@
-
 /* ═══════════════════════════════════════════════════════
    LessonView — Fullscreen mode
    ═══════════════════════════════════════════════════════ */
@@ -16,9 +15,29 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: #161616;
-  z-index: -1;
+  z-index: 0;
   pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 31px,
+      rgba(255, 255, 255, 0.016) 31px,
+      rgba(255, 255, 255, 0.016) 32px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 31px,
+      rgba(255, 255, 255, 0.016) 31px,
+      rgba(255, 255, 255, 0.016) 32px
+    ),
+    #161616;
+}
+
+.lv-container--fullscreen > * {
+  position: relative;
+  z-index: 1;
 }
 
 .lv-container--fullscreen .lv-loading {
@@ -30,8 +49,6 @@
 }
 
 .lv-header--fullscreen {
-  background: #161616;
-  border-bottom-color: rgba(255, 255, 255, 0.06);
   padding: 0.65rem 1.25rem;
 }
 
@@ -94,20 +111,20 @@
 }
 
 .lv-container--fullscreen .lv-body {
-  background: #161616;
+  background: transparent;
   flex: 1;
   min-height: 0;
 }
 
 .lv-container--fullscreen .lv-main {
-  background: #161616;
+  background: transparent;
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
 
 .lv-container--fullscreen .lv-chat-area {
-  background: #161616;
+  background: transparent;
   flex: 1;
   min-height: 0;
   padding-bottom: 0.75rem;
@@ -120,7 +137,7 @@
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
-  background: #161616;
+  background: transparent;
 }
 
 .lv-container--fullscreen .lv-input-shell {
@@ -145,18 +162,12 @@
   gap: 0.5rem;
 }
 
-.lv-container--fullscreen .lv-input-row {
-  background: transparent;
-  border-top: none;
-  padding: 0;
-}
-
 .lv-container--fullscreen .lv-input {
   background: transparent;
   border: none;
   color: #fff;
   padding: 0;
-  min-height: 1.5rem;
+  min-height: calc(1.5em * 3);
   box-shadow: none;
   resize: none;
 }
@@ -198,7 +209,7 @@
   color: #fff;
 }
 
-.lv-container--fullscreen .lv-msg-bubble {
+.lv-container--fullscreen .lv-chat-msg:not(.pedro) .lv-msg-bubble {
   background: #1a1a1a;
   border-color: rgba(255, 255, 255, 0.06);
   color: rgba(255, 255, 255, 0.9);
@@ -247,14 +258,6 @@
   color: #fff;
 }
 
-.lv-container--fullscreen .lv-notes-editor {
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.lv-container--fullscreen .lv-notes-editor:empty:before {
-  color: rgba(255, 255, 255, 0.25);
-}
-
 .lv-container--fullscreen .lv-viewing-banner,
 .lv-container--fullscreen .lv-review-banner {
   background: rgba(255, 181, 3, 0.08);
@@ -286,7 +289,7 @@
   }
 
   .lv-container--fullscreen .lv-notes-panel {
-    width: 380px;
+    min-width: 380px;
   }
 }
 
@@ -298,5 +301,101 @@
   .lv-container--fullscreen .lv-header-title {
     font-size: 0.82rem;
     max-width: 160px;
+  }
+}
+
+.lv-workshop-goal { flex-shrink: 0; margin: 0; padding: 0.8rem 1.25rem; color: #dadada; font-size: 0.85rem; line-height: 1.55; border-bottom: 1px solid #ffb50324; background: linear-gradient(105deg, #ffb5030c, #ff7b0205); }
+.lv-workshop-goal summary { cursor: pointer; }
+.lv-workshop-goal summary > span { color: #ffb503; font-weight: 700; margin-right: 0.75rem; }
+.lv-workshop-goal ul { margin: 0.75rem 0 0; padding-left: 1.3rem; color: #b7b7b7; }
+.lv-workshop-goal summary:focus-visible { outline: 2px solid #ffb503; outline-offset: 3px; }
+
+/* Minimal progress: one pill per section under the title. */
+.lv-header-segs {
+  display: flex;
+  gap: 5px;
+  width: 200px;
+  max-width: 50vw;
+  margin-top: 3px;
+}
+
+.lv-header-segs i {
+  flex: 1;
+  height: 5px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.lv-header-segs i.done {
+  background: #4fd18b;
+}
+
+.lv-header-segs i.now {
+  background: linear-gradient(90deg, #ffb503 55%, rgba(255, 255, 255, 0.1) 55%);
+}
+
+.lv-header-segs i.done.now {
+  background: #4fd18b;
+  box-shadow: 0 0 0 1.5px rgba(143, 230, 182, 0.5);
+}
+
+/* Help chips above the composer. */
+.lv-container--fullscreen .lv-teaching-actions {
+  flex-wrap: nowrap;
+  gap: 8px;
+  margin: 0 0 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.lv-container--fullscreen .lv-teaching-actions::-webkit-scrollbar {
+  display: none;
+}
+
+.lv-container--fullscreen .lv-teaching-actions button {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 13px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.03);
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  color: rgba(246, 243, 238, 0.72);
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.lv-container--fullscreen .lv-teaching-actions button:hover:not(:disabled) {
+  border-color: rgba(255, 181, 3, 0.3);
+  background: rgba(255, 181, 3, 0.06);
+  color: #f6f3ee;
+}
+
+.lv-container--fullscreen .lv-teaching-actions button:focus-visible {
+  outline: 2px solid #ffb503;
+  outline-offset: 2px;
+}
+
+.lv-container--fullscreen .lv-teaching-actions svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  color: #ffb503;
+}
+
+@media (max-width: 640px) {
+  .lv-header-segs {
+    width: 120px;
+  }
+}
+
+/* On narrow screens the help button sits bottom-left; keep the message box clear of it. */
+@media (max-width: 900px) {
+  .lv-container--fullscreen .lv-composer .lv-input-shell {
+    margin-left: calc(1.5rem + 44px - 1rem + 10px);
   }
 }

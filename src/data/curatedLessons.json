@@ -1,142 +1,82 @@
 [
   {
-    "id": "prismatic-system",
-    "folderName": "Prismatic System",
-    "title": "The Prismatic System",
-    "course": "Logic & Reasoning",
+    "id": "build-your-own-llm",
+    "folderName": "Build Your Own LLM",
+    "title": "Build Your Own LLM",
+    "outcomeTitle": "Build a tiny language model that writes",
+    "course": "AI & Machine Learning",
+    "format": "workshop",
     "cupCost": 0,
-    "featured": false,
-    "description": "The Prismatic System is a compact formal symbolic language built from four layers: elements, binding, folding, and chains. Each layer introduces new rules that depend on everything before it, making it an excellent test of logical reasoning and step-by-step problem solving.",
-    "studyNote": "This course was used in the original Coast learning study. Work through the four layers in order; each section maps directly to one lecture.",
+    "featured": true,
+    "estimatedMinutes": 110,
+    "outcome": "A tiny language model you build and train yourself in Python, right in your browser.",
+    "description": "ChatGPT can feel like magic. It isn't: it turns text into numbers, predicts the next piece, and picks one. You'll build each step yourself in Python, from your own tokenizer to a model you train on text you choose, and see why its answers vary and how attention lets it read context.",
+    "studyNote": "No setup: the Python runs in your browser. Some coding helps, but Pedro explains every step.",
     "highlights": [
-      {
-        "label": "Layer 1 · Elements",
-        "desc": "Three element types and the value rules that govern them"
-      },
-      {
-        "label": "Layer 2 · Binding",
-        "desc": "The binding operation (⊕) and its six type-and-order rules"
-      },
-      {
-        "label": "Layer 3 · Folding",
-        "desc": "The folding operation (∆) and conditional transformation rules"
-      },
-      {
-        "label": "Layer 4 · Chains",
-        "desc": "Multi-step sequences that combine every rule you've learned"
-      }
+      { "label": "Tokens", "desc": "How text becomes numbers, and why GPT splits words into pieces" },
+      { "label": "Next-token prediction", "desc": "A model that writes, built from counting" },
+      { "label": "Temperature and attention", "desc": "Why answers vary, and how a model decides which words matter" },
+      { "label": "Training", "desc": "Watch your own model's loss fall, then make it write" }
     ]
   },
   {
-    "id": "science-of-cooking",
-    "folderName": "Science of Cooking",
-    "title": "The Science of Cooking",
-    "course": "Chemistry & Physics",
+    "id": "build-a-rocket",
+    "folderName": "Build a Rocket",
+    "title": "Build a Rocket to Space",
+    "outcomeTitle": "Design a rocket that reaches space",
+    "course": "Physics",
+    "format": "workshop",
     "cupCost": 0,
     "featured": true,
-    "description": "A four-lecture deep dive into the chemistry and physics behind everyday cooking, from the Maillard reaction and emulsification to gluten networks and the thermodynamics of bread rising. Inspired by Harvard's Science and Cooking curriculum.",
-    "studyNote": "Work through the four lectures in order. Each section covers one lecture and its interactive kitchen diagnostics.",
+    "estimatedMinutes": 100,
+    "outcome": "A rocket you design and fly in a physics simulator that carries a payload past the 100 km edge of space.",
+    "description": "Why does a rocket work in empty space? Why do real rockets drop pieces on the way up? You'll design rockets, predict how high they'll go, launch them in a physics simulator, and work out where the fuel's energy went, until your own design carries a payload into space.",
+    "studyNote": "Predict first, then launch: the gap between the two is where you learn.",
     "highlights": [
-      {
-        "label": "Lecture 1 · Maillard Reaction",
-        "desc": "Non-enzymatic browning, flavor synthesis, and thermal kinetics"
-      },
-      {
-        "label": "Lecture 2 · Emulsification",
-        "desc": "Surfactants, interfacial tension, and stable emulsions"
-      },
-      {
-        "label": "Lecture 3 · Gluten Network",
-        "desc": "Gliadin, glutenin, and the viscoelastic dough matrix"
-      },
-      {
-        "label": "Lecture 4 · Leavening",
-        "desc": "Fermentation, gas laws, and why bread rises"
-      }
+      { "label": "Lift-off", "desc": "Newton's third law and thrust-to-weight" },
+      { "label": "The rocket equation", "desc": "Why doubling the fuel doesn't double your speed" },
+      { "label": "Gravity and air", "desc": "Where the speed goes on the way up" },
+      { "label": "Mission", "desc": "Staging, then the lightest rocket you can get to 100 km" }
+    ]
+  },
+  {
+    "id": "build-a-brain",
+    "folderName": "Build a Brain",
+    "title": "Build a Neuron, Then a Tiny Brain",
+    "outcomeTitle": "Build a neuron that fires and a synapse that learns",
+    "course": "Neuroscience",
+    "format": "workshop",
+    "cupCost": 0,
+    "featured": true,
+    "estimatedMinutes": 85,
+    "outcome": "A simulated neuron you drive and measure, a circuit that detects coincidences, and a synapse that learns.",
+    "description": "Every thought runs on neurons that add up tiny electrical inputs and fire when they reach a threshold. You'll drive a simulated neuron, measure how it codes a stronger input, wire two inputs into a coincidence detector, and teach a synapse to link a bell to food, as in Pavlov's dogs.",
+    "studyNote": "Each step is a small experiment: predict, run it, explain the result.",
+    "highlights": [
+      { "label": "The neuron", "desc": "Resting potential, threshold and the leak" },
+      { "label": "Spikes", "desc": "All-or-nothing signals and the firing-rate code" },
+      { "label": "Synapses", "desc": "Excitation, inhibition and coincidence detection" },
+      { "label": "Learning", "desc": "Fire together, wire together, and how memories fade" }
     ]
   },
   {
     "id": "memory-palace",
     "folderName": "Memory Palace",
     "title": "The Memory Palace",
+    "outcomeTitle": "Build a memory palace and test it for real",
     "course": "Study Skills",
+    "format": "workshop",
     "cupCost": 0,
     "featured": true,
-    "description": "Before paper, before printing, before phones, the people who built our civilisations held entire libraries in their heads. They were not smarter than you. They had a technique, and they treated memory as a craft. This lesson is that craft, rebuilt for one evening of your time.",
-    "studyNote": "Work through the five sections in order. You will build and walk your own palace before the lesson ends.",
+    "estimatedMinutes": 45,
+    "outcome": "A memory palace for five things you want to learn, a real recall test, and a review plan.",
+    "description": "Before paper, people held whole speeches in their heads using places they knew well. You'll pick five things worth remembering, build a route through a place you know, test your recall with the answers hidden, fix what didn't stick, and use the method on your own studying.",
+    "studyNote": "Bring five things from a course you're studying; you'll use them in the last step.",
     "highlights": [
-      {
-        "label": "Module 1 · Simonides",
-        "desc": "The 477 BC banquet story that invented the method of loci"
-      },
-      {
-        "label": "Modules 4–5 · Build & Encode",
-        "desc": "Choose your route and learn the absurd, sensory encoding rules"
-      },
-      {
-        "label": "Modules 6–7 · Practice",
-        "desc": "Place ten items and walk your palace until recall is effortless"
-      },
-      {
-        "label": "Module 9 · Real Studying",
-        "desc": "Apply the palace to vocabulary, formulas, speeches, and exams"
-      }
-    ]
-  },
-  {
-    "id": "first-principles-thinking",
-    "folderName": "First-Principles Thinking",
-    "title": "First-Principles Thinking",
-    "course": "Thinking Tools",
-    "cupCost": 0,
-    "featured": true,
-    "description": "Most people reason by analogy: they copy what worked before and hope it works again. The few who break problems apart until only facts remain see what everyone else missed. That habit has a name, and it is older than any startup pitch deck. This lesson teaches you to reach for it on purpose.",
-    "studyNote": "Work through the four sections in order. Each builds a step of the method, ending with problems you bring from your own studies.",
-    "highlights": [
-      {
-        "label": "Section 1 · The Habit",
-        "desc": "Analogy vs first principles, and why defaults hide bad assumptions"
-      },
-      {
-        "label": "Section 2 · Strip to Facts",
-        "desc": "Separate what you know, what you assume, and what you are guessing"
-      },
-      {
-        "label": "Section 3 · Rebuild",
-        "desc": "Construct answers from verified pieces instead of inherited templates"
-      },
-      {
-        "label": "Section 4 · Under Pressure",
-        "desc": "Apply the method to exam questions, essays, and open-ended problems"
-      }
-    ]
-  },
-  {
-    "id": "polya-method",
-    "folderName": "The Polya Method",
-    "title": "The Polya Method",
-    "course": "Problem Solving",
-    "cupCost": 0,
-    "featured": true,
-    "description": "When students at Stanford were stuck on a problem, George Polya did not give them the answer. He gave them four questions to ask in order, until the answer assembled itself. Mathematicians have used his method for eighty years. This lesson is that sequence, rebuilt so you can run it on any problem you face.",
-    "studyNote": "Work through the four phases in order: understand, plan, execute, and look back. Pedro will walk you through each stage with practice problems.",
-    "highlights": [
-      {
-        "label": "Phase 1 · Understand",
-        "desc": "Restate the problem, identify unknowns, and check you really grasp the goal"
-      },
-      {
-        "label": "Phase 2 · Plan",
-        "desc": "Connect the problem to tools you know and choose a strategy before calculating"
-      },
-      {
-        "label": "Phase 3 · Execute",
-        "desc": "Carry out the plan step by step and track whether each step still makes sense"
-      },
-      {
-        "label": "Phase 4 · Look Back",
-        "desc": "Verify the result, reflect on the method, and generalize what you learned"
-      }
+      { "label": "Your palace", "desc": "Five items and a route through a place you know" },
+      { "label": "Scenes that stick", "desc": "Associations you can rebuild from the place alone" },
+      { "label": "A real test", "desc": "Recall with the answers hidden, then repair the gaps" },
+      { "label": "Your studying", "desc": "Use it on real material, with a spaced review plan" }
     ]
   }
 ]
