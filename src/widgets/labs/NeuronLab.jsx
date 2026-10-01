@@ -5,11 +5,33 @@ import { fmt } from '../format';
 import Plot from '../Plot';
 import { LEARNING, NEURON, coincidence, firingRate, learningTrial, peakVoltage, rheobase, simulate, step } from '../sim/neuron';
 
+// The words each mode shows, for someone meeting them for the first time.
+const WORDS = {
+  potential: ['Membrane potential', 'the voltage across the neuron’s outer skin (its membrane), in millivolts (mV, thousandths of a volt).'],
+  rest: ['Rest', '−70 mV: where the membrane sits when nothing is coming in.'],
+  threshold: ['Threshold', '−55 mV: if the membrane reaches it, the neuron fires.'],
+  spike: ['Spike', 'a brief electrical pulse: the neuron’s signal. “Fires” means it sends one.'],
+  current: ['Current', 'the input, in nanoamps (nA, billionths of an amp): a tiny flow of charge into the neuron.'],
+  leak: ['Leak', 'charge seeps back out, so the membrane drifts back to rest.'],
+  resistance: ['Resistance and time constant', 'how far a current moves the membrane (10 MΩ: each 1 nA moves it 10 mV) and how quickly (about 15 ms, thousandths of a second).'],
+  rate: ['Firing rate', 'spikes per second, in hertz (Hz).'],
+  refractory: ['Refractory period', 'after a spike the neuron can’t fire again for 2 ms.'],
+  synapse: ['Synapse', 'the contact where a signal passes from one neuron to the next.'],
+  strength: ['Strength', 'how big a bump in the membrane one input gives.'],
+  excitatory: ['Excitatory, inhibitory', 'an excitatory input pushes the membrane up towards threshold; an inhibitory one pushes it down, away from it.'],
+  bell: ['Bell synapse strength', 'how strongly the bell’s input excites the neuron. Food’s input is strong enough to fire it on its own.'],
+};
+const words = (...ids) => ids.map((id) => WORDS[id]);
+
 const MODES = {
-  single: { title: 'A neuron at rest', hint: 'Inject current and watch the membrane.' },
-  rate: { title: 'Firing rate', hint: 'How does the rate grow with input?' },
-  synapses: { title: 'Synapses', hint: 'Two inputs, one neuron.' },
-  learning: { title: 'Learning', hint: 'Pair the bell with food.' },
+  single: { title: 'A neuron at rest', hint: 'Inject current and watch the membrane.',
+    terms: words('potential', 'rest', 'threshold', 'spike', 'current', 'leak', 'resistance') },
+  rate: { title: 'Firing rate', hint: 'How does the rate grow with input?',
+    terms: words('rate', 'current', 'threshold', 'spike', 'refractory') },
+  synapses: { title: 'Synapses', hint: 'Two inputs, one neuron.',
+    terms: words('synapse', 'strength', 'excitatory', 'potential', 'threshold', 'spike') },
+  learning: { title: 'Learning', hint: 'Pair the bell with food.',
+    terms: words('bell', 'synapse', 'spike', 'threshold') },
 };
 
 /** Membrane trace as plot points, keeping every spike's peak. */
@@ -47,7 +69,7 @@ function SingleNeuron({ onResult }) {
       : `Result: no spikes. The membrane rose to ${fmt(NEURON.rest + NEURON.resistance * shown.current, 1)} mV and stayed below the −55 mV threshold, then leaked back to −70 mV when the input stopped.`,
   ].join('\n') : null;
   return (
-    <LabFrame title="Neuron lab · A neuron at rest" hint={MODES.single.hint} result={message} onResult={onResult}>
+    <LabFrame title="Neuron lab · A neuron at rest" hint={MODES.single.hint} terms={MODES.single.terms} result={message} onResult={onResult}>
       <label className="lab-slider">
         <span>Input current <b>{fmt(current, 2)} nA</b> · on its own it would hold the membrane at <b>{fmt(settle, 1)} mV</b></span>
         <input type="range" min="0" max="4" step="0.05" value={current} onChange={(e) => { setCurrent(Number(e.target.value)); setShown(null); }} />
@@ -87,7 +109,7 @@ function FiringRate({ onResult }) {
     `The model's threshold current is ${fmt(rheobase(), 2)} nA; the rate can never pass ${fmt(1000 / NEURON.refractory)} Hz (2 ms refractory period).`,
   ].filter(Boolean).join('\n') : null;
   return (
-    <LabFrame title="Neuron lab · Firing rate" hint={MODES.rate.hint} result={message} onResult={onResult}>
+    <LabFrame title="Neuron lab · Firing rate" hint={MODES.rate.hint} terms={MODES.rate.terms} result={message} onResult={onResult}>
       <div className="lab-predict">
         <NumberField label="Smallest current that makes it fire (your guess)" unit="nA" min={0} value={guess ?? NaN} onChange={setGuess} />
       </div>
@@ -126,7 +148,7 @@ function Synapses({ onResult }) {
     `A alone: ${fired(trials.a)}. B alone: ${fired(trials.b)}. Both: ${fired(trials.both)}.`,
   ].join('\n') : null;
   return (
-    <LabFrame title="Neuron lab · Synapses" hint={MODES.synapses.hint} result={message} onResult={onResult}>
+    <LabFrame title="Neuron lab · Synapses" hint={MODES.synapses.hint} terms={MODES.synapses.terms} result={message} onResult={onResult}>
       <div className="lab-row lab-row--wrap">
         <label className="lab-slider"><span>Input A strength <b>{fmt(a, 1)}</b></span>
           <input type="range" min="0" max="12" step="0.5" value={a} onChange={(e) => { setA(Number(e.target.value)); setShown(false); }} /></label>
@@ -170,7 +192,7 @@ function Learning({ onResult }) {
     bellTests.length ? `Last bell-alone test: ${bellTests[bellTests.length - 1].fired ? 'the neuron fired' : 'no spike'}` : '',
   ].filter(Boolean).join('\n') : null;
   return (
-    <LabFrame title="Neuron lab · Learning" hint={MODES.learning.hint} result={message} onResult={onResult}>
+    <LabFrame title="Neuron lab · Learning" hint={MODES.learning.hint} terms={MODES.learning.terms} result={message} onResult={onResult}>
       <p className="lab-caption">Food excites the neuron strongly. The bell's synapse starts weak. It strengthens when the bell and the neuron fire together while food is there, and weakens a little each time the bell comes without food.</p>
       <div className="lab-row lab-row--wrap">
         <button type="button" className="lab-btn lab-btn--go" onClick={() => trial('pair')}><Bell size={14} aria-hidden="true" /><Beef size={14} aria-hidden="true" /> Bell + food</button>

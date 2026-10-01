@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { Check, FlaskConical, Send } from 'lucide-react';
 
 /** The shell every lab shares: a title bar, the lab itself, and a footer that sends the result
- *  to Pedro. `result` is the message text, or null while there is nothing to send yet. */
-export default function LabFrame({ title, hint, children, result, onResult, sendLabel = 'Send to Pedro' }) {
+ *  to Pedro. `result` is the message text, or null while there is nothing to send yet. `terms`
+ *  ([word, meaning] pairs) explains the lab's vocabulary for a newcomer, folded away until asked. */
+export default function LabFrame({ title, hint, terms, children, result, onResult, sendLabel = 'Send to Pedro' }) {
   const [sent, setSent] = useState(null);
   const canSend = Boolean(onResult && result);
   const send = () => {
@@ -17,6 +18,12 @@ export default function LabFrame({ title, hint, children, result, onResult, send
         <span className="lab__title">{title}</span>
         {hint && <span className="lab__hint">{hint}</span>}
       </header>
+      {terms?.length > 0 && (
+        <details className="lab__terms">
+          <summary>What the words mean</summary>
+          <dl>{terms.map(([word, meaning]) => <div key={word}><dt>{word}</dt><dd>{meaning}</dd></div>)}</dl>
+        </details>
+      )}
       <div className="lab__body">{children}</div>
       {onResult && (
         <footer className="lab__foot">

@@ -987,3 +987,16 @@
 
 .fv-workshop-outcome { font-size: 1.3rem; line-height: 1.45; margin: 0.5rem 0 1rem; color: #fafafa; }
 
+
+.fv-v2-source-retry {
+  margin-left: 6px;
+  padding: 0 6px;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.95em;
+  cursor: pointer;
+}
+.fv-v2-source-retry:disabled { opacity: 0.6; cursor: default; }

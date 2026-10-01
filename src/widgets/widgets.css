@@ -40,6 +40,13 @@
 .lab__title { font-weight: 800; letter-spacing: 0.01em; color: var(--pedro-strong, #fff); }
 .lab__hint { color: var(--pedro-muted, #aaa); font-size: 13px; }
 
+.lab__terms { margin: 0.35em 1em 0; font-size: 13px; color: var(--pedro-muted, #aaa); }
+.lab__terms summary { cursor: pointer; width: fit-content; color: var(--pedro-sea, #45d3c3); }
+.lab__terms dl { display: grid; gap: 0.3em; margin: 0.5em 0 0.2em; padding: 0.6em 0.75em; border-radius: 10px; background: var(--lab-bg); }
+.lab__terms dl > div { display: flex; flex-wrap: wrap; gap: 0 0.5em; }
+.lab__terms dt { font-weight: 700; color: var(--pedro-strong, #fff); }
+.lab__terms dd { margin: 0; flex: 1 1 16em; }
+
 .lab__body {
   display: flex;
   flex-direction: column;

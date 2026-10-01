@@ -2,7 +2,7 @@
 // [REMEMBER: …], [CLICKED: …], …) are for the backend only — never shown to students.
 const TAG_NAMES = [
   'SECTION_COMPLETE', 'TEST_OUT_PASSED', 'ANSWER_CORRECT', 'ANSWER_WRONG',
-  'PLACEMENT_PASSED', 'PLACEMENT_STOP', 'REMEMBER', 'CLICKED', 'TUTOR_CORRECTION',
+  'PLACEMENT_PASSED', 'PLACEMENT_STOP', 'REMEMBER', 'CLICKED', 'TUTOR_CORRECTION', 'ONBOARDING_COMPLETE',
 ];
 const PEDRO_TAG_RE = new RegExp(`\\[(?:${TAG_NAMES.join('|')})(?::[^\\]\\n]*)?\\]`, 'gi');
 // While streaming, a tag can arrive half-written at the very end of the text.

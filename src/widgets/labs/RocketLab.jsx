@@ -5,17 +5,44 @@ import { fmt } from '../format';
 import Plot from '../Plot';
 import { ENGINES, SPACE_ALTITUDE, designProblems, idealDeltaV, liftoffRatio, minimumHardware, simulate, totalMass } from '../sim/rocket';
 
+// The words each scene shows, for someone meeting them for the first time.
+const WORDS = {
+  thrust: ['Thrust', 'the engine’s push, in kilonewtons (kN). 1 kN holds up about 102 kg against gravity.'],
+  weight: ['Weight', 'gravity’s pull on the whole rocket: mass in kg × 9.81 ÷ 1000, in kN so you can compare it with thrust.'],
+  twr: ['Thrust-to-weight', 'thrust divided by weight.'],
+  dry: ['Tanks + engine', 'everything that is left once the fuel is used up.'],
+  exhaust: ['Exhaust speed', 'how fast the engine throws its gas out of the back, in metres per second (m/s). Each engine type has its own.'],
+  dv: ['Δv (“delta-v”)', 'how much the rocket can change its speed by burning all its fuel, in m/s, with no gravity or air to slow it.'],
+  equation: ['Rocket equation', 'Δv = exhaust speed × ln(m₀ ÷ m_f).'],
+  masses: ['m₀ and m_f', 'the rocket’s mass full of fuel, and once the fuel is gone.'],
+  ln: ['ln', 'the natural logarithm: the “ln” button on a calculator.'],
+  payload: ['Payload', 'what the rocket carries.'],
+  apogee: ['Highest point', 'where the rocket stops rising: it keeps coasting up after the fuel runs out.'],
+  burnout: ['Burnout', 'the moment the fuel runs out.'],
+  losses: ['Lost to gravity, lost to air', 'speed the rocket would have had without gravity pulling it back, or without air pushing against it (drag).'],
+  diameter: ['Diameter', 'how wide the rocket is: a wider rocket has to push more air out of the way.'],
+  g: ['g', 'the pull of gravity at the Earth’s surface: at 3 g you’d feel three times your weight.'],
+  stage: ['Stage', 'a section with its own tanks and engine. Stage 1 fires first and is dropped when its fuel is gone.'],
+  space: ['Space', 'by convention it starts 100 km up.'],
+};
+const words = (...ids) => ids.map((id) => WORDS[id]);
+
 // What each workshop milestone's scene shows and asks for.
 const SCENES = {
   liftoff: { title: 'Lift-off', hint: 'Will it leave the pad?', predict: 'liftoff', stages: 1, air: true, diameter: false, payload: false,
+    terms: words('thrust', 'weight', 'twr', 'dry', 'exhaust'),
     start: [{ fuelMass: 600, dryMass: 400, thrust: 9, engine: 'kerosene' }] },
   design: { title: 'The rocket equation', hint: 'Predict the Δv, then check it.', predict: 'dv', stages: 1, air: false, diameter: false, payload: true,
+    terms: words('dv', 'equation', 'masses', 'ln', 'exhaust', 'dry', 'payload'),
     start: [{ fuelMass: 600, dryMass: 400, thrust: 20, engine: 'kerosene' }] },
   flight: { title: 'Flight', hint: 'Predict the highest point, then launch.', predict: 'apogee', stages: 1, air: true, diameter: true, payload: true,
+    terms: words('apogee', 'burnout', 'dv', 'losses', 'diameter', 'g', 'space'),
     start: [{ fuelMass: 400, dryMass: 400, thrust: 15, engine: 'kerosene' }] },
   staging: { title: 'Staging', hint: 'Same total mass, two stages.', predict: 'apogee', stages: 2, air: true, diameter: true, payload: true, compare: true,
+    terms: words('stage', 'apogee', 'dv', 'losses', 'twr'),
     start: [{ fuelMass: 450, dryMass: 250, thrust: 20, engine: 'kerosene' }, { fuelMass: 150, dryMass: 150, thrust: 5, engine: 'kerosene' }] },
   mission: { title: 'Mission: reach space', hint: 'Carry the payload past 100 km, as light as you can.', predict: 'apogee', stages: 3, air: true, diameter: true, payload: 'fixed',
+    terms: words('payload', 'space', 'stage', 'dv', 'losses', 'twr'),
     start: [{ fuelMass: 300, dryMass: 300, thrust: 10, engine: 'kerosene' }] },
 };
 
@@ -148,7 +175,7 @@ export default function RocketLab({ params = {}, onResult }) {
   }
 
   return (
-    <LabFrame title={`Rocket lab · ${scene.title}`} hint={scene.hint} result={message} onResult={onResult}>
+    <LabFrame title={`Rocket lab · ${scene.title}`} hint={scene.hint} terms={scene.terms} result={message} onResult={onResult}>
       <div className="lab-stages">
         {stages.map((s, i) => (
           <StageEditor key={i} stage={s} index={i} count={stages.length}
@@ -170,6 +197,7 @@ export default function RocketLab({ params = {}, onResult }) {
       <p className="lab-caption">
         Total mass {fmt(totalMass(design))} kg · weight {fmt((totalMass(design) * 9.81) / 1000, 1)} kN · lift-off thrust-to-weight <b className={twr > 1 ? 'is-ok' : 'is-bad'}>{fmt(twr, 2)}</b>
         {scene.predict !== 'dv' && flown ? ` · ideal Δv ${fmt(idealDeltaV(design))} m/s` : ''}
+        {scene.predict === 'dv' ? ` · full, m₀ ${fmt(totalMass(design))} kg · fuel gone, m_f ${fmt(totalMass(design) - stages[0].fuelMass)} kg` : ''}
       </p>
       {problems.length > 0 && <ul className="lab-problems">{problems.map((p) => <li key={p}>{p}</li>)}</ul>}
 

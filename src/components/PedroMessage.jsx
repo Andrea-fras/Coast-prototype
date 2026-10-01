@@ -15,7 +15,9 @@ import 'katex/dist/katex.min.css';
 import { API_URL } from '../config';
 import { useThrottledValue } from '../utils/useThrottledValue';
 import WidgetBlock from '../widgets/WidgetBlock';
+import { repairWidgetBlocks } from '../widgets/parseWidget';
 import { WidgetContext } from '../widgets/widgetContext';
+import { repairSlideEmbeds } from '../utils/slideEmbeds';
 
 const STREAM_MARKDOWN_MS = 280;
 const NO_SOURCES = [];
@@ -38,6 +40,9 @@ function sanitizePedroMarkdown(text) {
     .replace(/\$([^$]*?)µ([^$]*?)\$/g, (_, a, b) => `$${a}\\mu${b}$`)
     // "[Lecture · p. 8]" written without a link: drop the brackets so it becomes a clean citation chip.
     .replace(/\[([^\]\n]{2,90}?·\s*(?:pp?\.?|pages?|slides?)\s*\d+(?:\s*[-–]\s*\d+)?)\](?!\()/g, '$1')
+    // \[ … \] and \( … \), some models' LaTeX habit, as the $$ … $$ and $ … $ the renderer reads.
+    .replace(/\\\[([\s\S]+?)\\\]/g, (_, tex) => `$$${tex}$$`)
+    .replace(/\\\(([^\n]+?)\\\)/g, (_, tex) => `$${tex.trim()}$`)
     // An equation alone on its line is a display equation, even when written as $$...$$ on one line.
     .replace(/^((?:[ \t]*>)*[ \t]*)\$\$([^\n$][^\n]*?)\$\$[ \t]*$/gm, (_, lead, tex) => `${lead}$$\n${lead}${tex.trim()}\n${lead}$$`);
 }
@@ -298,7 +303,7 @@ function MarkdownBlock({ text, sourceReferences = NO_SOURCES, onCitation, stream
   return (
     <StreamingContext.Provider value={streaming}>
       <ReactMarkdown remarkPlugins={plugins} rehypePlugins={REHYPE_PLUGINS} components={components}>
-        {sanitizePedroMarkdown(text)}
+        {sanitizePedroMarkdown(repairWidgetBlocks(repairSlideEmbeds(text, { streaming })))}
       </ReactMarkdown>
     </StreamingContext.Provider>
   );

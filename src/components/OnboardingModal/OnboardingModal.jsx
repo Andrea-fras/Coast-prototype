@@ -5,6 +5,7 @@ import { fetchWithRetry } from '../../utils/fetchWithRetry';
 import { beginChatStream, isActiveStream, endChatStream } from '../../utils/chatStreamGuard';
 import { useStreamBuffer } from '../../utils/useStreamBuffer';
 import PedroMessage from '../PedroMessage';
+import { stripPedroTags } from '../../utils/pedroTags';
 import mascot from '../../assets/sessioncompletebird.svg';
 import { Sparkles, ArrowRight, ArrowLeft, MessageCircle, Send, Brain } from 'lucide-react';
 import GuidedTour from '../GuidedTour/GuidedTour';
@@ -80,7 +81,7 @@ function OnboardingPedroChat({ token, onComplete, onConversationId }) {
 
       if (!isActiveStream(streamGenRef, streamId)) return;
 
-      const fullText = finalizeStream() || meta?.reply || '';
+      const fullText = stripPedroTags(finalizeStream() || meta?.reply || '');
       if (fullText) {
         setMessages((prev) => [...prev, { role: 'pedro', content: fullText }]);
       }
@@ -142,7 +143,7 @@ function OnboardingPedroChat({ token, onComplete, onConversationId }) {
           <div className="lv-chat-msg pedro">
             <img src={mascot} alt="" className="lv-msg-avatar" />
             <div className="lv-msg-bubble">
-              <PedroMessage text={streamingText} isStreaming />
+              <PedroMessage text={stripPedroTags(streamingText)} isStreaming />
             </div>
           </div>
         )}

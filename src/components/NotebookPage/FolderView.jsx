@@ -321,7 +321,31 @@ const FolderView = ({
     hasOutline ? (everMastered ? 'Mastered' : `${masteredCount} mastered`) : null,
     lessonState?.estimated_minutes ? `~${lessonState.estimated_minutes} min in total` : null,
   ].filter(Boolean).join(' · ');
-  const sourcesIndexing = docSources.some((s) => s.oma_ingest_status && !['READY_FOR_ROADMAP', 'COMPLETE'].includes(s.oma_ingest_status));
+  const DONE_STAGES = ['READY_FOR_ROADMAP', 'COMPLETE'];
+  // A file still being read or waiting its turn; one that failed is not "preparing", it needs a retry.
+  const isReading = (s) => s.oma_ingest_status && ![...DONE_STAGES, 'CONTENT_INDEXED', 'FAILED'].includes(s.oma_ingest_status);
+  const readingCount = docSources.filter(isReading).length;
+  const sourcesFailed = docSources.some((s) => s.oma_ingest_status === 'FAILED');
+  const sourcesIndexing = docSources.some((s) => s.oma_ingest_status && ![...DONE_STAGES, 'FAILED'].includes(s.oma_ingest_status));
+  // Concept linking starts once every file of the course is read, so a finished file says what it waits for.
+  const sourceStage = (s) => {
+    if (s.oma_ingest_status === 'INGESTING') return 'Reading slides…';
+    if (s.oma_ingest_status === 'CONTENT_INDEXED') {
+      return readingCount > 0 ? `Waiting for ${readingCount} other file${readingCount === 1 ? '' : 's'}…` : 'Linking concepts…';
+    }
+    if (s.oma_ingest_status === 'FAILED') return 'Couldn\'t be prepared';
+    return 'Waiting to start…';
+  };
+  const [retryingSources, setRetryingSources] = useState(false);
+  const handleRetrySources = async (e) => {
+    e?.stopPropagation();
+    setRetryingSources(true);
+    try {
+      await fetch(`${API_URL}/api/oma/folder/${encodeURIComponent(folderName)}/ingest-all`, { method: 'POST', headers: headers() });
+      await fetchSources({ silent: true });
+    } catch { /* the row keeps its retry button */ }
+    setRetryingSources(false);
+  };
 
   const handleIslandClick = (index, state) => {
     const prog = sectionProgress[index] || {};
@@ -517,8 +541,8 @@ const FolderView = ({
             <div className="fv-v2-panel-head">
               <h2 className="fv-v2-heading">Sources</h2>
               {docSources.length > 0 && (
-                <span className={`fv-chip ${sourcesIndexing || uploading ? 'fv-chip--amber' : 'fv-chip--mint'}`}>
-                  {uploading ? 'Uploading' : sourcesIndexing ? 'Indexing' : 'All ready'}
+                <span className={`fv-chip ${sourcesIndexing || uploading || sourcesFailed ? 'fv-chip--amber' : 'fv-chip--mint'}`}>
+                  {uploading ? 'Uploading' : sourcesIndexing ? 'Preparing' : sourcesFailed ? 'Needs a retry' : 'All ready'}
                 </span>
               )}
             </div>
@@ -547,8 +571,11 @@ const FolderView = ({
                       <span className="fv-v2-source-meta">
                         <i className={`fv-v2-source-dot${src.oma_ingest_status && !['READY_FOR_ROADMAP', 'COMPLETE'].includes(src.oma_ingest_status) ? ' is-busy' : ''}`} aria-hidden="true" />
                         {src.page_count} page{src.page_count === 1 ? '' : 's'}
-                        {src.oma_ingest_status && src.oma_ingest_status !== 'READY_FOR_ROADMAP' && src.oma_ingest_status !== 'COMPLETE' && (
-                          <> · {({ INGESTING: 'Indexing…', CONTENT_INDEXED: 'Linking concepts…', FAILED: 'Indexing needs a retry' })[src.oma_ingest_status] || 'Queued for indexing'}</>
+                        {src.oma_ingest_status && !DONE_STAGES.includes(src.oma_ingest_status) && <> · {sourceStage(src)}</>}
+                        {src.oma_ingest_status === 'FAILED' && (
+                          <button type="button" className="fv-v2-source-retry" onClick={handleRetrySources} disabled={retryingSources}>
+                            {retryingSources ? 'Retrying…' : 'Retry'}
+                          </button>
                         )}
                       </span>
                     </div>
@@ -651,7 +678,7 @@ const FolderView = ({
                     {omaIndexing && !prepareMarked && (
                       <p className="fv-v2-indexing-hint">
                         <Loader size={14} className="spinning" />
-                        Sources still indexing in the background…
+                        Preparing your files. You can generate the roadmap once they're ready.
                       </p>
                     )}
                     {generateError && <p className="fv-v2-error">{generateError}</p>}
@@ -712,7 +739,12 @@ const FolderView = ({
                     </button>
                   )}
                   {hasOutline && !contentReady && (
-                    <p className="fv-v2-hint">Content OMA is still indexing — wait a moment or tap Prepare lesson again.</p>
+                    <p className="fv-v2-hint" role="status">
+                      {lessonState?.section_preparation?.error
+                        || (lessonState?.section_preparation?.total_pages
+                          ? `Getting this section ready: ${lessonState.section_preparation.ready_pages} of ${lessonState.section_preparation.total_pages} slides prepared…`
+                          : 'Getting this section ready…')}
+                    </p>
                   )}
                   {isComplete && (
                     <div className="fv-v2-complete-msg">
