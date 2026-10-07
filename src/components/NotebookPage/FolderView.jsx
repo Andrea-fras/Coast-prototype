@@ -355,7 +355,9 @@ const FolderView = ({
       if (!isWorkshop) setTestOutIndex(index);  // workshops are built in order: no skipping
       return;
     }
-    if (needsReview && (prog.attempted || state === 'complete' || state === 'current')) {
+    // The section in progress always continues ("Continue"), however high its mastery: a review
+    // starts a new conversation and would restart the section.
+    if (needsReview && state !== 'current' && (prog.attempted || state === 'complete')) {
       onStartLesson?.(folderName, index, { review: true });
       return;
     }

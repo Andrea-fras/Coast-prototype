@@ -8,7 +8,6 @@ const OnboardingModal = lazy(() => import('./components/OnboardingModal/Onboardi
 import FeedbackWidget from './components/FeedbackWidget/FeedbackWidget';
 const GuidedTour = lazy(() => import('./components/GuidedTour/GuidedTour'));
 import { buildCoastTour } from './components/GuidedTour/coastTour';
-import ContentProviderToggle from './components/ContentProviderToggle/ContentProviderToggle';
 const ControlCenter = lazy(() => import('./components/ControlCenter/ControlCenter'));
 import { useAuth } from './context/authState';
 import { API_URL } from './config';
@@ -184,7 +183,6 @@ function App() {
       )}
 
       <FeedbackWidget position="bottom-left" />
-      <ContentProviderToggle />
     </>
   );
 }

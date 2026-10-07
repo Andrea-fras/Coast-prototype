@@ -9,6 +9,7 @@ import { useAuth } from '../../context/authState';
 import { API_URL } from '../../config';
 import { useThrottledValue } from '../../utils/useThrottledValue';
 import { readSourceChatStream } from '../../utils/sourceChatStream';
+import { formatPedroForDisplay } from '../../utils/pedroFormatting';
 import remarkSourceCitations from '../../utils/sourceCitations';
 import SourceCitationViewer from './SourceCitationViewer';
 import SourceConversationPicker from './SourceConversationPicker';
@@ -19,7 +20,7 @@ function SourceAnswer({ message, onCitation }) {
   const content = useThrottledValue(message.content || '', message.streaming ? 160 : 0);
   const citations = message.citations || [];
   return <>
-    <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath, remarkSourceCitations]} rehypePlugins={[[rehypeKatex, { strict: false, trust: false }]]} skipHtml
+    <ReactMarkdown remarkPlugins={[remarkGfm, [remarkMath, { singleDollarTextMath: false }], remarkSourceCitations]} rehypePlugins={[[rehypeKatex, { strict: false, trust: false }]]} skipHtml
       components={{
         a: ({ href, children }) => {
           const id = /^#source-(S\d+)$/.exec(href || '')?.[1];
@@ -31,7 +32,7 @@ function SourceAnswer({ message, onCitation }) {
         },
         img: () => null,
         table: ({ children }) => <div className="ask-table"><table>{children}</table></div>,
-      }}>{content}</ReactMarkdown>
+      }}>{formatPedroForDisplay(content, { streaming: message.streaming })}</ReactMarkdown>
     {!message.streaming && citations.length > 0 && <div className="ask-citations" aria-label="Sources cited">
       {citations.map(c => <button type="button" key={c.id} disabled={c.available === false} onClick={() => onCitation(c)}>
         <BookOpen size={13} /><span>{c.title} · {c.source_type === 'pptx' ? 'slide' : 'p.'} {c.page}{c.available === false ? ' · Removed' : ''}</span>

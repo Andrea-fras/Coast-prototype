@@ -132,7 +132,9 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
       return;
     }
     streamHandledRef.current = true;
-    const fullText = stripPedroTags(finalizeStream());
+    // The reply as saved: the server repairs what streamed (a question boxed, a callout quoted).
+    const streamed = finalizeStream();
+    const fullText = stripPedroTags(evt?.reply || streamed);
     setChatLoading(false);
     pendingUserMessageRef.current = null;
     clearUnsendWindow();
@@ -716,6 +718,14 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
     setViewingChat([]);
   };
 
+  // Leaves a mastery review for the section in progress, which resumes its own conversation.
+  const returnToLesson = () => {
+    setReviewSectionIdx(null);
+    if (!lessonState?.is_complete) {
+      startSectionChat(lessonState?.current_section || 0, lessonState?.sections).catch(() => setLoadError(true));
+    }
+  };
+
   if (loading) {
     return (
       <div className="lv-container lv-container--fullscreen">
@@ -889,19 +899,22 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
               const viewing = isViewingPast && viewingSection === i;
               const reviewing = isReviewMode && reviewSectionIdx === i;
               const prog = sectionProgress[i] || {};
-              const canReview = prog.mastery_pct != null && prog.mastery_pct < 100 && (done || prog.attempted);
+              // The section in progress always continues its own conversation, however high its
+              // mastery: a review starts a new one, so it is only for other sections.
+              const canReview = !current && prog.mastery_pct != null && prog.mastery_pct < 100 && (done || prog.attempted);
               return (
                 <button
                   key={i}
                   className={`lv-sidebar-item ${done ? 'done' : current ? 'current' : 'locked'} ${viewing ? 'viewing' : ''} ${reviewing ? 'reviewing' : ''}`}
                   disabled={!done && !current && !canReview}
                   onClick={() => {
-                    if (canReview) {
+                    if (current) {
+                      if (isViewingPast) handleBackToCurrent();
+                      else if (isReviewMode) returnToLesson();
+                    } else if (canReview) {
                       startReviewSection(i, sections, sectionProgress);
                     } else if (done) {
                       handleViewPastSection(i);
-                    } else if (current && isViewingPast) {
-                      handleBackToCurrent();
                     }
                     setSidebarOpen(false);
                   }}
@@ -925,10 +938,7 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
           {/* Mastery review banner */}
           {isReviewMode && !isViewingPast && (
             <div className="lv-viewing-banner lv-review-banner">
-              <button className="lv-back-current-btn" onClick={() => {
-                setReviewSectionIdx(null);
-                if (!isComplete) startSectionChat(currentIdx, sections).catch(() => setLoadError(true));
-              }}>
+              <button className="lv-back-current-btn" onClick={returnToLesson}>
                 <ChevronLeft size={16} />
                 Back to lesson
               </button>

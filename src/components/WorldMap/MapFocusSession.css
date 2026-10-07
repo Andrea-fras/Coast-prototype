@@ -33,9 +33,8 @@
     radial-gradient(ellipse at center, rgba(6, 8, 16, 0) 55%, rgba(6, 8, 16, 0.42) 100%);
 }
 
-/* Floating app buttons (help, dev toggles) stay out of the shot. */
-:root[data-focus-timer='on'] .fb-fab,
-:root[data-focus-timer='on'] .content-provider-toggle {
+/* Floating app buttons (help) stay out of the shot. */
+:root[data-focus-timer='on'] .fb-fab {
   display: none;
 }
 

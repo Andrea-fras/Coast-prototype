@@ -18,6 +18,7 @@ import WidgetBlock from '../widgets/WidgetBlock';
 import { repairWidgetBlocks } from '../widgets/parseWidget';
 import { WidgetContext } from '../widgets/widgetContext';
 import { repairSlideEmbeds } from '../utils/slideEmbeds';
+import { formatPedroForDisplay } from '../utils/pedroFormatting';
 
 const STREAM_MARKDOWN_MS = 280;
 const NO_SOURCES = [];
@@ -29,22 +30,10 @@ const KATEX_OPTIONS = {
   trust: false,
 };
 
-/** Normalize Unicode units/symbols Pedro often uses before remark-math sees them. */
+/** "[Lecture · p. 8]" written without a link: the brackets dropped so it becomes a clean citation chip. */
 function sanitizePedroMarkdown(text) {
   if (!text) return text;
-  return text
-    // 10 µm → KaTeX-friendly inline math
-    .replace(/(\d+(?:\.\d+)?)\s*µm\b/g, '$1 $\\mu\\text{m}$')
-    .replace(/(\d+(?:\.\d+)?)\s*µ(?![a-zA-Z])/g, '$1 $\\mu$')
-    // Micro sign inside $...$ math delimiters
-    .replace(/\$([^$]*?)µ([^$]*?)\$/g, (_, a, b) => `$${a}\\mu${b}$`)
-    // "[Lecture · p. 8]" written without a link: drop the brackets so it becomes a clean citation chip.
-    .replace(/\[([^\]\n]{2,90}?·\s*(?:pp?\.?|pages?|slides?)\s*\d+(?:\s*[-–]\s*\d+)?)\](?!\()/g, '$1')
-    // \[ … \] and \( … \), some models' LaTeX habit, as the $$ … $$ and $ … $ the renderer reads.
-    .replace(/\\\[([\s\S]+?)\\\]/g, (_, tex) => `$$${tex}$$`)
-    .replace(/\\\(([^\n]+?)\\\)/g, (_, tex) => `$${tex.trim()}$`)
-    // An equation alone on its line is a display equation, even when written as $$...$$ on one line.
-    .replace(/^((?:[ \t]*>)*[ \t]*)\$\$([^\n$][^\n]*?)\$\$[ \t]*$/gm, (_, lead, tex) => `${lead}$$\n${lead}${tex.trim()}\n${lead}$$`);
+  return text.replace(/\[([^\]\n]{2,90}?·\s*(?:pp?\.?|pages?|slides?)\s*\d+(?:\s*[-–]\s*\d+)?)\](?!\()/g, '$1');
 }
 
 function repairIncompleteSvg(text) {
@@ -187,7 +176,9 @@ function Callout({ kind, title, children }) {
 function MarkdownBlock({ text, sourceReferences = NO_SOURCES, onCitation, streaming = false }) {
   const { imageAccess } = useAuth();
   const plugins = useMemo(() => [
-    remarkMath, remarkGfm, remarkPedro,
+    // Math only between double dollars: formatPedroForDisplay writes Pedro's \( \) and \[ \] that
+    // way, and a single $ stays a currency sign.
+    [remarkMath, { singleDollarTextMath: false }], remarkGfm, remarkPedro,
     ...(onCitation ? [[remarkLessonCitations, { sources: sourceReferences }]] : []),
   ], [sourceReferences, onCitation]);
   // One stable set of renderers for the whole stream. Fresh component functions on every
@@ -303,7 +294,7 @@ function MarkdownBlock({ text, sourceReferences = NO_SOURCES, onCitation, stream
   return (
     <StreamingContext.Provider value={streaming}>
       <ReactMarkdown remarkPlugins={plugins} rehypePlugins={REHYPE_PLUGINS} components={components}>
-        {sanitizePedroMarkdown(repairWidgetBlocks(repairSlideEmbeds(text, { streaming })))}
+        {sanitizePedroMarkdown(formatPedroForDisplay(repairWidgetBlocks(repairSlideEmbeds(text, { streaming })), { streaming }))}
       </ReactMarkdown>
     </StreamingContext.Provider>
   );
