@@ -483,6 +483,17 @@ const LessonView = ({ folderName, onClose, initialViewSection, initialReviewSect
 
       if (!isActiveStream(streamGenerationRef, streamId)) return;
 
+      if (res.status === 409) {
+        // Not an error: this section's pages are still being indexed. Show the preparing
+        // screen (it opens the lesson by itself) and give the student back what they typed.
+        pendingUserMessageRef.current = null;
+        clearUnsendWindow();
+        setChatLoading(false);
+        setChatMessages(prev => (prev.length && prev[prev.length - 1].role === 'user' ? prev.slice(0, -1) : prev));
+        if (!message.startsWith("I'm ready to learn about")) setChatInput(message);
+        fetchLessonState({ quiet: true });
+        return;
+      }
       if (!res.ok) {
         pendingUserMessageRef.current = null;
         clearUnsendWindow();

@@ -341,3 +341,40 @@ body.coast-test-out-active .fv-v2-back {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+/* The sections to check are still being prepared from the student's sources. */
+.test-out-preparing {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.7rem 1.1rem;
+  font-size: 0.84rem;
+  color: rgba(255, 255, 255, 0.75);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.test-out-preparing > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.test-out-preparing strong {
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 600;
+}
+
+.test-out-preparing button {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}

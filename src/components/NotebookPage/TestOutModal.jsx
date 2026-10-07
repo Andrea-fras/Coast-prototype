@@ -31,6 +31,8 @@ const TestOutModal = ({
   const [applyDone, setApplyDone] = useState(false);
   const [applyError, setApplyError] = useState(false);
   const [retryPayload, setRetryPayload] = useState(null);
+  // The sections to check are still being prepared from the student's sources: {message, payload}.
+  const [preparing, setPreparing] = useState(null);
   const [placement, setPlacement] = useState(null);
   const [result, setResult] = useState(null);
 
@@ -91,12 +93,21 @@ const TestOutModal = ({
       return;
     }
 
+    if (res.status === 409) {
+      // Not an error: the pages Pedro needs for this check are still being indexed.
+      const err = await res.json().catch(() => ({}));
+      setMessages(prev => prev.slice(0, -1));
+      setPreparing({ message: err.detail, payload: { message, convId } });
+      setLoading(false);
+      return;
+    }
     if (!res.ok) {
       updateLastPedro('Sorry, something went wrong. Try again!');
       setRetryPayload({ message, convId });
       setLoading(false);
       return;
     }
+    setPreparing(null);
 
     try {
       const reader = res.body.getReader();
@@ -141,6 +152,13 @@ const TestOutModal = ({
     }
     setLoading(false);
   }, [folderName, targetIndex, token]);
+
+  // Re-check every 10 seconds while the sources are being prepared; the check starts by itself.
+  useEffect(() => {
+    if (!preparing || loading) return undefined;
+    const timer = setTimeout(() => sendToApi(preparing.payload.message, preparing.payload.convId), 10000);
+    return () => clearTimeout(timer);
+  }, [preparing, loading, sendToApi]);
 
   useEffect(() => {
     if (startedRef.current || (!targetSection && !wholeCourse)) return;
@@ -298,6 +316,19 @@ const TestOutModal = ({
             </div>
           )}
         </div>
+
+        {preparing && !loading && !passed && (
+          <div className="test-out-preparing" role="status" aria-live="polite">
+            <Loader size={16} className="spinning" />
+            <div>
+              <strong>Your sources are still being prepared in the background</strong>
+              <span>{preparing.message || 'Pedro needs the pages of the sections you want to skip before he can check them.'} Checking again in a few seconds.</span>
+            </div>
+            <button type="button" onClick={() => sendToApi(preparing.payload.message, preparing.payload.convId)}>
+              <RefreshCw size={14} /> Check now
+            </button>
+          </div>
+        )}
 
         {retryPayload && !loading && !passed && (
           <div className="test-out-retry">
